@@ -70,6 +70,7 @@ The Platform Hub is the operational frontend for the data platform — report re
 
 ## Schema naming reference
 
+
 | Layer | Schema in Snowflake | dbt folder | Materialization |
 | --- | --- | --- | --- |
 | Raw ingestion | `RAW` | (pipelines, not dbt) | Append-only tables |
@@ -78,6 +79,7 @@ The Platform Hub is the operational frontend for the data platform — report re
 | Gold (dims, facts, reports) | `MARTS` | `models/marts/` | Table / Incremental |
 | ML Features | `ML_FEATURES` | `models/ml_features/` | Table |
 | Monitoring | `MONITORING` | (not dbt-managed) | Alerts, tasks, views |
+>>>>>>> remote
 
 ---
 

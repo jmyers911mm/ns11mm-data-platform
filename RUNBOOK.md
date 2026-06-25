@@ -58,6 +58,7 @@ FROM NS11MM_DW_PROD.MARTS.FCT_DAILY_OPERATIONS;
 | Create ticket forecast | `dbt run-operation create_ticket_demand_forecast` |
 | Sync verified queries | `dbt run-operation sync_verified_queries` |
 | Full refresh a model | `dbt run -s my_model --full-refresh` |
+
 | GDPR erasure | `dbt run-operation gdpr_anonymize --args '{email: user@example.com}'` |
 | Apply governance tags | `dbt run-operation apply_governance_tags` |
 | Apply masking policies | `dbt run-operation apply_masking_policies` |
@@ -66,3 +67,5 @@ FROM NS11MM_DW_PROD.MARTS.FCT_DAILY_OPERATIONS;
 | **Resume all alerts** | `CALL NS11MM_DW_DEV.MONITORING.MANAGE_ALERTS('RESUME', 'ALL')` |
 | **Suspend one alert** | `CALL NS11MM_DW_DEV.MONITORING.MANAGE_ALERTS('SUSPEND', 'ALERT_DBT_RUN_FAILURES')` |
 | Execute deployed dbt project | `EXECUTE DBT PROJECT NS11MM_DW_DEV.PUBLIC.NS11MM_DATA_PLATFORM ARGS = 'build'` |
+
+>>>>>>> remote

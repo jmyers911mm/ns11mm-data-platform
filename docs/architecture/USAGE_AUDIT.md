@@ -8,8 +8,10 @@
 
 ## Quick Navigation
 
+
 - [Pre-Built Monitoring Views](#pre-built-monitoring-views)
 - [Daily Credit Summary](#daily-credit-summary)
+>>>>>>> remote
 - [Warehouse Spend](#warehouse-spend)
 - [Serverless Feature Spend](#serverless-feature-spend)
 - [Cortex AI Spend](#cortex-ai-spend)
@@ -20,6 +22,7 @@
 - [Snowsight UI](#snowsight-ui)
 
 ---
+
 
 ## Pre-Built Monitoring Views
 
@@ -44,6 +47,7 @@ CALL NS11MM_DW_DEV.MONITORING.MANAGE_ALERTS('RESUME', 'ALL');
 ---
 
 ## Daily Credit Summary
+>>>>>>> remote
 
 Total credits consumed across all services (warehouses, serverless, cloud services):
 

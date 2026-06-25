@@ -4,6 +4,7 @@ All notable changes to the ns11mm-data-platform project will be documented in th
 
 This is the production repository (`ns11mm/ns11mm-data-platform`), successor to the POC (`jmyers911mm/ns11mm-dbt`). The POC changelog is preserved separately. Version numbering restarts at 1.0.0 for this repo.
 
+
 ## [1.2.0] — 2026-06-25 — Best Practices, Security & Monitoring
 
 ### Added
@@ -58,6 +59,7 @@ This is the production repository (`ns11mm/ns11mm-data-platform`), successor to 
 ---
 
 ## [1.1.0] — 2026-06-24 — Production Git Workspace Migration
+>>>>>>> remote
 
 ### Added
 - `profiles.yml` for Snowflake-native dbt (no env_var/password/authenticator)

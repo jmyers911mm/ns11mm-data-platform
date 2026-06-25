@@ -1,6 +1,8 @@
 # Operations Macros
 
+
 Run-operation macros for deployment, governance, ML forecasting, GDPR compliance, and incident recovery.
+>>>>>>> remote
 
 | Macro | Command | Purpose |
 |---|---|---|
@@ -11,6 +13,7 @@ Run-operation macros for deployment, governance, ML forecasting, GDPR compliance
 | `smart_retry` | `dbt run-operation smart_retry` | Identifies failed models and suggests rerun commands |
 | `rerun_from_source` | `dbt run-operation rerun_from_source --args '{"source_table": "RAW_GATEWAY_TRANSACTIONS"}'` | Maps RAW table to downstream models |
 | `resolve_quarantine` | `dbt run-operation resolve_quarantine --args '{"model_name": "silver_pos_tickets"}'` | Marks quarantined rows as resolved |
+
 | `gdpr_anonymize` | `dbt run-operation gdpr_anonymize --args '{email: user@example.com}'` | GDPR right-to-erasure: anonymizes PII across all layers with audit log |
 | `apply_masking_policies` | `dbt run-operation apply_masking_policies` | Applies MASK_NAME/EMAIL/PHONE to PII columns (runs automatically on-run-end) |
 | `apply_governance_tags` | `dbt run-operation apply_governance_tags` | Applies SENSITIVITY/DATA_DOMAIN/DATA_OWNER tags (runs automatically on-run-end) |
@@ -21,3 +24,5 @@ Run-operation macros for deployment, governance, ML forecasting, GDPR compliance
 The following macros run automatically after every `dbt run` or `dbt build`:
 - `apply_governance_tags()` — ensures all tables have correct sensitivity and domain tags
 - `apply_masking_policies()` — ensures PII columns have masking policies attached
+
+>>>>>>> remote

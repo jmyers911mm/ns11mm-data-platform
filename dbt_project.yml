@@ -17,11 +17,13 @@ clean-targets:
 vars:
   skip_circuit_breaker: false
 
+
 on-run-end:
   - "{% if target.name != 'dev' %}{{ apply_governance_tags() }}{% endif %}"
   - "{% if target.name != 'dev' %}{{ apply_masking_policies() }}{% endif %}"
 
 models:
+>>>>>>> remote
   +persist_docs:
     relation: true
     columns: true

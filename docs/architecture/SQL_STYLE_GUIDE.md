@@ -12,12 +12,14 @@ Conventions for SQL in the `ns11mm-data-platform` project. These are enforced wh
 
 | Prefix | Layer | Example | Notes |
 | --- | --- | --- | --- |
+
 | `stg_<source>__<object>` | Staging | `stg_gateway__transactions` | One staging model per source table. Views in STAGING schema. |
 | `silver_` | Silver / Intermediate | `silver_pos_tickets` | Cleansed, business-logic-applied, incremental in INTERMEDIATE schema. |
 | `dim_` | Gold dimension | `dim_customer` | One row per entity (customer, date, product…). Table in MARTS. |
 | `fct_` | Gold fact | `fct_ticket_sales` | One row per event/grain. In MARTS. |
 | `rpt_` | Gold report | `rpt_daily_operations` | Pre-joined, denormalized. **The only MARTS surface Power BI should consume.** |
 | `ml_` | ML feature | `ml_donor_churn_features` | Feature-engineered tables in ML_FEATURES schema. |
+>>>>>>> remote
 
 ### Columns
 

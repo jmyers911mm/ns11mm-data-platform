@@ -26,7 +26,6 @@ PII is concentrated in a small number of models. Know these before you build:
 - **`rpt_member_360` / `rpt_customer_ltv`** — member profiles with contact details.
 - **Intermediate models** that carry email/phone: `silver_pos_tickets`, `silver_pos_retail`, `silver_shopify`, `silver_sf_marketing_cloud`.
 - **`fct_ticket_sales`** — carries `customer_email` and `customer_phone` for identity resolution.
-
 **Masking policies** are automatically applied to all PII columns via `on-run-end` hooks:
 - `MASK_NAME` — full redaction for non-privileged roles
 - `MASK_EMAIL` — shows only `***@domain.com`
@@ -51,7 +50,9 @@ By design, **fact and report tables reference people by `customer_id`**, not by 
 
 ## Access control in practice
 
+
 Access is provisioned through Snowflake RBAC roles (see [SNOWFLAKE_SETTINGS](../../SNOWFLAKE_SETTINGS.md)):
+>>>>>>> remote
 
 | Role | PII Access | Scope |
 |---|---|---|
@@ -60,12 +61,15 @@ Access is provisioned through Snowflake RBAC roles (see [SNOWFLAKE_SETTINGS](../
 | `POWERBI_ROLE` | Masked (***@domain) | MARTS only |
 | `ML_ROLE` | Row-filtered (no PII rows visible) | INTERMEDIATE + MARTS + ML_FEATURES |
 | `LOADER_ROLE` | None (write-only to RAW) | RAW schema |
+>>>>>>> remote
 
 Masking and row access are enforced automatically by Snowflake policies — no application-level checks needed.
+>>>>>>> remote
 
 To request or change access, contact Jeremy Myers.
 
 ---
+>>>>>>> remote
 
 ## Classification on new models
 

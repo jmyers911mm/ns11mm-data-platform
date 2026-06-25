@@ -20,23 +20,31 @@ main (production)
 
 ```powershell
 # 1. Navigate to your local repo
+
 cd C:\Users\<your-username>\ns11mm-data-platform
+>>>>>>> remote
 
 # 2. Configure Snowflake CLI (see Snowflake CLI Setup section below)
+>>>>>>> remote
 #    Set password as environment variable (never hardcode in scripts)
 $env:SNOWFLAKE_PASSWORD = "<your_password>"
+
 snow connection test --connection museum    # approve DUO notification
+>>>>>>> remote
 
 # 3. Clone the repo (first time only)
 git clone https://github.com/ns11mm/ns11mm-data-platform.git
 cd ns11mm-data-platform
+>>>>>>> remote
 
 # 4. Set up Python + dbt (first time only)
 py -3.12 -m venv .venv
 & .venv\Scripts\Activate.ps1
 pip install dbt-core dbt-snowflake
+>>>>>>> remote
 
 # 5. Pull latest from main
+>>>>>>> remote
 git pull origin main
 
 # 6. Create a feature branch
@@ -52,10 +60,12 @@ git push -u origin feature/<your_branch_name>
 # 9. Create the PR (GitHub CLI — first time: winget install --id GitHub.cli && gh auth login)
 gh pr create --title "<PR title>" --body "<PR description>" --base main --head feature/<your_branch_name>
 
+
 # 10. After PR is merged, build in your personal dev
 git checkout main
 git pull origin main
 dbt build
+>>>>>>> remote
 ```
 
 ### Commit Messages
@@ -74,6 +84,8 @@ docs: update runbook with quarantine steps
 
 ```
 NS11MM_DW_DEV_JMYERS    ← Jeremy personal sandbox  (TRANSFORMER_ROLE)
+
+>>>>>>> remote
 NS11MM_DW_DEV           ← Shared dev / integration  (DEPLOY_DEV_ROLE — Jeremy only)
 NS11MM_DW_PROD          ← Production                (DEPLOY_PROD_ROLE — Jeremy only)
 ```
@@ -85,6 +97,7 @@ The flow is: **personal sandbox → PR → shared dev → prod**. Developers nev
 When a new developer joins, Jeremy creates `NS11MM_DW_DEV_<USERNAME>` and grants `TRANSFORMER_ROLE`.
 
 
+>>>>>>> remote
 ---
 
 ## Schema names
@@ -105,10 +118,12 @@ When a new developer joins, Jeremy creates `NS11MM_DW_DEV_<USERNAME>` and grants
 ### How a change goes from idea to production
 
 ```
+
 VS Code (local)  →  GitHub PR  →  NS11MM_DW_DEV_JMYERS  →  NS11MM_DW_DEV  →  NS11MM_DW_PROD
                          │                │                       │                    │
                     CI validates      TRANSFORMER_ROLE       DEPLOY_DEV_ROLE     DEPLOY_PROD_ROLE
                     (auto)           (you, daily)           (you, after PR)     (you, after validation)
+>>>>>>> remote
 ```
 
 ### Step by step
@@ -127,7 +142,7 @@ VS Code (local)  →  GitHub PR  →  NS11MM_DW_DEV_JMYERS  →  NS11MM_DW_DEV  
 | 10 | Update CHANGELOG.md | — | Document what shipped |
 
 ### Validation between tiers
-
+>>>>>>> remote
 ```sql
 -- Compare personal dev vs shared dev
 SELECT 'JMYERS' as env, COUNT(*) as rows FROM NS11MM_DW_DEV_JMYERS.MARTS.FCT_TICKET_SALES
@@ -139,7 +154,7 @@ SELECT 'DEV' as env, COUNT(*) as rows FROM NS11MM_DW_DEV.MARTS.FCT_TICKET_SALES
 UNION ALL
 SELECT 'PROD', COUNT(*) FROM NS11MM_DW_PROD.MARTS.FCT_TICKET_SALES;
 ```
-
+>>>>>>> remote
 ### Rollback
 
 If something goes wrong in production:
@@ -426,18 +441,14 @@ Verified queries live in `analyses/verified_queries/` organized by business doma
 ---
 
 ## VS Code ↔ GitHub ↔ Snowflake Sync
-
 This workspace (`USER$.PUBLIC."ns11mm-data-platform"`) is a **Git-connected workspace** linked to `https://github.com/ns11mm/ns11mm-data-platform.git`. It automatically syncs with GitHub — no manual copy/publish steps needed.
-
 ### Daily workflow (VS Code — recommended)
-
 ```bash
 # 1. Pull latest from GitHub
 git pull origin main
 
 # 2. Create a feature branch
 git checkout -b feature/<your_branch_name>
-
 # 3. Make changes, build locally
 dbt build --select my_model+
 
@@ -445,19 +456,14 @@ dbt build --select my_model+
 git add .
 git commit -m "feat: describe your changes"
 git push -u origin feature/<your_branch_name>
-
 # 5. Open a PR
 gh pr create --title "feat: description" --base main
 ```
 
 ### After PR is merged
-
 The Git workspace auto-syncs from GitHub. Changes are immediately visible in Snowsight.
-
 To trigger a manual sync: pull the latest in the workspace file browser.
-
 ### Editing in Snowsight workspace
-
 You can also edit directly in the Snowsight workspace browser. Changes you make are committed to a branch in the Git repo. Open a PR from that branch to merge to main.
 
 ### Snowflake CLI Setup
@@ -476,7 +482,6 @@ schema = "MARTS"
 ```
 
 Test with: `snow connection test --connection museum` (approve Duo push)
-
 ---
 
 ## SQL Style Guide

@@ -18,7 +18,9 @@
 
  ┌────────────────────────────┐ ┌─────────────────────┐ ┌──────────────────┐
  │  TICKETING & OPERATIONS    │ │  CRM & FUNDRAISING     │ │  DIGITAL &       │
+>>>>>>> remote
  │                            │ │                      │ │  MARKETING       │
+
  │  raw_gateway_transactions  │ │  raw_salesforce_nps_  │ │                  │
  │  raw_gateway_customers     │ │    contact/account/  │ │  raw_ga4_         │
  │  raw_counterpoint_*        │ │    opportunity       │ │    sessionreport  │
@@ -31,12 +33,15 @@
  │  High-frequency ops data   │ │                      │ │  warn  > 4 hrs   │
  │  drives real-time capacity │ │  Fundraising + CRM    │ │  error > 8 hrs   │
  │  planning & Cortex agent   │ │  enrichment           │ │                  │
+>>>>>>> remote
  └────────────────────────────┘ └─────────────────────┘ └──────────────────┘
           │                              │                       │
           └──────────────────────────────┴───────────────────────┘
                                          │
+
                             all 14 sources land in
                             NS11MM_DW_DEV.RAW (immutable)
+>>>>>>> remote
                                          │
                                          ▼
 

@@ -13,16 +13,19 @@ Reusable schema test macros for the NS11MM data platform.
 | `daily_volume_bounds` | Validates daily row counts stay within min/max bounds |
 | `cardinality_change` | Alerts if distinct value count falls outside expected range |
 | `distribution_shift` | Detects when a specific value frequency drifts outside acceptable range |
+
 | `z_score_outlier` | Flags rows where a numeric column exceeds N standard deviations (default 3) |
 | `positive_value` | Fails if any row has a negative value in the specified column |
 | `value_between` | Fails if any row's value is outside min/max bounds |
 
+>>>>>>> remote
 ## Usage
 
 ```yaml
 # schema.yml
 models:
   - name: silver_pos_tickets
+
     columns:
       - name: hashdiff
         tests:
@@ -40,4 +43,5 @@ models:
         tests:
           - null_rate_threshold:
               threshold: 0.3
+>>>>>>> remote
 ```

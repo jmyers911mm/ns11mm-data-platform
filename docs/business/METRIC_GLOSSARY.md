@@ -14,7 +14,9 @@ These terms appear across many metrics, so they're defined once here.
 
 | Term | What it means |
 | --- | --- |
+
 | **Fiscal year / quarter** | Our financial calendar starts in **October**, not January. "FY26" runs October 2025–September 2026. Every dashboard with a fiscal view uses this. |
+>>>>>>> remote
 | **Customer (resolved)** | One real person, even if they appear in several systems. We link records that share an email **or** phone number, so a single visitor isn't counted three times. |
 | **Known Member** | A resolved customer who matches a record in our CRM (Salesforce). We know who they are. |
 | **Identified Visitor** | A resolved customer we can recognize by email or phone, but who isn't in the CRM. |

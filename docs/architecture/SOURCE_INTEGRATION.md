@@ -2,7 +2,8 @@
 
 **Project:** NS11MM Data Platform Modernization
 
-**Scope:** Integration of all identified source systems into the Snowflake RAW schema and through the dbt staging layer (STAGING schema)
+** Integration of all identified source systems into the Snowflake RAW schema and through the dbt staging layer (STAGING schema)
+>>>>>>> remote
 
 **Status:** Active v1.0 — 14 sources confirmed; Azure pipeline build in progress
 
@@ -14,7 +15,9 @@
 
 This plan defines every source system that feeds the platform, the real API or extraction profile for each, and the specific details we need to land and contract each one. The GitHub `sources.yml` reflects sample data, so the schemas there are illustrative only. This version replaces that with the actual connection, authentication, and extraction details per vendor.
 
+
 Two non-negotiable rules still frame the work. RAW is immutable, so this is landing and contracting raw data only. And no MARTS model or Power BI element may be built on a feed until its metric definitions clear the ADR-005 gate.
+>>>>>>> remote
 
 ---
 
