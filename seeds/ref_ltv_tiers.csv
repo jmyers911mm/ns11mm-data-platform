@@ -1,0 +1,5 @@
+tier_id,tier_name,min_ltv,max_ltv,color_hex
+1,Platinum,1000,999999,#5B21B6
+2,Gold,500,999.99,#D97706
+3,Silver,100,499.99,#6B7280
+4,Bronze,0,99.99,#92400E

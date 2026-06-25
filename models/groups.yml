@@ -1,0 +1,24 @@
+groups:
+  - name: staging
+    owner:
+      email: kramsey@911memorial.org
+
+  - name: silver
+    owner:
+      email: kramsey@911memorial.org
+
+  - name: gold_dimensions
+    owner:
+      email: jmyers@911memorial.org
+
+  - name: gold_facts
+    owner:
+      email: jmyers@911memorial.org
+
+  - name: gold_reports
+    owner:
+      email: jmyers@911memorial.org
+
+  - name: ml_features
+    owner:
+      email: jmyers@911memorial.org

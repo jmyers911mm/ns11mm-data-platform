@@ -1,0 +1,148 @@
+version: 2
+
+exposures:
+
+  - name: powerbi_operations_dashboard
+    type: dashboard
+    maturity: high
+    url: https://app.powerbi.com
+    description: Daily operations Power BI dashboard consuming Gold facts and reports
+    depends_on:
+      - ref('fct_daily_operations')
+      - ref('fct_ticket_sales')
+      - ref('fct_retail_line_items')
+      - ref('rpt_daily_operations')
+      - ref('rpt_ticket_sales')
+      - ref('dim_date')
+      - ref('dim_customer')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: powerbi_donor_retention_dashboard
+    type: dashboard
+    maturity: medium
+    url: https://app.powerbi.com
+    description: Donor retention and fundraising Power BI dashboard
+    depends_on:
+      - ref('fct_donor_retention')
+      - ref('fct_donor_cohort_survival')
+      - ref('fct_fundraising')
+      - ref('rpt_customer_ltv')
+      - ref('dim_customer')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: cortex_analyst_operations
+    type: ml
+    maturity: medium
+    description: Cortex Analyst natural language interface over NS11MM operations semantic view
+    depends_on:
+      - ref('fct_daily_operations')
+      - ref('fct_ticket_sales')
+      - ref('fct_retail_line_items')
+      - ref('dim_date')
+      - ref('dim_customer')
+      - ref('dim_gate')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: ml_donor_churn_model
+    type: ml
+    maturity: low
+    description: Donor churn prediction model consuming ML feature tables
+    depends_on:
+      - ref('ml_donor_churn_features')
+      - ref('ml_donor_upgrade_propensity_features')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: ml_ticket_demand_forecast
+    type: ml
+    maturity: medium
+    description: Snowflake ML FORECAST model for 90-day ticket demand prediction
+    depends_on:
+      - ref('ml_ticket_demand_features')
+      - ref('fct_ticket_demand_benchmarks')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: powerbi_member_360_dashboard
+    type: dashboard
+    maturity: high
+    url: https://app.powerbi.com
+    description: Member 360 dashboard showing LTV, engagement segments, and donor retention
+    depends_on:
+      - ref('rpt_member_360')
+      - ref('rpt_customer_ltv')
+      - ref('dim_customer')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: powerbi_digital_marketing_dashboard
+    type: dashboard
+    maturity: medium
+    url: https://app.powerbi.com
+    description: Digital marketing performance dashboard with ROAS and channel attribution
+    depends_on:
+      - ref('rpt_digital_marketing')
+      - ref('rpt_campaign_performance')
+      - ref('fct_digital_ad_performance')
+      - ref('fct_marketing_channel_summary')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: powerbi_revenue_bridge
+    type: dashboard
+    maturity: high
+    url: https://app.powerbi.com
+    description: Weekly revenue bridge report for executive leadership
+    depends_on:
+      - ref('rpt_revenue_bridge')
+      - ref('fct_daily_operations')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: cortex_analyst_fundraising
+    type: application
+    maturity: medium
+    description: Cortex Analyst semantic view for fundraising and member analytics
+    depends_on:
+      - ref('rpt_member_360')
+      - ref('rpt_customer_ltv')
+      - ref('fct_fundraising')
+      - ref('fct_donor_retention')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: cortex_analyst_marketing
+    type: application
+    maturity: medium
+    description: Cortex Analyst semantic view for marketing performance and attribution
+    depends_on:
+      - ref('fct_digital_ad_performance')
+      - ref('fct_campaign_performance')
+      - ref('fct_website_traffic')
+      - ref('fct_marketing_channel_summary')
+      - ref('fct_campaign_attribution')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org
+
+  - name: ml_member_churn_model
+    type: ml
+    maturity: medium
+    description: XGBoost member churn classifier registered in Snowflake ML Registry
+    depends_on:
+      - ref('ml_member_churn_features')
+    owner:
+      name: Jeremy Myers
+      email: jmyers@911memorial.org

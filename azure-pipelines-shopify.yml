@@ -1,0 +1,91 @@
+# NS11MM Data Platform -- shopify pipeline
+# Azure DevOps CI/CD: deploys pipelines/shopify/ to Azure Functions
+# Timer schedule: 0 0 8 * * * UTC
+# Function App: func-ns11mm-shopify-dev
+# Key Vault: kv-ns11mm-dp-dev
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/shopify/**
+      - pipelines/shared/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/shopify/**
+      - pipelines/shared/**
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  FUNCTION_APP_NAME: 'func-ns11mm-shopify-dev'
+  AZURE_SERVICE_CONNECTION: 'ns11mm-azure-connection'
+  PYTHON_VERSION: '3.11'
+
+stages:
+
+  - stage: Validate
+    displayName: Validate pipeline code
+    jobs:
+      - job: ValidateJob
+        displayName: Install and validate
+        steps:
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(PYTHON_VERSION)
+            displayName: Set Python $(PYTHON_VERSION)
+
+          - script: |
+              pip install -r pipelines/requirements-shared.txt
+              pip install -r pipelines/shopify/requirements.txt
+            displayName: Install dependencies
+
+          - script: |
+              cd pipelines
+              python -c "from shopify.pipeline import SOURCE_SYSTEM; print(f'Source system: {SOURCE_SYSTEM}')"
+            displayName: Validate pipeline imports
+
+  - stage: Deploy
+    displayName: Deploy to Azure Functions
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployJob
+        displayName: Deploy shopify pipeline
+        environment: 'ns11mm-data-platform-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                - checkout: self
+
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: $(PYTHON_VERSION)
+                  displayName: Set Python $(PYTHON_VERSION)
+
+                - script: |
+                    pip install -r pipelines/requirements-shared.txt
+                    pip install -r pipelines/shopify/requirements.txt
+                    pip install -r pipelines/requirements-shared.txt --target pipelines/shopify/.python_packages/lib/site-packages
+                    pip install -r pipelines/shopify/requirements.txt --target pipelines/shopify/.python_packages/lib/site-packages
+                  displayName: Install dependencies for deployment
+
+                - task: AzureFunctionApp@2
+                  displayName: Deploy to $(FUNCTION_APP_NAME)
+                  inputs:
+                    azureSubscription: $(AZURE_SERVICE_CONNECTION)
+                    appType: functionAppLinux
+                    appName: $(FUNCTION_APP_NAME)
+                    package: pipelines/shopify
+                    runtimeStack: 'PYTHON|3.11'

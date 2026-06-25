@@ -1,0 +1,33 @@
+# NS11MM Data Platform — Terraform Deploy: dev
+# Auto-triggers on merge to main
+
+trigger: automatic on main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  TF_VAR_FILE: environments/dev.tfvars.json
+  ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+  ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+  ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+  ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+steps:
+  - task: TerraformInstaller@1
+    inputs:
+      terraformVersion: '1.5.x'
+
+  - script: terraform init
+    workingDirectory: terraform/
+    displayName: Terraform Init
+
+  - script: terraform plan -var-file=$(TF_VAR_FILE) -out=tfplan
+    workingDirectory: terraform/
+    displayName: Terraform Plan
+
+  
+
+  - script: terraform apply tfplan
+    workingDirectory: terraform/
+    displayName: Terraform Apply

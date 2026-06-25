@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag"
+    columns:
+      - name: date_id
+        tests:
+          - unique
+          - not_null
+      - name: is_commemoration_day
+        description: >
+          True for September 11 (anniversary). This flag exists because the anniversary
+          creates structural anomalies across all metrics. Models reference this flag to
+          treat September 11 as a known exception rather than a statistical outlier.
+        tests:
+          - not_null
+
+  - name: dim_marketing_channel
+    description: "Marketing channel reference dimension from ref_marketing_channels seed"
+    columns:
+      - name: channel_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_customer
+    description: "Unified customer dimension using connected-component identity resolution across Gateway, CounterPoint, Shopify, and Salesforce."
+    columns:
+      - name: customer_id
+        description: "MD5 hash-based surrogate key from identity resolution"
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_gate
+    description: "Ticketing gate dimension from Gateway. STATUS: Awaiting RAW connection."
+
+  - name: dim_campaign
+    description: "Campaign dimension from Salesforce. STATUS: Awaiting RAW connection."
+
+  - name: dim_ticket_type
+    description: "Ticket type dimension from Gateway. STATUS: Awaiting RAW connection."
+
+  - name: dim_product
+    description: "Retail product dimension from CounterPoint/Shopify. STATUS: Awaiting RAW connection."
+
+  - name: dim_payment_method
+    description: "Payment method reference dimension."
+
+  - name: dim_fund
+    description: "Blackbaud GL fund dimension. STATUS: Awaiting Blackbaud RAW connection."
+
+  - name: dim_budget_version
+    description: "Vena plan version dimension. STATUS: Awaiting Vena RAW connection."

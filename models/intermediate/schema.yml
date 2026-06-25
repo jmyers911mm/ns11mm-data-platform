@@ -1,0 +1,159 @@
+version: 2
+
+models:
+  - name: silver_sf_crm
+    description: "Enriched CRM contacts with membership and donation data from Salesforce Opportunities"
+    columns:
+      - name: contact_id
+        description: "Salesforce Contact Id — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: "Contact email address"
+      - name: computed_membership_status
+        description: "Derived membership status: Active, Inactive, or Unknown"
+        tests:
+          - accepted_values:
+              values: ['Active', 'Inactive', 'Unknown']
+      - name: donor_tier
+        description: "Donor classification based on YTD donation amount"
+        tests:
+          - accepted_values:
+              values: ['Major Donor', 'Mid-Level Donor', 'Donor', 'Small Donor', 'Non-Donor']
+
+  - name: silver_pos_tickets
+    description: "Cleaned and enriched Gateway ticket transactions with customer identity from Gateway customers table"
+    columns:
+      - name: transaction_id
+        description: "Gateway transaction identifier — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: transaction_date
+        description: "Date of ticket purchase"
+        tests:
+          - not_null
+      - name: total_amount
+        description: "Transaction total amount"
+        tests:
+          - not_null
+      - name: visitor_category
+        description: "Derived visitor type based on ticket_type_id pattern"
+        tests:
+          - accepted_values:
+              values: ['Adult', 'Child', 'Senior', 'Member', 'School Group', 'Family', 'Other']
+
+  - name: silver_pos_retail
+    description: "Unified retail transactions from CounterPoint (in-store) and Shopify (online)"
+    columns:
+      - name: transaction_id
+        description: "CounterPoint line item ID or Shopify order ID — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: transaction_date
+        tests:
+          - not_null
+      - name: retail_channel
+        description: "Source system: counterpoint or shopify"
+        tests:
+          - accepted_values:
+              values: ['counterpoint', 'shopify']
+
+  - name: silver_sf_marketing_cloud
+    description: "Marketing Cloud email engagement events (sends, opens, clicks, bounces, unsubscribes)"
+    columns:
+      - name: send_id
+        description: "Unique send event identifier — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: event_type
+        description: "Email event type"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Sent', 'Open', 'Click', 'Bounce', 'Unsubscribe']
+      - name: email_address
+        tests:
+          - not_null
+
+  - name: silver_shopify
+    description: "Cleaned Shopify orders excluding test orders, with derived revenue metrics"
+    columns:
+      - name: order_id
+        description: "Shopify order ID — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: order_date
+        tests:
+          - not_null
+
+  - name: silver_classy
+    description: "GoFundMe Pro / Classy donation transactions with recurring flag"
+    columns:
+      - name: transaction_id
+        description: "Classy transaction ID — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: gross_amount
+        tests:
+          - not_null
+
+  - name: silver_blackbaud
+    description: "Blackbaud Financial Edge NXT journal entries with posting type derivation"
+    columns:
+      - name: journal_entry_id
+        description: "Journal entry ID — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: posting_type
+        description: "Derived: Actual or Encumbrance"
+        tests:
+          - accepted_values:
+              values: ['Actual', 'Encumbrance']
+
+  - name: silver_google_analytics
+    description: "GA4 session-level web analytics with derived channel grouping and page categories"
+    columns:
+      - name: hashdiff
+        description: "Hash-based unique key for session record"
+        tests:
+          - unique
+          - not_null
+      - name: channel_grouping
+        description: "Derived marketing channel from source/medium"
+        tests:
+          - accepted_values:
+              values: ['Paid Search', 'Paid Social', 'Organic Search', 'Email', 'Direct', 'Other']
+
+  - name: silver_google_ads
+    description: "Google Ads campaign performance metrics"
+
+  - name: silver_meta_ads
+    description: "Meta (Facebook/Instagram) Ads campaign performance metrics"
+
+  - name: silver_ticket_scans
+    description: "Gate scan events derived from Gateway transactions where gate_id is present"
+    columns:
+      - name: scan_id
+        description: "Transaction ID used as scan identifier — primary key"
+        tests:
+          - unique
+          - not_null
+      - name: scan_date
+        tests:
+          - not_null
+
+  - name: silver_ticket_inventory
+    description: "Ticket capacity vs reservations by date/window/type — awaiting capacity source confirmation"
+    columns:
+      - name: inventory_key
+        description: "Composite key: entry_date + window_start + ticket_type"
+        tests:
+          - unique
+          - not_null

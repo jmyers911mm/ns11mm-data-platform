@@ -1,0 +1,9 @@
+payment_method_id,payment_method_name,payment_method_type,is_digital
+1,Visa,Credit Card,false
+2,Mastercard,Credit Card,false
+3,American Express,Credit Card,false
+4,Cash,Cash,false
+5,Apple Pay,Digital Wallet,true
+6,Google Pay,Digital Wallet,true
+7,Online - Credit Card,Online,true
+8,Complimentary,Comp,false

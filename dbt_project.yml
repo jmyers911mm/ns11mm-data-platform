@@ -1,0 +1,84 @@
+name: 'ns11mm_data_platform'
+version: '1.0.0'
+config-version: 2
+profile: 'ns11mm_data_platform'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests/reconciliation", "tests/referential_integrity", "tests/business_rules"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  skip_circuit_breaker: false
+
+on-run-end:
+  - "{% if target.name != 'dev' %}{{ apply_governance_tags() }}{% endif %}"
+  - "{% if target.name != 'dev' %}{{ apply_masking_policies() }}{% endif %}"
+
+models:
+  +persist_docs:
+    relation: true
+    columns: true
+  +pre-hook:
+    - "ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 3600"
+    - "{% if 'intraday' in model.tags %}ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 300{% endif %}"
+  ns11mm_data_platform:
+    raw:
+      +materialized: view
+      +schema: STAGING
+      +tags: ['daily', 'critical']
+      +query_tag: 'dbt_ns11mm_staging'
+      +group: staging
+    intermediate:
+      +materialized: incremental
+      +schema: INTERMEDIATE
+      +incremental_strategy: merge
+      +on_schema_change: append_new_columns
+      +tags: ['daily', 'critical']
+      +query_tag: 'dbt_ns11mm_silver'
+      +copy_grants: true
+      +transient: true
+      +group: silver
+    marts:
+      +materialized: incremental
+      +schema: MARTS
+      +incremental_strategy: merge
+      +on_schema_change: append_new_columns
+      +tags: ['daily', 'critical']
+      +query_tag: 'dbt_ns11mm_gold'
+      +copy_grants: true
+      +post-hook:
+        - "GRANT SELECT ON {{ this }} TO ROLE POWERBI_ROLE"
+        - "GRANT SELECT ON {{ this }} TO ROLE ML_ROLE"
+      dimensions:
+        +materialized: table
+        +group: gold_dimensions
+        +access: public
+      facts:
+        +group: gold_facts
+        +access: public
+      reports:
+        +group: gold_reports
+        +access: public
+    ml_features:
+      +materialized: table
+      +schema: ML_FEATURES
+      +tags: ['daily', 'non-critical']
+      +query_tag: 'dbt_ns11mm_ml_features'
+      +transient: true
+      +group: ml_features
+      +access: public
+      +post-hook:
+        - "GRANT SELECT ON {{ this }} TO ROLE ML_ROLE"
+
+snapshots:
+  ns11mm_data_platform:
+    +target_schema: INTERMEDIATE
+    +tags: ['daily', 'non-critical']
+    +query_tag: 'dbt_ns11mm_snapshots'

@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: rpt_member_360
+    description: "Unified member/customer 360 view aggregating tickets, retail, donations, and email engagement"
+    columns:
+      - name: customer_id
+        description: "Resolved customer identifier from dim_customer"
+        tests:
+          - unique
+          - not_null
+      - name: total_lifetime_value
+        description: "Sum of ticket + retail + donation spend"
+        tests:
+          - not_null
+      - name: engagement_segment
+        description: "Derived engagement level based on email activity and recency"
+        tests:
+          - accepted_values:
+              values: ['Highly Engaged', 'Engaged', 'Lapsed']
+      - name: ltv_tier
+        description: "Value tier: High Value (>=1000), Medium (>=200), Low (>0), No Spend"
+        tests:
+          - accepted_values:
+              values: ['High Value', 'Medium Value', 'Low Value', 'No Spend']
+
+  - name: rpt_customer_ltv
+    description: "Customer lifetime value report with spend breakdown across ticket, retail, and donations"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: ltv_tier
+        tests:
+          - accepted_values:
+              values: ['Platinum', 'Gold', 'Silver', 'Bronze']
+
+  - name: rpt_daily_operations
+    description: "Daily executive operations dashboard: visitors, revenue, retail, and weather"
+
+  - name: rpt_ticket_sales
+    description: "Ticket sales summary report with visitor category breakdown and trend analysis"
+
+  - name: rpt_visitor_traffic
+    description: "Visitor traffic patterns report with day-of-week and seasonal analysis"
+
+  - name: rpt_retail_performance
+    description: "Retail performance report: revenue, units, AOV by channel and category"
+
+  - name: rpt_digital_marketing
+    description: "Digital marketing performance report: spend, conversions, ROAS across channels"
+
+  - name: rpt_campaign_performance
+    description: "Campaign performance report with attribution and ROI metrics"
+
+  - name: rpt_revenue_bridge
+    description: "Revenue bridge analysis: period-over-period variance decomposition by revenue stream"

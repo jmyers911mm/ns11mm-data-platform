@@ -1,0 +1,427 @@
+name: ns11mm_operations
+description: "NS11MM Operations Analytics — ticket sales, visitor traffic, retail performance, and daily operations"
+
+tables:
+  - name: ticket_sales
+    description: "Ticket sales transactions with visitor category, pricing, and customer resolution"
+    base_table:
+      database: NS11MM_DW_DEV
+      schema: MARTS
+      table: FCT_TICKET_SALES
+    dimensions:
+      - name: visitor_category
+        synonyms: ["ticket type", "visitor type", "admission type"]
+        description: "Visitor classification: Adult, Child, Senior, Member, School Group, Family, Other"
+        expr: VISITOR_CATEGORY
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Adult", "Child", "Senior", "Member", "School Group", "Family", "Other"]
+      - name: payment_method
+        description: "Payment method used for ticket purchase"
+        expr: PAYMENT_METHOD
+        data_type: VARCHAR
+      - name: is_discounted
+        description: "Whether a discount was applied"
+        expr: IS_DISCOUNTED
+        data_type: BOOLEAN
+      - name: discount_code
+        description: "Discount or promo code used"
+        expr: DISCOUNT_CODE
+        data_type: VARCHAR
+      - name: gate_id
+        description: "Entry gate identifier"
+        expr: GATE_ID
+        data_type: VARCHAR
+      - name: customer_id
+        description: "Resolved customer identifier from identity resolution"
+        expr: CUSTOMER_ID
+        data_type: VARCHAR
+    time_dimensions:
+      - name: transaction_date
+        synonyms: ["sale date", "purchase date", "ticket date"]
+        description: "Date the ticket was purchased"
+        expr: TRANSACTION_DATE
+        data_type: DATE
+        unique: false
+      - name: scan_date
+        synonyms: ["visit date", "entry date", "admission date"]
+        description: "Date the visitor actually entered (scanned at gate)"
+        expr: SCAN_DATE
+        data_type: DATE
+    facts:
+      - name: quantity
+        synonyms: ["tickets sold", "number of tickets"]
+        description: "Number of tickets in this transaction"
+        expr: QUANTITY
+        data_type: NUMBER
+      - name: unit_price
+        description: "Price per ticket"
+        expr: UNIT_PRICE
+        data_type: NUMBER
+      - name: total_amount
+        synonyms: ["revenue", "ticket revenue", "sales amount"]
+        description: "Total transaction amount"
+        expr: TOTAL_AMOUNT
+        data_type: NUMBER
+      - name: discount_amount
+        description: "Discount amount applied"
+        expr: DISCOUNT_AMOUNT
+        data_type: NUMBER
+      - name: visitors_admitted
+        synonyms: ["visitors", "admissions", "attendance"]
+        description: "Number of visitors admitted at gate scan"
+        expr: VISITORS_ADMITTED
+        data_type: NUMBER
+    metrics:
+      - name: total_ticket_revenue
+        synonyms: ["ticket sales", "admission revenue"]
+        description: "Total ticket sales revenue"
+        expr: SUM(TOTAL_AMOUNT)
+      - name: total_tickets_sold
+        synonyms: ["tickets sold count"]
+        description: "Total number of tickets sold"
+        expr: SUM(QUANTITY)
+      - name: total_visitors
+        synonyms: ["attendance", "total attendance", "visitors admitted"]
+        description: "Total visitors admitted through gates"
+        expr: SUM(VISITORS_ADMITTED)
+      - name: avg_ticket_price
+        synonyms: ["average ticket price", "ATP"]
+        description: "Average ticket price"
+        expr: AVG(UNIT_PRICE)
+      - name: discount_rate
+        description: "Percentage of transactions with a discount"
+        expr: AVG(CASE WHEN IS_DISCOUNTED THEN 1.0 ELSE 0.0 END)
+      - name: transaction_count
+        description: "Number of ticket transactions"
+        expr: COUNT(DISTINCT TRANSACTION_ID)
+
+  - name: retail_sales
+    description: "Retail line items from CounterPoint (in-store) and Shopify (online)"
+    base_table:
+      database: NS11MM_DW_DEV
+      schema: MARTS
+      table: FCT_RETAIL_LINE_ITEMS
+    dimensions:
+      - name: retail_channel
+        synonyms: ["sales channel", "store type"]
+        description: "Retail source: counterpoint (in-store) or shopify (online)"
+        expr: RETAIL_CHANNEL
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["counterpoint", "shopify"]
+      - name: item_category
+        synonyms: ["product category", "category"]
+        description: "Product category from CounterPoint"
+        expr: ITEM_CATEGORY
+        data_type: VARCHAR
+      - name: item_name
+        synonyms: ["product name", "product"]
+        description: "Product name"
+        expr: ITEM_NAME
+        data_type: VARCHAR
+      - name: payment_method
+        description: "Payment method used"
+        expr: PAYMENT_METHOD
+        data_type: VARCHAR
+    time_dimensions:
+      - name: transaction_date
+        synonyms: ["sale date", "purchase date"]
+        description: "Date of retail transaction"
+        expr: TRANSACTION_DATE
+        data_type: DATE
+    facts:
+      - name: quantity
+        synonyms: ["units sold"]
+        description: "Quantity of items sold"
+        expr: QUANTITY
+        data_type: NUMBER
+      - name: unit_price
+        description: "Price per unit"
+        expr: UNIT_PRICE
+        data_type: NUMBER
+      - name: total_amount
+        synonyms: ["revenue", "retail revenue"]
+        description: "Total line item amount"
+        expr: TOTAL_AMOUNT
+        data_type: NUMBER
+      - name: discount_amount
+        description: "Discount applied"
+        expr: DISCOUNT_AMOUNT
+        data_type: NUMBER
+    metrics:
+      - name: total_retail_revenue
+        synonyms: ["retail sales", "store revenue", "gift shop revenue"]
+        description: "Total retail revenue across all channels"
+        expr: SUM(TOTAL_AMOUNT)
+      - name: total_units_sold
+        description: "Total retail units sold"
+        expr: SUM(QUANTITY)
+      - name: avg_order_value
+        synonyms: ["AOV"]
+        description: "Average order value"
+        expr: AVG(TOTAL_AMOUNT)
+      - name: online_revenue
+        description: "Revenue from Shopify online store"
+        expr: SUM(CASE WHEN RETAIL_CHANNEL = 'shopify' THEN TOTAL_AMOUNT ELSE 0 END)
+      - name: in_store_revenue
+        description: "Revenue from CounterPoint in-store"
+        expr: SUM(CASE WHEN RETAIL_CHANNEL = 'counterpoint' THEN TOTAL_AMOUNT ELSE 0 END)
+
+  - name: dates
+    description: "Date dimension with fiscal calendar and commemoration day flag"
+    base_table:
+      database: NS11MM_DW_DEV
+      schema: MARTS
+      table: DIM_DATE
+    dimensions:
+      - name: date_id
+        description: "Calendar date (primary key)"
+        expr: DATE_ID
+        data_type: DATE
+        unique: true
+      - name: day_of_week_name
+        synonyms: ["day name", "weekday"]
+        description: "Day of week name (Mon, Tue, etc.)"
+        expr: DAY_OF_WEEK_NAME
+        data_type: VARCHAR
+      - name: month_name
+        synonyms: ["month"]
+        description: "Month name"
+        expr: MONTH_NAME
+        data_type: VARCHAR
+      - name: fiscal_year
+        synonyms: ["FY", "fiscal"]
+        description: "NS11MM fiscal year (Oct-Sep)"
+        expr: FISCAL_YEAR
+        data_type: NUMBER
+      - name: is_weekend
+        description: "Whether the date falls on a weekend"
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: is_commemoration_day
+        synonyms: ["anniversary", "9/11"]
+        description: "September 11 anniversary — structural anomaly day"
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+
+  - name: daily_operations
+    description: "Daily aggregated operations metrics: visitors, ticket revenue, retail revenue"
+    base_table:
+      database: NS11MM_DW_DEV
+      schema: MARTS
+      table: FCT_DAILY_OPERATIONS
+    dimensions:
+      - name: visit_date
+        expr: VISIT_DATE
+        data_type: DATE
+    time_dimensions:
+      - name: visit_date
+        synonyms: ["date", "operating date"]
+        description: "Date of operations"
+        expr: VISIT_DATE
+        data_type: DATE
+    facts:
+      - name: total_visitors
+        synonyms: ["attendance", "visitors"]
+        description: "Total visitors admitted through gates"
+        expr: TOTAL_VISITORS
+        data_type: NUMBER
+      - name: valid_scans
+        description: "Valid gate scans"
+        expr: VALID_SCANS
+        data_type: NUMBER
+      - name: gates_active
+        description: "Number of active gates"
+        expr: GATES_ACTIVE
+        data_type: NUMBER
+      - name: ticket_transactions
+        description: "Number of ticket transactions"
+        expr: TICKET_TRANSACTIONS
+        data_type: NUMBER
+      - name: tickets_sold
+        description: "Total tickets sold"
+        expr: TICKETS_SOLD
+        data_type: NUMBER
+      - name: ticket_revenue
+        synonyms: ["admission revenue"]
+        description: "Gross ticket revenue"
+        expr: TICKET_REVENUE
+        data_type: NUMBER
+      - name: ticket_discounts
+        description: "Total ticket discounts"
+        expr: TICKET_DISCOUNTS
+        data_type: NUMBER
+      - name: retail_transactions
+        description: "Number of retail transactions"
+        expr: RETAIL_TRANSACTIONS
+        data_type: NUMBER
+      - name: retail_revenue
+        synonyms: ["gift shop revenue"]
+        description: "Gross retail revenue"
+        expr: RETAIL_REVENUE
+        data_type: NUMBER
+      - name: total_revenue
+        synonyms: ["combined revenue"]
+        description: "Ticket + retail revenue"
+        expr: TOTAL_REVENUE
+        data_type: NUMBER
+      - name: retail_revenue_per_visitor
+        synonyms: ["retail per cap"]
+        description: "Retail revenue per visitor"
+        expr: RETAIL_REVENUE_PER_VISITOR
+        data_type: FLOAT
+      - name: identified_ticket_buyers
+        description: "Ticket buyers with identified email/phone"
+        expr: IDENTIFIED_TICKET_BUYERS
+        data_type: NUMBER
+    metrics:
+      - name: avg_daily_visitors
+        synonyms: ["average attendance"]
+        description: "Average daily visitor count"
+        expr: AVG(TOTAL_VISITORS)
+      - name: avg_daily_revenue
+        description: "Average daily total revenue"
+        expr: AVG(TOTAL_REVENUE)
+      - name: total_operating_revenue
+        description: "Total revenue across all days"
+        expr: SUM(TOTAL_REVENUE)
+      - name: identification_rate
+        description: "Percentage of ticket buyers with known identity"
+        expr: SUM(IDENTIFIED_TICKET_BUYERS)::FLOAT / NULLIF(SUM(TICKET_TRANSACTIONS), 0)
+
+  - name: ticket_availability
+    description: "Real-time ticket capacity and utilization for demand management"
+    base_table:
+      database: NS11MM_DW_DEV
+      schema: MARTS
+      table: FCT_TICKET_AVAILABILITY
+    dimensions:
+      - name: ticket_type
+        synonyms: ["ticket category"]
+        description: "Ticket type/category"
+        expr: TICKET_TYPE
+        data_type: VARCHAR
+      - name: day_name
+        expr: DAY_NAME
+        data_type: VARCHAR
+      - name: demand_level
+        synonyms: ["demand status"]
+        description: "Demand classification: Sold Out, High Demand, Moderate, Low, Very Low"
+        expr: DEMAND_LEVEL
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Sold Out", "High Demand", "Moderate", "Low", "Very Low"]
+      - name: is_weekend
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: fiscal_year
+        expr: FISCAL_YEAR
+        data_type: NUMBER
+    time_dimensions:
+      - name: entry_date
+        synonyms: ["date", "visit date"]
+        description: "Date of entry"
+        expr: ENTRY_DATE
+        data_type: DATE
+    facts:
+      - name: ticket_capacity
+        synonyms: ["capacity", "available capacity"]
+        description: "Total ticket capacity"
+        expr: TICKET_CAPACITY
+        data_type: NUMBER
+      - name: tickets_reserved
+        synonyms: ["tickets sold", "reservations"]
+        description: "Tickets reserved/sold"
+        expr: TICKETS_RESERVED
+        data_type: NUMBER
+      - name: tickets_available
+        synonyms: ["remaining tickets"]
+        description: "Remaining available tickets"
+        expr: TICKETS_AVAILABLE
+        data_type: NUMBER
+      - name: utilization_pct
+        synonyms: ["occupancy", "fill rate"]
+        description: "Capacity utilization percentage"
+        expr: UTILIZATION_PCT
+        data_type: FLOAT
+    metrics:
+      - name: avg_utilization
+        synonyms: ["average occupancy"]
+        description: "Average capacity utilization"
+        expr: AVG(UTILIZATION_PCT)
+      - name: sold_out_days
+        description: "Number of sold-out time windows"
+        expr: COUNT(CASE WHEN DEMAND_LEVEL = 'Sold Out' THEN 1 END)
+      - name: total_capacity
+        description: "Total available capacity"
+        expr: SUM(TICKET_CAPACITY)
+
+relationships:
+  - name: ticket_sales_to_dates
+    left_table: ticket_sales
+    right_table: dates
+    relationship_columns:
+      - left_column: TRANSACTION_DATE
+        right_column: DATE_ID
+  - name: retail_sales_to_dates
+    left_table: retail_sales
+    right_table: dates
+    relationship_columns:
+      - left_column: TRANSACTION_DATE
+        right_column: DATE_ID
+  - name: daily_operations_to_dates
+    left_table: daily_operations
+    right_table: dates
+    relationship_columns:
+      - left_column: VISIT_DATE
+        right_column: DATE_ID
+  - name: ticket_availability_to_dates
+    left_table: ticket_availability
+    right_table: dates
+    relationship_columns:
+      - left_column: ENTRY_DATE
+        right_column: DATE_ID
+
+metrics:
+  - name: total_operations_revenue
+    synonyms: ["total revenue", "combined revenue"]
+    description: "Total revenue from tickets + retail"
+    expr: ticket_sales.total_ticket_revenue + retail_sales.total_retail_revenue
+  - name: revenue_per_visitor
+    synonyms: ["per capita spend", "spend per visitor"]
+    description: "Total revenue divided by visitors admitted"
+    expr: (ticket_sales.total_ticket_revenue + retail_sales.total_retail_revenue) / NULLIF(ticket_sales.total_visitors, 0)
+
+verified_queries:
+  - name: daily_attendance
+    question: "What is the daily attendance for the past 30 days?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT transaction_date, SUM(visitors_admitted) as total_visitors
+      FROM NS11MM_DW_DEV.MARTS.FCT_TICKET_SALES
+      WHERE transaction_date >= DATEADD('day', -30, CURRENT_DATE())
+      GROUP BY transaction_date
+      ORDER BY transaction_date
+  - name: revenue_by_visitor_type
+    question: "What is the revenue breakdown by visitor category?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT visitor_category, SUM(total_amount) as revenue, SUM(quantity) as tickets
+      FROM NS11MM_DW_DEV.MARTS.FCT_TICKET_SALES
+      GROUP BY visitor_category
+      ORDER BY revenue DESC
+  - name: retail_channel_comparison
+    question: "How does in-store retail compare to online sales?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT retail_channel, SUM(total_amount) as revenue, COUNT(DISTINCT transaction_id) as transactions
+      FROM NS11MM_DW_DEV.MARTS.FCT_RETAIL_LINE_ITEMS
+      GROUP BY retail_channel
+
+custom_instructions: |
+  The NS11MM fiscal year runs October through September.
+  September 11 is the commemoration anniversary and creates structural anomalies
+  across all metrics — exclude it from trend analysis unless specifically asked.
+  When asked about "attendance" or "visitors", use the visitors_admitted fact from ticket_sales.
+  When asked about "revenue" without qualification, include both ticket and retail revenue.

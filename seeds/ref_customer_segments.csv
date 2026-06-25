@@ -1,0 +1,4 @@
+segment_id,segment_name,segment_description
+1,Known Member,Customer with active or lapsed membership on record
+2,Identified Visitor,Customer with email/phone match but no membership
+3,Anonymous,No identity match available

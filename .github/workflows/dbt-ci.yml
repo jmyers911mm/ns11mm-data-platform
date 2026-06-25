@@ -1,0 +1,54 @@
+name: dbt CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'models/**'
+      - 'macros/**'
+      - 'tests/**'
+      - 'seeds/**'
+      - 'snapshots/**'
+      - 'dbt_project.yml'
+      - 'packages.yml'
+
+jobs:
+  dbt-ci:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_ACCOUNT: om01578.east-us.azure
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: TRANSFORMER_ROLE
+      SNOWFLAKE_WAREHOUSE: DBT_DEV_WH
+      SNOWFLAKE_DATABASE: NS11MM_DW_DEV_JMYERS
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: pip install dbt-snowflake==1.9.*
+
+      - name: dbt deps
+        run: dbt deps
+
+      - name: dbt parse (validate project)
+        run: dbt parse
+
+      - name: dbt compile (check SQL generation)
+        run: dbt compile
+
+      - name: dbt build --select state:modified+ (slim CI)
+        if: github.event_name == 'pull_request'
+        run: |
+          dbt build --select 'state:modified+' --defer --state ./state --target dev
+        continue-on-error: false
+
+      - name: SQLFluff lint
+        run: |
+          pip install sqlfluff sqlfluff-templater-dbt
+          sqlfluff lint models/ --dialect snowflake || true

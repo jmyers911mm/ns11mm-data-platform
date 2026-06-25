@@ -1,0 +1,83 @@
+version: 2
+
+models:
+  - name: ml_member_churn_features
+    description: "Feature table for member churn prediction model. Target: is_churned (binary)"
+    columns:
+      - name: contact_id
+        tests:
+          - unique
+          - not_null
+      - name: is_churned
+        description: "Binary label: 1 if membership expired/lapsed/grace period"
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: churn_risk_flag
+        description: "1 if active member with >60 days since last visit"
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+  - name: ml_donor_churn_features
+    description: "Feature table for donor churn/lapse prediction. Target: is_churned (binary)"
+    columns:
+      - name: contact_id
+        tests:
+          - unique
+          - not_null
+      - name: is_churned
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: recency_segment
+        tests:
+          - accepted_values:
+              values: ['Recent', 'Lapsing', 'Lapsed']
+
+  - name: ml_donor_upgrade_propensity_features
+    description: "Feature table for predicting donor tier upgrade likelihood"
+
+  - name: ml_ticket_demand_features
+    description: "Feature table for ticket demand forecasting with lag features and rolling averages"
+    columns:
+      - name: entry_date
+        tests:
+          - not_null
+      - name: ticket_type
+        tests:
+          - not_null
+
+  - name: ml_visitor_forecast_training
+    description: "Training dataset for daily visitor count forecasting model"
+
+  - name: ml_daily_visitor_features
+    description: "Daily visitor features with weather, calendar, and lagged visitor counts"
+
+  - name: ml_marketing_attribution_features
+    description: "First-touch and last-touch attribution features for converting web users"
+    columns:
+      - name: user_pseudo_id
+        tests:
+          - not_null
+
+  - name: ml_campaign_response_features
+    description: "Campaign response prediction features combining email engagement and transaction history"
+
+  - name: ml_email_send_time_features
+    description: "Optimal email send time prediction features based on historical open patterns"
+
+  - name: ml_dynamic_pricing_features
+    description: "Dynamic pricing model features: demand, capacity, day-of-week, lead time"
+
+  - name: ml_ticket_no_show_features
+    description: "No-show prediction features for reserved/pre-purchased tickets"
+
+  - name: ml_retail_cross_sell_features
+    description: "Cross-sell recommendation features based on purchase history and affinity"
+
+  - name: ml_ad_budget_optimization_features
+    description: "Ad budget allocation optimization features across Google and Meta channels"
+
+  - name: ml_ad_creative_features
+    description: "Ad creative performance features for creative optimization"

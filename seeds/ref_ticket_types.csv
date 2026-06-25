@@ -1,0 +1,11 @@
+ticket_type_id,ticket_type_name,ticket_category,is_timed_entry,default_price
+1,Adult General Admission,General,true,28.00
+2,Child General Admission,General,true,16.00
+3,Senior General Admission,General,true,22.00
+4,Member Adult,Member,true,0.00
+5,Member Child,Member,true,0.00
+6,Group Adult,Group,true,22.00
+7,Group Child,Group,true,12.00
+8,School Group,Educational,true,0.00
+9,Military,Special,true,0.00
+10,First Responder,Special,true,0.00

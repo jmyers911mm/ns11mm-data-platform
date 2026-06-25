@@ -1,0 +1,36 @@
+# NS11MM Data Platform — Terraform Deploy: staging
+# Manual trigger only
+
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  TF_VAR_FILE: environments/staging.tfvars.json
+  ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+  ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+  ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+  ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+steps:
+  - task: TerraformInstaller@1
+    inputs:
+      terraformVersion: '1.5.x'
+
+  - script: terraform init
+    workingDirectory: terraform/
+    displayName: Terraform Init
+
+  - script: terraform plan -var-file=$(TF_VAR_FILE) -out=tfplan
+    workingDirectory: terraform/
+    displayName: Terraform Plan
+
+    - task: ManualValidation@0
+    displayName: Approve deployment to staging
+    inputs:
+      instructions: 'Review Terraform plan above before approving staging deployment'
+
+  - script: terraform apply tfplan
+    workingDirectory: terraform/
+    displayName: Terraform Apply

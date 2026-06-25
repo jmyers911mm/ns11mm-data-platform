@@ -1,0 +1,8 @@
+channel_id,channel_name,channel_type,is_paid,platform
+1,Paid Search,Digital,true,Google
+2,Paid Social - Facebook,Digital,true,Meta
+3,Paid Social - Instagram,Digital,true,Meta
+4,Organic Search,Digital,false,Google
+5,Email,Digital,false,Salesforce MC
+6,Direct,Digital,false,
+7,Referral,Digital,false,

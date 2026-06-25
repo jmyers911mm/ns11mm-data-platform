@@ -1,0 +1,2 @@
+# API path: no additions beyond requirements-shared.txt
+# DB path (if ADR decision changes): add pymysql==1.1.0 (MySQL) or psycopg2-binary==2.9.9 (PostgreSQL)
