@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: silver_gateway__ticket_journal_lines
+  - name: int_gateway__ticket_journal_lines
     description: >
       Enriched Gateway ticket journal lines (JnlDetails jnl_code_id = 101),
       joined to tickets, items, vAttribute, COA, disbursement and events.
@@ -19,7 +19,7 @@ models:
           - accepted_values:
               values: [0, 1]
 
-  - name: silver_gateway__item_journal_lines
+  - name: int_gateway__item_journal_lines
     description: >
       Enriched Gateway item journal lines (JnlDetails jnl_code_id 102-104).
       Feeds audio guide, service fee and ticketing donation metrics.
@@ -27,31 +27,31 @@ models:
       - name: key_date
         data_tests: [not_null]
 
-  - name: silver_dpr__tour_revenue
+  - name: int_dpr__tour_revenue
     description: Guided/virtual/field-trip tour quantities and revenue per day.
     columns:
       - name: key_date
         data_tests: [not_null, unique]
 
-  - name: silver_dpr__fees_and_services
+  - name: int_dpr__fees_and_services
     description: Service fees, audio guide revenue, memorial+museum tour per day.
     columns:
       - name: key_date
         data_tests: [not_null, unique]
 
-  - name: silver_dpr__retail
+  - name: int_dpr__retail
     description: CounterPoint retail gross profit, MUS AG, and retail donations per day.
     columns:
       - name: key_date
         data_tests: [not_null, unique]
 
-  - name: silver_dpr__donations
+  - name: int_dpr__donations
     description: Gateway ticketing/box/exit donations per day.
     columns:
       - name: key_date
         data_tests: [not_null, unique]
 
-  - name: silver_dpr__admissions
+  - name: int_dpr__admissions
     description: >
       GA tickets sold, ticket revenue, scanned-GA attendance proxy and
       CityPASS/C3 pass revenue per day. Partial attendance (see model header

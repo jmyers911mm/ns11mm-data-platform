@@ -1,6 +1,6 @@
 /*
   fct_ticket_availability
-  Source: silver_ticket_inventory + dim_date
+  Source: int_ticket_inventory + dim_date
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
@@ -16,7 +16,7 @@
 }}
 
 with inventory as (
-    select * from {{ ref('silver_ticket_inventory') }}
+    select * from {{ ref('int_ticket_inventory') }}
     {% if is_incremental() %}
     where entry_date >= (select max(entry_date) - 7 from {{ this }})
     {% endif %}

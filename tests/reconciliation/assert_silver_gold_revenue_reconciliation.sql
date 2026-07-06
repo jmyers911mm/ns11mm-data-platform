@@ -2,9 +2,9 @@
 -- Validates that Gold revenue totals reconcile with Silver source within 0.1%
 -- STATUS: Awaiting production models
 /*
-with silver_revenue as (
+with int_revenue as (
     select sum(transaction_amount) as total
-    from {{ ref('silver_pos_tickets') }}
+    from {{ ref('int_pos_tickets') }}
     where transaction_date >= '2024-01-01'
 ),
 gold_revenue as (
@@ -14,7 +14,7 @@ gold_revenue as (
 ),
 check as (
     select abs(s.total - g.total) / nullif(s.total, 0) as diff_pct
-    from silver_revenue s, gold_revenue g
+    from int_revenue s, gold_revenue g
 )
 select diff_pct from check where diff_pct > 0.001
 */

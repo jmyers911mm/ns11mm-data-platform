@@ -26,8 +26,8 @@
 {% endset %}
 {% do run_query(log_sql) %}
 
-{# --- INTERMEDIATE: silver_sf_crm --- #}
-{% set silver_crm_sql %}
+{# --- INTERMEDIATE: int_sf_crm --- #}
+{% set int_crm_sql %}
     UPDATE {{ target.database }}.INTERMEDIATE.SILVER_SF_CRM
     SET
         first_name = {{ anon_name }},
@@ -37,54 +37,54 @@
         phone = {{ anon_phone }}
     WHERE LOWER(TRIM(email)) = '{{ email_lower }}';
 {% endset %}
-{% set result = run_query(silver_crm_sql) %}
+{% set result = run_query(int_crm_sql) %}
 {{ log("GDPR Anonymization: Updated INTERMEDIATE.SILVER_SF_CRM", info=True) }}
 {% do tables_affected.append('INTERMEDIATE.SILVER_SF_CRM') %}
 
-{# --- INTERMEDIATE: silver_pos_tickets --- #}
-{% set silver_tickets_sql %}
+{# --- INTERMEDIATE: int_pos_tickets --- #}
+{% set int_tickets_sql %}
     UPDATE {{ target.database }}.INTERMEDIATE.SILVER_POS_TICKETS
     SET
         customer_email = {{ anon_email }},
         customer_phone = {{ anon_phone }}
     WHERE LOWER(TRIM(customer_email)) = '{{ email_lower }}';
 {% endset %}
-{% set result = run_query(silver_tickets_sql) %}
+{% set result = run_query(int_tickets_sql) %}
 {{ log("GDPR Anonymization: Updated INTERMEDIATE.SILVER_POS_TICKETS", info=True) }}
 {% do tables_affected.append('INTERMEDIATE.SILVER_POS_TICKETS') %}
 
-{# --- INTERMEDIATE: silver_pos_retail --- #}
-{% set silver_retail_sql %}
+{# --- INTERMEDIATE: int_pos_retail --- #}
+{% set int_retail_sql %}
     UPDATE {{ target.database }}.INTERMEDIATE.SILVER_POS_RETAIL
     SET
         customer_email = {{ anon_email }},
         customer_phone = {{ anon_phone }}
     WHERE LOWER(TRIM(customer_email)) = '{{ email_lower }}';
 {% endset %}
-{% set result = run_query(silver_retail_sql) %}
+{% set result = run_query(int_retail_sql) %}
 {{ log("GDPR Anonymization: Updated INTERMEDIATE.SILVER_POS_RETAIL", info=True) }}
 {% do tables_affected.append('INTERMEDIATE.SILVER_POS_RETAIL') %}
 
-{# --- INTERMEDIATE: silver_sf_marketing_cloud --- #}
-{% set silver_mc_sql %}
+{# --- INTERMEDIATE: int_sf_marketing_cloud --- #}
+{% set int_mc_sql %}
     UPDATE {{ target.database }}.INTERMEDIATE.SILVER_SF_MARKETING_CLOUD
     SET
         email_address = {{ anon_email }}
     WHERE LOWER(TRIM(email_address)) = '{{ email_lower }}';
 {% endset %}
-{% set result = run_query(silver_mc_sql) %}
+{% set result = run_query(int_mc_sql) %}
 {{ log("GDPR Anonymization: Updated INTERMEDIATE.SILVER_SF_MARKETING_CLOUD", info=True) }}
 {% do tables_affected.append('INTERMEDIATE.SILVER_SF_MARKETING_CLOUD') %}
 
-{# --- INTERMEDIATE: silver_shopify --- #}
-{% set silver_shopify_sql %}
+{# --- INTERMEDIATE: int_shopify --- #}
+{% set int_shopify_sql %}
     UPDATE {{ target.database }}.INTERMEDIATE.SILVER_SHOPIFY
     SET
         customer_email = {{ anon_email }},
         customer_phone = {{ anon_phone }}
     WHERE LOWER(TRIM(customer_email)) = '{{ email_lower }}';
 {% endset %}
-{% set result = run_query(silver_shopify_sql) %}
+{% set result = run_query(int_shopify_sql) %}
 {{ log("GDPR Anonymization: Updated INTERMEDIATE.SILVER_SHOPIFY", info=True) }}
 {% do tables_affected.append('INTERMEDIATE.SILVER_SHOPIFY') %}
 

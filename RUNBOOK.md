@@ -54,7 +54,7 @@ FROM NS11MM_DW_PROD.MARTS.FCT_DAILY_OPERATIONS;
 | Run tests | `dbt test` |
 | Slim CI (modified only) | `dbt build -s 'state:modified+' --defer --state ./state` |
 | Validate before deploy | `dbt run-operation validate_before_deploy` |
-| Compare model to prod | `dbt run-operation compare_model_to_prod --args '{"model_name": "fct_ticket_sales"}'` |
+| Compare model to prod | `dbt run-operation compare_model_to_prod --args '{"model_name": "fct_daily_performance"}'` |
 | Create ticket forecast | `dbt run-operation create_ticket_demand_forecast` |
 | Sync verified queries | `dbt run-operation sync_verified_queries` |
 | Full refresh a model | `dbt run -s my_model --full-refresh` |
@@ -68,4 +68,3 @@ FROM NS11MM_DW_PROD.MARTS.FCT_DAILY_OPERATIONS;
 | **Suspend one alert** | `CALL NS11MM_DW_DEV.MONITORING.MANAGE_ALERTS('SUSPEND', 'ALERT_DBT_RUN_FAILURES')` |
 | Execute deployed dbt project | `EXECUTE DBT PROJECT NS11MM_DW_DEV.PUBLIC.NS11MM_DATA_PLATFORM ARGS = 'build'` |
 
->>>>>>> remote

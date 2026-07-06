@@ -47,4 +47,4 @@ Two ADRs are currently blocking work:
 
 **ADR-007 — Drupal ingestion path:** Blocks `stg_drupal__pages.sql` completion. Requires Jeremy + Anna Kim + Kenny.
 
-**ADR-008 — Retail source split:** Blocks `silver_pos_retail.sql` and `fct_retail_line_items.sql`. Recommendation is Option A (unified with channel flag). Requires Jeremy's sign-off.
+**ADR-008 — Retail source split:** Blocks `int_pos_retail.sql` and `fct_retail_line_items.sql`. Recommendation is Option A (unified with channel flag). Requires Jeremy's sign-off.

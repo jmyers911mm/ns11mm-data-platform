@@ -18,7 +18,6 @@ Reusable schema test macros for the NS11MM data platform.
 | `positive_value` | Fails if any row has a negative value in the specified column |
 | `value_between` | Fails if any row's value is outside min/max bounds |
 
->>>>>>> remote
 ## Usage
 
 ```yaml
@@ -43,5 +42,4 @@ models:
         tests:
           - null_rate_threshold:
               threshold: 0.3
->>>>>>> remote
 ```

@@ -1,6 +1,6 @@
 /*
   dim_gate
-  Source: silver_ticket_scans
+  Source: int_ticket_scans
   STATUS: Awaiting RAW data.
   Gate names/locations are hardcoded mappings — update once Gateway schema confirmed.
 */
@@ -9,7 +9,7 @@
 
 with gates as (
     select distinct gate_id
-    from {{ ref('silver_ticket_scans') }}
+    from {{ ref('int_ticket_scans') }}
     where gate_id is not null
 )
 

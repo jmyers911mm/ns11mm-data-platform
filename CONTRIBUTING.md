@@ -22,29 +22,23 @@ main (production)
 # 1. Navigate to your local repo
 
 cd C:\Users\<your-username>\ns11mm-data-platform
->>>>>>> remote
 
 # 2. Configure Snowflake CLI (see Snowflake CLI Setup section below)
->>>>>>> remote
 #    Set password as environment variable (never hardcode in scripts)
 $env:SNOWFLAKE_PASSWORD = "<your_password>"
 
 snow connection test --connection museum    # approve DUO notification
->>>>>>> remote
 
 # 3. Clone the repo (first time only)
 git clone https://github.com/ns11mm/ns11mm-data-platform.git
 cd ns11mm-data-platform
->>>>>>> remote
 
 # 4. Set up Python + dbt (first time only)
 py -3.12 -m venv .venv
 & .venv\Scripts\Activate.ps1
 pip install dbt-core dbt-snowflake
->>>>>>> remote
 
 # 5. Pull latest from main
->>>>>>> remote
 git pull origin main
 
 # 6. Create a feature branch
@@ -65,7 +59,6 @@ gh pr create --title "<PR title>" --body "<PR description>" --base main --head f
 git checkout main
 git pull origin main
 dbt build
->>>>>>> remote
 ```
 
 ### Commit Messages
@@ -85,7 +78,6 @@ docs: update runbook with quarantine steps
 ```
 NS11MM_DW_DEV_JMYERS    ← Jeremy personal sandbox  (TRANSFORMER_ROLE)
 
->>>>>>> remote
 NS11MM_DW_DEV           ← Shared dev / integration  (DEPLOY_DEV_ROLE — Jeremy only)
 NS11MM_DW_PROD          ← Production                (DEPLOY_PROD_ROLE — Jeremy only)
 ```
@@ -97,7 +89,6 @@ The flow is: **personal sandbox → PR → shared dev → prod**. Developers nev
 When a new developer joins, Jeremy creates `NS11MM_DW_DEV_<USERNAME>` and grants `TRANSFORMER_ROLE`.
 
 
->>>>>>> remote
 ---
 
 ## Schema names
@@ -123,7 +114,6 @@ VS Code (local)  →  GitHub PR  →  NS11MM_DW_DEV_JMYERS  →  NS11MM_DW_DEV  
                          │                │                       │                    │
                     CI validates      TRANSFORMER_ROLE       DEPLOY_DEV_ROLE     DEPLOY_PROD_ROLE
                     (auto)           (you, daily)           (you, after PR)     (you, after validation)
->>>>>>> remote
 ```
 
 ### Step by step
@@ -142,7 +132,6 @@ VS Code (local)  →  GitHub PR  →  NS11MM_DW_DEV_JMYERS  →  NS11MM_DW_DEV  
 | 10 | Update CHANGELOG.md | — | Document what shipped |
 
 ### Validation between tiers
->>>>>>> remote
 ```sql
 -- Compare personal dev vs shared dev
 SELECT 'JMYERS' as env, COUNT(*) as rows FROM NS11MM_DW_DEV_JMYERS.MARTS.FCT_TICKET_SALES
@@ -154,7 +143,6 @@ SELECT 'DEV' as env, COUNT(*) as rows FROM NS11MM_DW_DEV.MARTS.FCT_TICKET_SALES
 UNION ALL
 SELECT 'PROD', COUNT(*) FROM NS11MM_DW_PROD.MARTS.FCT_TICKET_SALES;
 ```
->>>>>>> remote
 ### Rollback
 
 If something goes wrong in production:
@@ -390,6 +378,11 @@ If production needs an urgent fix and Jeremy is unavailable:
 ---
 
 ## Verified Query (VQR) Workflow
+
+> **[PLANNED]** The `analyses/verified_queries/` library was removed in release 1.3.1 because
+> it referenced disabled models, and there is no Cortex Agent yet. This workflow returns when
+> the verified-query library is re-established against enabled marts. Until then, verified
+> queries for the live DPR scope live inline in `semantic_models/dpr.yaml`.
 
 Verified queries live in `analyses/verified_queries/` organized by business domain. They are the source of truth for what the Cortex Agent knows how to answer accurately.
 

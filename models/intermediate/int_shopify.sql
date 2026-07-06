@@ -1,5 +1,5 @@
 /*
-  silver_shopify
+  int_shopify
   Source: stg_shopify__orders
   STATUS: Awaiting RAW data. New model — no POC equivalent.
 */

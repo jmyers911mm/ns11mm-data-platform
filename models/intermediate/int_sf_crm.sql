@@ -1,5 +1,5 @@
 /*
-  silver_sf_crm
+  int_sf_crm
   Source: stg_salesforce_nps__contacts + stg_salesforce_nps__opportunities
   Grain: one row per contact
   Enriches contacts with membership and donation data from Opportunities.

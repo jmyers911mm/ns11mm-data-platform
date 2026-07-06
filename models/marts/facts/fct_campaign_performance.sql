@@ -1,6 +1,6 @@
 /*
   fct_campaign_performance
-  Source: silver_sf_marketing_cloud
+  Source: int_sf_marketing_cloud
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
@@ -34,5 +34,5 @@ select
         nullif(count(case when event_type = 'Sent' then 1 end), 0)
     ) * 100, 2)                                             as unsubscribe_rate_pct,
     current_timestamp()                                     as _loaded_at
-from {{ ref('silver_sf_marketing_cloud') }}
+from {{ ref('int_sf_marketing_cloud') }}
 group by campaign_id, campaign_name

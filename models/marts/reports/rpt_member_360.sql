@@ -1,6 +1,6 @@
 /*
   rpt_member_360
-  Sources: dim_customer + fct_ticket_sales + fct_retail_line_items + fct_fundraising + silver_sf_marketing_cloud
+  Sources: dim_customer + fct_ticket_sales + fct_retail_line_items + fct_fundraising + int_sf_marketing_cloud
   STATUS: Awaiting RAW data. Logic migrated from POC. Added Classy donations.
 */
 
@@ -48,7 +48,7 @@ email_agg as (
         count(distinct case when event_type = 'Click' then campaign_id end) as email_clicks,
         count(distinct case when event_type = 'Sent'  then campaign_id end) as emails_received,
         max(case when event_type = 'Open' then event_date end)              as last_email_open_date
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     group by email_address
 )
 

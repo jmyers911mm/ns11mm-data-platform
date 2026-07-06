@@ -20,11 +20,11 @@
 {{ config(materialized='view') }}
 
 with item_lines as (
-    select * from {{ ref('silver_gateway__item_journal_lines') }}
+    select * from {{ ref('int_gateway__item_journal_lines') }}
 ),
 
 ticket_lines as (
-    select * from {{ ref('silver_gateway__ticket_journal_lines') }}
+    select * from {{ ref('int_gateway__ticket_journal_lines') }}
 ),
 
 fees as (

@@ -1,6 +1,6 @@
 /*
   bridge_session_customer
-  Sources: silver_google_analytics + dim_customer + fct_ticket_sales
+  Sources: int_google_analytics + dim_customer + fct_ticket_sales
   STATUS: Awaiting RAW data. Logic migrated from POC.
   Links converting GA4 sessions to resolved customers via email match
   on same-day ticket purchase. Used for multi-touch attribution.
@@ -18,7 +18,7 @@ with ga_sessions as (
         channel_grouping,
         page_category,
         conversions > 0                                     as is_conversion
-    from {{ ref('silver_google_analytics') }}
+    from {{ ref('int_google_analytics') }}
     where conversions > 0
 ),
 

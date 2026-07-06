@@ -1,5 +1,5 @@
 /*
-  silver_blackbaud
+  int_blackbaud
   Source: stg_blackbaud__journal_entries
   STATUS: Awaiting RAW data. New model — no POC equivalent.
   NOTE: See pipeline notes on batch-by-batch extraction requirement.

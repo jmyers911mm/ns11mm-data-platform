@@ -1,5 +1,10 @@
 # Metric Glossary
 
+> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
+> sources are connected, feeding the Daily Performance Report. Other sources, models, and
+> domains described below are part of the target design but are currently `enabled=false` /
+> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+
 Plain-English definitions for every certified metric and key term on the Museum Data Platform. This is the **tie-breaker**: if two numbers disagree, the definition here is the source of truth.
 
 Each metric shows what it means, roughly how it's calculated (no code), and where you'll see it. The technical, code-level definitions live in the dbt project; the authoritative business catalog (with owners and approval dates) lives in the Hub's **Metric Registry**.
@@ -16,7 +21,6 @@ These terms appear across many metrics, so they're defined once here.
 | --- | --- |
 
 | **Fiscal year / quarter** | Our financial calendar starts in **October**, not January. "FY26" runs October 2025–September 2026. Every dashboard with a fiscal view uses this. |
->>>>>>> remote
 | **Customer (resolved)** | One real person, even if they appear in several systems. We link records that share an email **or** phone number, so a single visitor isn't counted three times. |
 | **Known Member** | A resolved customer who matches a record in our CRM (Salesforce). We know who they are. |
 | **Identified Visitor** | A resolved customer we can recognize by email or phone, but who isn't in the CRM. |

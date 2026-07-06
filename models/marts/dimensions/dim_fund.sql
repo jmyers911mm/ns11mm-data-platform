@@ -7,7 +7,7 @@
 {{ config(materialized='table') }}
 
 -- PLACEHOLDER: Replace with production source ref
--- Source: stg_blackbaud__accounts -> silver_blackbaud -> this model
+-- Source: stg_blackbaud__accounts -> int_blackbaud -> this model
 select
     null::varchar as fund_id,
     'placeholder — awaiting Blackbaud RAW connection' as status

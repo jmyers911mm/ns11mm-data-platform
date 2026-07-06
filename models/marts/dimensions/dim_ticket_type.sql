@@ -1,6 +1,6 @@
 /*
   dim_ticket_type
-  Source: silver_pos_tickets + ref_ticket_types seed
+  Source: int_pos_tickets + ref_ticket_types seed
   STATUS: Awaiting RAW data.
   Seed provides reference data; Silver provides actuals from Gateway.
 */
@@ -13,7 +13,7 @@ with from_silver as (
         ticket_type_id  as ticket_type_name,
         visitor_category,
         unit_price      as standard_price
-    from {{ ref('silver_pos_tickets') }}
+    from {{ ref('int_pos_tickets') }}
 ),
 
 from_seed as (

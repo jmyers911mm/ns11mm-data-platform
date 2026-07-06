@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: silver_sf_crm
+  - name: int_sf_crm
     description: "Enriched CRM contacts with membership and donation data from Salesforce Opportunities"
     columns:
       - name: contact_id
@@ -24,7 +24,7 @@ models:
 
 
 
-  - name: silver_sf_marketing_cloud
+  - name: int_sf_marketing_cloud
     description: "Marketing Cloud email engagement events (sends, opens, clicks, bounces, unsubscribes)"
     columns:
       - name: send_id
@@ -42,7 +42,7 @@ models:
         tests:
           - not_null
 
-  - name: silver_shopify
+  - name: int_shopify
     description: "Cleaned Shopify orders excluding test orders, with derived revenue metrics"
     columns:
       - name: order_id
@@ -54,7 +54,7 @@ models:
         tests:
           - not_null
 
-  - name: silver_classy
+  - name: int_classy
     description: "GoFundMe Pro / Classy donation transactions with recurring flag"
     columns:
       - name: transaction_id
@@ -66,7 +66,7 @@ models:
         tests:
           - not_null
 
-  - name: silver_blackbaud
+  - name: int_blackbaud
     description: "Blackbaud Financial Edge NXT journal entries with posting type derivation"
     columns:
       - name: journal_entry_id
@@ -80,7 +80,7 @@ models:
           - accepted_values:
               values: ['Actual', 'Encumbrance']
 
-  - name: silver_google_analytics
+  - name: int_google_analytics
     description: "GA4 session-level web analytics with derived channel grouping and page categories"
     columns:
       - name: hashdiff
@@ -94,10 +94,10 @@ models:
           - accepted_values:
               values: ['Paid Search', 'Paid Social', 'Organic Search', 'Email', 'Direct', 'Other']
 
-  - name: silver_google_ads
+  - name: int_google_ads
     description: "Google Ads campaign performance metrics"
 
-  - name: silver_meta_ads
+  - name: int_meta_ads
     description: "Meta (Facebook/Instagram) Ads campaign performance metrics"
 
 

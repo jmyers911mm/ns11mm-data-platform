@@ -1,6 +1,6 @@
 /*
   ml_email_send_time_features
-  Source: silver_sf_marketing_cloud
+  Source: int_sf_marketing_cloud
   STATUS: Awaiting RAW data. Logic migrated from POC — updated refs.
   Identifies optimal email send time per subscriber.
 */
@@ -13,7 +13,7 @@ with campaign_sends as (
         event_date::timestamp                              as send_timestamp,
         extract(hour from event_date::timestamp)           as send_hour,
         extract(dow from event_date::timestamp)            as send_dow
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     where event_type = 'Sent'
 ),
 
@@ -22,7 +22,7 @@ campaign_opens as (
         subscriber_key, campaign_id,
         min(event_date::timestamp)                         as first_open_timestamp,
         extract(hour from min(event_date::timestamp))      as open_hour
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     where event_type = 'Open'
     group by subscriber_key, campaign_id
 ),
@@ -34,7 +34,7 @@ subscriber_history as (
         count(distinct case when event_type = 'Open' then campaign_id end) as total_opens,
         div0(count(distinct case when event_type = 'Open' then campaign_id end)::float,
              count(distinct case when event_type = 'Sent' then campaign_id end)) as historical_open_rate
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     group by subscriber_key
 )
 

@@ -1,13 +1,13 @@
 /*
   fct_retail_line_items
-  Sources: silver_pos_retail, dim_customer, dim_product
+  Sources: int_pos_retail, dim_customer, dim_product
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
 {{ config(enabled=false,materialized='table', cluster_by=['transaction_date', 'item_category']) }}
 
 with retail as (
-    select * from {{ ref('silver_pos_retail') }}
+    select * from {{ ref('int_pos_retail') }}
 ),
 
 customer_lookup as (

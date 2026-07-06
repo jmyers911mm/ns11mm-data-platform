@@ -4,6 +4,13 @@ Welcome. This page is written for everyone **outside** the data team — Develop
 
 If you've ever asked *"how many people visited last weekend?"*, *"how is the spring campaign performing?"*, or *"are we retaining members?"* — the answers live here, and this page tells you exactly where to find them.
 
+> **What's available today (July 2026):** the platform is being built in stages. The first
+> area to go live is **Revenue and Operations via the Daily Performance Report** — daily
+> tickets, tours, retail, donations, and fees from our ticketing (Gateway) and retail (CounterPoint)
+> systems. The other areas below (Membership, Donor Relations, Digital/Marketing, and the
+> attendance/capacity views) are **planned** and arrive as each source system is connected.
+> Rows marked *(planned)* below are not available yet.
+
 ---
 
 ## What this platform is, in one paragraph
@@ -14,7 +21,9 @@ The NS11MM Data Platform brings together information from our ticketing, retail,
 
 ## What questions can it answer?
 
-The platform is organized into six areas. Each area has certified metrics and at least one dashboard.
+The platform is organized into six areas. Each area has certified metric *definitions*; the
+dashboards behind them are being delivered in stages (see status note above). **Revenue and
+Operations** is live today via the Daily Performance Report; the rest are planned.
 
 | Area | Example questions it answers |
 | --- | --- |
@@ -31,15 +40,16 @@ The platform is organized into six areas. Each area has certified metrics and at
 
 Match your question to the dashboard that answers it. If you don't have access, see [How to get access](#how-to-get-access) below.
 
-| Your question | Dashboard | Best for |
-| --- | --- | --- |
-| "How did today/this week go across tickets, retail, and visitors?" | **Daily Operations** | Operations, leadership |
-| "Where and when are visitors coming in? Are we near capacity?" | **Capacity Planning** | Operations, Visitor Experience |
-| "How are members and donors trending? Who's lapsing or at risk?" | **Membership and Donors** | Membership, Development |
-| "How is the gift shop performing?" | **Retail Performance** | Operations, Retail |
-| "How is our email marketing performing?" | **Campaign Performance** | Marketing |
-| "What's a visitor worth over their lifetime?" | **Customer LTV** | Development, Membership |
-| "How are paid and organic channels driving revenue?" | **Digital Marketing** | Marketing, Digital |
+| Your question | Dashboard | Status | Best for |
+| --- | --- | --- | --- |
+| "How did today/this month go across tickets, tours, retail, and donations?" | **Daily Performance Report** | **Live** | Operations, Finance, leadership |
+| "How did today/this week go across tickets, retail, and visitors?" | Daily Operations | *(planned)* | Operations, leadership |
+| "Where and when are visitors coming in? Are we near capacity?" | Capacity Planning | *(planned)* | Operations, Visitor Experience |
+| "How are members and donors trending? Who's lapsing or at risk?" | Membership and Donors | *(planned)* | Membership, Development |
+| "How is the gift shop performing?" | Retail Performance | *(planned)* | Operations, Retail |
+| "How is our email marketing performing?" | Campaign Performance | *(planned)* | Marketing |
+| "What's a visitor worth over their lifetime?" | Customer LTV | *(planned)* | Development, Membership |
+| "How are paid and organic channels driving revenue?" | Digital Marketing | *(planned)* | Marketing, Digital |
 
 ---
 

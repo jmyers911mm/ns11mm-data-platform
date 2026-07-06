@@ -4,6 +4,12 @@
 > **Account:** om01578 (Azure East US)  
 > **Project:** ns11mm/ns11mm-data-platform
 
+> **Scope note:** this scorecard assesses the **target platform design**. Live today is the
+> Daily Performance Report slice (Gateway + CounterPoint): 21 staging, 8 intermediate, 6 marts,
+> 1 semantic view. Most non-DPR models are `enabled=false` pending source connectivity, and the
+> verified-query library was removed in 1.3.1. Counts elsewhere in this doc reflect the full
+> planned build, not what is currently enabled.
+
 ---
 
 ## Overall Score: 9.3 / 10
@@ -19,7 +25,7 @@
 | CI/CD & Deployment | 9/10 | GitHub Actions, deployed dbt project, PR-gated workflow — GitHub secrets not yet configured |
 | Disaster Recovery | 8/10 | 14-day time travel (PROD), weekly clone, 7-day (DEV) — cross-region replication blocked (account limitation) |
 | Documentation | 10/10 | 15+ docs: README, CONTRIBUTING, RUNBOOK, ONBOARDING, ADRs, DATA_CONTRACTS, METRIC_GLOSSARY, SQL_STYLE_GUIDE, PROJECT_MAP, ARCHITECTURE_FLOW, CHANGELOG |
-| Semantic Layer & AI | 9/10 | 4 semantic models, ML notebooks, Cortex Analyst ready — views not deployed (awaiting data) |
+| Semantic Layer & AI | 9/10 | 1 live DPR semantic view (MARTS.DPR); other domain views planned; ML feature models disabled pending sources |
 | Automation | 9/10 | on-run-end hooks (tags + masking), scheduled builds, docs gen — tasks not yet resumed |
 | Observability | 9/10 | query_tag per layer, audit views, credit tracking — no Streamlit monitoring dashboard |
 
@@ -55,7 +61,7 @@ All remaining items are "waiting on" blockers, not design gaps:
 | DR strategy | "We have Time Travel" | Time Travel (14d) + weekly zero-copy clone + (pending) replication |
 | Documentation coverage | README only | 15+ purpose-specific docs covering every audience |
 | CI/CD | Manual deploys | PR-gated CI + deployed native dbt project object |
-| Semantic layer | None or separate tool | 4 Cortex Analyst semantic views with verified queries |
+| Semantic layer | None or separate tool | 1 live Cortex Analyst semantic view (DPR); more planned as marts are enabled |
 | Data contracts | Informal/absent | Formal SLAs with freshness windows and quality thresholds |
 | Alert coverage | Credit monitors only | 5 proactive alerts + email notification |
 

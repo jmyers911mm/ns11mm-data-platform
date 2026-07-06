@@ -9,7 +9,7 @@
 --   t_fact_museum_audio_new, t_fact_memorial_audio_new,
 --   t_fact_service_fees_new, t_fact_museum_ticketing_donations_issued.
 --
--- ADR-001 / ADR-004 as per silver_gateway__ticket_journal_lines.
+-- ADR-001 / ADR-004 as per int_gateway__ticket_journal_lines.
 
 {{ config(materialized='view') }}
 

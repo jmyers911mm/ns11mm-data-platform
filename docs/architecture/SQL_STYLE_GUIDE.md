@@ -19,7 +19,6 @@ Conventions for SQL in the `ns11mm-data-platform` project. These are enforced wh
 | `fct_` | Gold fact | `fct_ticket_sales` | One row per event/grain. In MARTS. |
 | `rpt_` | Gold report | `rpt_daily_operations` | Pre-joined, denormalized. **The only MARTS surface Power BI should consume.** |
 | `ml_` | ML feature | `ml_donor_churn_features` | Feature-engineered tables in ML_FEATURES schema. |
->>>>>>> remote
 
 ### Columns
 

@@ -1,5 +1,5 @@
 /*
-  silver_google_ads
+  int_google_ads
   Source: stg_google_ads__campaigns
   STATUS: Awaiting RAW data.
   Logic migrated from POC with production refs.

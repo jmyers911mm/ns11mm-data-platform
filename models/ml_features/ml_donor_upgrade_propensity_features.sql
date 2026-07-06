@@ -1,6 +1,6 @@
 /*
   ml_donor_upgrade_propensity_features
-  Sources: dim_customer + rpt_customer_ltv + silver_sf_marketing_cloud + fct_donor_retention
+  Sources: dim_customer + rpt_customer_ltv + int_sf_marketing_cloud + fct_donor_retention
   STATUS: Awaiting RAW data. Logic migrated from POC — updated refs.
   Scores Known Members for likelihood to upgrade membership tier or increase giving.
 */
@@ -28,7 +28,7 @@ email_engagement as (
            count(distinct case when event_type = 'Sent'  then campaign_id end) as emails_received,
            div0(count(distinct case when event_type = 'Open' then campaign_id end)::float,
                 count(distinct case when event_type = 'Sent' then campaign_id end)) as open_rate
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     group by email_address
 )
 

@@ -1,13 +1,13 @@
 /*
   fct_ticket_sales
-  Sources: silver_pos_tickets, silver_ticket_scans, dim_customer
+  Sources: int_pos_tickets, int_ticket_scans, dim_customer
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
 {{ config(enabled=false,materialized='table', cluster_by=['transaction_date', 'ticket_type_id']) }}
 
 with tickets as (
-    select * from {{ ref('silver_pos_tickets') }}
+    select * from {{ ref('int_pos_tickets') }}
 ),
 
 scan_summary as (
@@ -17,7 +17,7 @@ scan_summary as (
         gate_id                                             as entry_gate,
         is_valid_scan,
         visitor_count
-    from {{ ref('silver_ticket_scans') }}
+    from {{ ref('int_ticket_scans') }}
 ),
 
 customer_lookup as (

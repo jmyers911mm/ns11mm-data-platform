@@ -74,7 +74,6 @@ ns11mm_data_platform:
 > **Note:** The Snowflake Git workspace uses a simplified `profiles.yml` without `password` or `authenticator` (session auth is automatic). The file above is for **local VS Code development only**.
 
 Ask Jeremy for your personal dev database name if it hasn't been provisioned yet.
->>>>>>> remote
 
 ---
 
@@ -152,12 +151,10 @@ gh pr create --base main
 NS11MM_DW_DEV_<YOUR_NAME>   ← your personal sandbox (TRANSFORMER_ROLE — full write)
 NS11MM_DW_DEV               ← shared dev (DEPLOY_DEV_ROLE — Jeremy only)
 NS11MM_DW_PROD              ← production (DEPLOY_PROD_ROLE — Jeremy only)
->>>>>>> remote
 ```
 
 
 You work exclusively in your personal database. **Snowflake RBAC enforces this** — if you accidentally target shared dev or prod with TRANSFORMER_ROLE, the query will fail with `Insufficient privileges`. This is by design.
->>>>>>> remote
 
 ### Role summary
 
@@ -167,4 +164,3 @@ You work exclusively in your personal database. **Snowflake RBAC enforces this**
 | `DEPLOY_DEV_ROLE` | ❌ Jeremy only | Write to NS11MM_DW_DEV |
 | `DEPLOY_PROD_ROLE` | ❌ Jeremy only | Write to NS11MM_DW_PROD |
 
->>>>>>> remote

@@ -1,7 +1,7 @@
 {% macro resolve_quarantine(model_name) %}
 /*
   Marks quarantined rows as resolved after a successful rerun.
-  Run via: dbt run-operation resolve_quarantine --args '{"model_name": "silver_pos_tickets"}'
+  Run via: dbt run-operation resolve_quarantine --args '{"model_name": "int_pos_tickets"}'
 */
 
 {% set resolve_query %}

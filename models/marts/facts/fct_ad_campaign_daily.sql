@@ -1,6 +1,6 @@
 /*
   fct_ad_campaign_daily
-  Sources: silver_google_ads + silver_meta_ads
+  Sources: int_google_ads + int_meta_ads
   STATUS: Awaiting RAW data. Logic migrated from POC.
   Campaign-level daily summary across all ad platforms.
 */
@@ -25,7 +25,7 @@ select
     case when sum(conversions) > 0 then sum(cost) / sum(conversions) else null end as cost_per_conversion,
     case when sum(cost) > 0 then sum(conversions) / sum(cost) else null end as roas,
     current_timestamp() as _loaded_at
-from {{ ref('silver_google_ads') }}
+from {{ ref('int_google_ads') }}
 group by report_date, campaign_id, campaign_name, campaign_status, campaign_category
 
 union all
@@ -48,5 +48,5 @@ select
     null::number     as cost_per_conversion,
     null::float      as roas,
     current_timestamp() as _loaded_at
-from {{ ref('silver_meta_ads') }}
+from {{ ref('int_meta_ads') }}
 group by ad_date, campaign_id, campaign_name, campaign_category

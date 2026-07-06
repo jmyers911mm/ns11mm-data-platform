@@ -1,5 +1,5 @@
 /*
-  silver_meta_ads
+  int_meta_ads
   Source: stg_meta_ads__campaigns
   STATUS: Awaiting RAW data.
   Logic migrated from POC with production refs.

@@ -24,23 +24,23 @@
 ) }}
 
 with tours as (
-    select * from {{ ref('silver_dpr__tour_revenue') }}
+    select * from {{ ref('int_dpr__tour_revenue') }}
 ),
 
 fees as (
-    select * from {{ ref('silver_dpr__fees_and_services') }}
+    select * from {{ ref('int_dpr__fees_and_services') }}
 ),
 
 retail as (
-    select * from {{ ref('silver_dpr__retail') }}
+    select * from {{ ref('int_dpr__retail') }}
 ),
 
 donations as (
-    select * from {{ ref('silver_dpr__donations') }}
+    select * from {{ ref('int_dpr__donations') }}
 ),
 
 admissions as (
-    select * from {{ ref('silver_dpr__admissions') }}
+    select * from {{ ref('int_dpr__admissions') }}
 ),
 
 -- Union all contributing dates to form the day spine.

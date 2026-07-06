@@ -7,7 +7,7 @@
 -- Conforms the seven Galaxy tables the DPR ticket/tour/pass line items all
 -- share (jnldetails + jnltickets + items + vattribute + coa +
 -- disbursementdetails + rmevents) into a single enriched line-grain fact.
--- Downstream silver_dpr__* models filter this by matrix code / PLU / ga_flag
+-- Downstream int_dpr__* models filter this by matrix code / PLU / ga_flag
 -- rather than re-joining the base tables, which is where the legacy Pentaho
 -- estate accumulated its duplication.
 --

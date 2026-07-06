@@ -1,6 +1,6 @@
 /*
   dim_payment_method
-  Source: silver_pos_tickets + silver_pos_retail + ref_payment_methods seed
+  Source: int_pos_tickets + int_pos_retail + ref_payment_methods seed
   STATUS: Awaiting RAW data.
   Logic migrated from POC.
 */
@@ -8,9 +8,9 @@
 {{ config(enabled=false,materialized='table') }}
 
 with from_silver as (
-    select distinct payment_method as payment_method_id from {{ ref('silver_pos_tickets') }} where payment_method is not null
+    select distinct payment_method as payment_method_id from {{ ref('int_pos_tickets') }} where payment_method is not null
     union
-    select distinct payment_method from {{ ref('silver_pos_retail') }} where payment_method is not null
+    select distinct payment_method from {{ ref('int_pos_retail') }} where payment_method is not null
 ),
 
 from_seed as (

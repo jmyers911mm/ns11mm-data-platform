@@ -1,6 +1,6 @@
 /*
   fct_visitor_traffic
-  Source: silver_ticket_scans
+  Source: int_ticket_scans
   STATUS: Awaiting RAW data. Logic migrated from POC.
   Hourly gate-level visitor traffic.
 */
@@ -20,5 +20,5 @@ select
     round(count(case when is_valid_scan then 1 end)::float
         / nullif(count(*), 0) * 100, 2)                    as valid_scan_rate_pct,
     current_timestamp()                                     as _loaded_at
-from {{ ref('silver_ticket_scans') }}
+from {{ ref('int_ticket_scans') }}
 group by scan_date, gate_id

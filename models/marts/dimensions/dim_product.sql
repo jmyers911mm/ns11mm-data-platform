@@ -1,6 +1,6 @@
 /*
   dim_product
-  Source: silver_pos_retail
+  Source: int_pos_retail
   STATUS: Awaiting RAW data.
   Logic migrated from POC.
 */
@@ -14,7 +14,7 @@ with counterpoint_products as (
         item_category as category,
         unit_price  as standard_price,
         'counterpoint' as source_system
-    from {{ ref('silver_pos_retail') }}
+    from {{ ref('int_pos_retail') }}
     where retail_channel = 'counterpoint'
 ),
 

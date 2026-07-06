@@ -1,5 +1,5 @@
 /*
-  silver_sf_marketing_cloud
+  int_sf_marketing_cloud
   Source: stg_salesforce_mc__tracking
   STATUS: Awaiting RAW data.
   Logic migrated from POC with production refs.

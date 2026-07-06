@@ -27,7 +27,7 @@
 {{ config(materialized='view') }}
 
 with lines as (
-    select * from {{ ref('silver_gateway__ticket_journal_lines') }}
+    select * from {{ ref('int_gateway__ticket_journal_lines') }}
     where ga_flag = 0
 ),
 

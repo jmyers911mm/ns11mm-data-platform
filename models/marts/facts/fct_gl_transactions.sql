@@ -1,6 +1,6 @@
 /*
   fct_gl_transactions
-  Source: silver_blackbaud + stg_blackbaud__accounts
+  Source: int_blackbaud + stg_blackbaud__accounts
   STATUS: Awaiting RAW data. New model — no POC equivalent.
 */
 
@@ -26,5 +26,5 @@ select
     j.reference,
     j.posting_type,
     current_timestamp()                                     as _loaded_at
-from {{ ref('silver_blackbaud') }} j
+from {{ ref('int_blackbaud') }} j
 left join {{ ref('stg_blackbaud__accounts') }} a on j.account_number = a.account_number

@@ -1,6 +1,6 @@
 /*
   fct_website_funnel
-  Source: silver_google_analytics
+  Source: int_google_analytics
   STATUS: Awaiting RAW data. Logic migrated from POC with GA4 field names.
 */
 
@@ -10,7 +10,7 @@ with session_pages as (
     select session_date, session_date as user_pseudo_id,
            channel_grouping, device_category, page_category,
            conversions > 0 as is_conversion, avg_session_duration_seconds
-    from {{ ref('silver_google_analytics') }}
+    from {{ ref('int_google_analytics') }}
 ),
 funnel_stages as (
     select

@@ -1,6 +1,6 @@
 /*
   fct_donor_retention
-  Source: silver_sf_crm + silver_classy + dim_date
+  Source: int_sf_crm + int_classy + dim_date
   STATUS: Awaiting RAW data. Logic migrated from POC with Classy added.
 */
 
@@ -19,7 +19,7 @@ with donors as (
         membership_start_date,
         membership_end_date,
         last_donation_date
-    from {{ ref('silver_sf_crm') }}
+    from {{ ref('int_sf_crm') }}
     where donation_total_ytd > 0
 ),
 

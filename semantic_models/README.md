@@ -5,8 +5,8 @@ Analyst (natural-language querying) and native semantic SQL:
 
 | File | What it is | When to use |
 |---|---|---|
-| `dpr_semantic_view.sql` | Native `CREATE SEMANTIC VIEW` DDL | **Recommended.** Schema-level object (GA March 2026): full RBAC, sharing, catalog, `SEMANTIC_VIEW()` SELECT support. |
-| `dpr_semantic_model.yaml` | Cortex Analyst YAML semantic model | REST API (`semantic_model_file` on a stage), `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML`, and human-readable iteration. |
+| `create_dpr_semantic_view.sql` | Native `CREATE SEMANTIC VIEW` DDL | **Recommended.** Schema-level object (GA March 2026): full RBAC, sharing, catalog, `SEMANTIC_VIEW()` SELECT support. |
+| `dpr.yaml` | Cortex Analyst YAML semantic model | REST API (`semantic_model_file` on a stage), `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML`, and human-readable iteration. |
 
 Keep the two in sync; they describe the same model.
 
@@ -54,37 +54,37 @@ tickets, not the mean of 30 daily averages. The model guarantees it.
 ## Deploy
 
 **Native semantic view (recommended):**
-1. Edit `dpr_semantic_view.sql`: replace `NS11MM_DP.MARTS` with your database and
+1. Edit `create_dpr_semantic_view.sql`: set your database via `USE DATABASE` (dev: NS11MM_DW_DEV_JMYERS); the object is created as `MARTS.DPR`. Replace placeholders and
    schema.
 2. Run it in a worksheet (or via CI) against the schema holding the marts:
    ```sql
-   -- creates NS11MM_DP.MARTS.DPR
+   -- creates MARTS.DPR
    ```
 3. Grant Cortex Analyst usage:
    ```sql
-   GRANT SEMANTIC VIEW DPR ON SCHEMA NS11MM_DP.MARTS TO ROLE <analyst_role>;
+   GRANT SEMANTIC VIEW DPR ON SCHEMA MARTS TO ROLE <analyst_role>;
    -- plus SNOWFLAKE.CORTEX_ANALYST_USER on the role that calls the API
    ```
 4. Query it directly, or point Cortex Analyst at it:
    ```sql
    SELECT * FROM SEMANTIC_VIEW(
-       NS11MM_DP.MARTS.DPR
+       MARTS.DPR
        DIMENSIONS dt.month_name
        METRICS dp.total_ticket_revenue, dp.avg_ticket_price
    );
    ```
-   REST API request body: `{"semantic_view": "NS11MM_DP.MARTS.DPR", ...}`.
+   REST API request body: `{"semantic_view": "MARTS.DPR", ...}`.
 
 **YAML model (REST API / stage):**
-1. Edit `dpr_semantic_model.yaml`: replace `NS11MM_DP` / `MARTS`.
+1. Edit `dpr.yaml`: set the database via `USE DATABASE` (schema is `MARTS`).
 2. Upload to a stage and reference it, or materialize it as a semantic view:
    ```sql
-   PUT file://dpr_semantic_model.yaml @NS11MM_DP.MARTS.SEMANTIC_STAGE;
-   -- REST API body: {"semantic_model_file": "@NS11MM_DP.MARTS.SEMANTIC_STAGE/dpr_semantic_model.yaml"}
+   PUT file://dpr.yaml @MARTS.SEMANTIC_STAGE;
+   -- REST API body: {"semantic_model_file": "@MARTS.SEMANTIC_STAGE/dpr.yaml"}
 
    -- or create a native view from it:
    CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-       'NS11MM_DP.MARTS',
+       'MARTS',
        $$<paste YAML or reference stage file>$$
    );
    ```

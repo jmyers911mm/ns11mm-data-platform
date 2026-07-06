@@ -1,6 +1,6 @@
 /*
   dim_customer
-  Source: silver_sf_crm + silver_pos_tickets + silver_pos_retail
+  Source: int_sf_crm + int_pos_tickets + int_pos_retail
   STATUS: Awaiting RAW data.
   Logic migrated from POC dim_customer.sql with production refs.
   Identity resolution: shared email OR phone merges records into one customer_id.
@@ -10,26 +10,26 @@
 
 with tickets as (
     select lower(trim(customer_email)) as identifier_value, 'EMAIL' as identifier_type, 'GATEWAY' as source_system, transaction_id as source_id
-    from {{ ref('silver_pos_tickets') }} where customer_email is not null
+    from {{ ref('int_pos_tickets') }} where customer_email is not null
     union all
     select trim(customer_phone), 'PHONE', 'GATEWAY', transaction_id
-    from {{ ref('silver_pos_tickets') }} where customer_phone is not null
+    from {{ ref('int_pos_tickets') }} where customer_phone is not null
 ),
 
 retail as (
     select lower(trim(customer_email)), 'EMAIL', 'COUNTERPOINT', transaction_id
-    from {{ ref('silver_pos_retail') }} where customer_email is not null
+    from {{ ref('int_pos_retail') }} where customer_email is not null
     union all
     select trim(customer_phone), 'PHONE', 'COUNTERPOINT', transaction_id
-    from {{ ref('silver_pos_retail') }} where customer_phone is not null
+    from {{ ref('int_pos_retail') }} where customer_phone is not null
 ),
 
 crm as (
     select lower(trim(email)), 'EMAIL', 'SALESFORCE_NPS', contact_id
-    from {{ ref('silver_sf_crm') }} where email is not null
+    from {{ ref('int_sf_crm') }} where email is not null
     union all
     select trim(phone), 'PHONE', 'SALESFORCE_NPS', contact_id
-    from {{ ref('silver_sf_crm') }} where phone is not null
+    from {{ ref('int_sf_crm') }} where phone is not null
 ),
 
 all_identifiers as (
@@ -100,7 +100,7 @@ crm_match as (
            c.computed_membership_status as membership_status,
            c.membership_type, c.donor_tier, c.donation_total_ytd
     from grouped g
-    left join {{ ref('silver_sf_crm') }} c on g.primary_email = c.email
+    left join {{ ref('int_sf_crm') }} c on g.primary_email = c.email
 )
 
 select

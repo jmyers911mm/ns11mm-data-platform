@@ -1,5 +1,10 @@
 # Documentation Map
 
+> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
+> sources are connected, feeding the Daily Performance Report. Other sources, models, and
+> domains described below are part of the target design but are currently `enabled=false` /
+> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+
 This is the front door for **all** documentation about the NS11MM Data Platform. It exists so that anyone — a board member, a marketing manager, an analyst, or a data engineer — can find what they need in under a minute.
 
 If you only read one thing, read the row in the table below that matches who you are.
@@ -79,7 +84,6 @@ The Platform Hub is the operational frontend for the data platform — report re
 | Gold (dims, facts, reports) | `MARTS` | `models/marts/` | Table / Incremental |
 | ML Features | `ML_FEATURES` | `models/ml_features/` | Table |
 | Monitoring | `MONITORING` | (not dbt-managed) | Alerts, tasks, views |
->>>>>>> remote
 
 ---
 

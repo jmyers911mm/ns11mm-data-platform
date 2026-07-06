@@ -1,6 +1,6 @@
 /*
   fct_digital_ad_performance
-  Sources: silver_google_ads + silver_meta_ads
+  Sources: int_google_ads + int_meta_ads
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
@@ -25,7 +25,7 @@ select
     cost_per_conversion,
     roas,
     current_timestamp()                                     as _loaded_at
-from {{ ref('silver_google_ads') }}
+from {{ ref('int_google_ads') }}
 
 union all
 
@@ -48,4 +48,4 @@ select
     null::number(14,2)                                      as cost_per_conversion,
     roas,
     current_timestamp()                                     as _loaded_at
-from {{ ref('silver_meta_ads') }}
+from {{ ref('int_meta_ads') }}

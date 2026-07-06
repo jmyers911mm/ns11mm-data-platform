@@ -22,7 +22,7 @@
 {{ config(materialized='view') }}
 
 with retail as (
-    select * from {{ ref('silver_counterpoint__retail_lines') }}
+    select * from {{ ref('int_counterpoint__retail_lines') }}
 ),
 
 daily as (

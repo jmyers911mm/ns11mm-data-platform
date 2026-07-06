@@ -1,6 +1,6 @@
 /*
   ml_marketing_attribution_features
-  Source: silver_google_analytics
+  Source: int_google_analytics
   STATUS: Awaiting RAW data. Logic migrated from POC — no ref changes needed.
   First-touch and last-touch attribution for converting users.
 */
@@ -14,7 +14,7 @@ with sessions as (
         conversions > 0 as is_conversion, sessions,
         row_number() over (partition by session_date order by session_date) as session_sequence,
         sum(case when conversions > 0 then 1 else 0 end) over (partition by session_date) as user_total_conversions
-    from {{ ref('silver_google_analytics') }}
+    from {{ ref('int_google_analytics') }}
 ),
 
 converting_users as (

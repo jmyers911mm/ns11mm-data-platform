@@ -1,5 +1,5 @@
 /*
-  silver_classy
+  int_classy
   Source: stg_classy__transactions
   STATUS: Awaiting RAW data. New model — no POC equivalent.
 */

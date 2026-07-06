@@ -1,5 +1,5 @@
 /*
-  silver_google_analytics
+  int_google_analytics
   Source: stg_ga4__sessions
   STATUS: Awaiting RAW data.
   Logic migrated from POC with production refs and GA4 field names.

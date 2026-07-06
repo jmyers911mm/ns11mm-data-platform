@@ -7,19 +7,19 @@ with raw_count as (
     from {{ source('gateway_seed', 'seed_gate_jnltickets') }}
 ),
 
-silver_count as (
+int_count as (
     select count(*) as cnt
-    from {{ ref('silver_pos_tickets') }}
+    from {{ ref('int_pos_tickets') }}
 ),
 
 reconciliation as (
     select
         r.cnt as raw_cnt,
-        s.cnt as silver_cnt,
+        s.cnt as int_cnt,
         abs(r.cnt - s.cnt) / nullif(r.cnt, 0) as diff_pct
-    from raw_count r, silver_count s
+    from raw_count r, int_count s
 )
 
-select raw_cnt, silver_cnt, diff_pct
+select raw_cnt, int_cnt, diff_pct
 from reconciliation
 where diff_pct > 0.01

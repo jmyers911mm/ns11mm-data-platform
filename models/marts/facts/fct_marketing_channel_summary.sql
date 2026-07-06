@@ -1,6 +1,6 @@
 /*
   fct_marketing_channel_summary
-  Sources: silver_google_ads + silver_meta_ads + silver_sf_marketing_cloud + fct_website_traffic
+  Sources: int_google_ads + int_meta_ads + int_sf_marketing_cloud + fct_website_traffic
   STATUS: Awaiting RAW data. Logic migrated from POC.
   Cross-channel daily performance rollup.
 */
@@ -11,13 +11,13 @@ with paid_search as (
     select report_date, 'Paid Search' as channel, true as is_paid,
            sum(impressions) as impressions, sum(clicks) as clicks,
            sum(cost) as spend, sum(conversions) as conversions, null::number as conversion_value
-    from {{ ref('silver_google_ads') }} where campaign_status != 'REMOVED'
+    from {{ ref('int_google_ads') }} where campaign_status != 'REMOVED'
     group by report_date
 ),
 paid_social as (
     select ad_date as report_date, 'Paid Social' as channel, true as is_paid,
            sum(impressions), sum(clicks), sum(spend), null::float, null::number
-    from {{ ref('silver_meta_ads') }}
+    from {{ ref('int_meta_ads') }}
     group by ad_date
 ),
 email_ch as (
@@ -25,7 +25,7 @@ email_ch as (
            count(case when event_type = 'Sent' then 1 end) as impressions,
            count(case when event_type = 'Click' then 1 end) as clicks,
            0 as spend, 0 as conversions, null::number
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     group by event_date
 ),
 organic as (

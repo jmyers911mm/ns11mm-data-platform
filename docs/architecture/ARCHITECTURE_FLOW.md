@@ -1,5 +1,10 @@
 # NS11MM Data Platform Architecture
 
+> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
+> sources are connected, feeding the Daily Performance Report. Other sources, models, and
+> domains described below are part of the target design but are currently `enabled=false` /
+> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+
 > **Source of truth:** `ns11mm/ns11mm-data-platform` — built from actual repo structure  
 > **Last updated:** June 2026  ·  Jeremy Myers, VP of AI & Analytics  
 > **Legend:** `┌─┐` standard layer  `╔═╗` test gate

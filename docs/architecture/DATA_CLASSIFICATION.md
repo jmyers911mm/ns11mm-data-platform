@@ -52,7 +52,6 @@ By design, **fact and report tables reference people by `customer_id`**, not by 
 
 
 Access is provisioned through Snowflake RBAC roles (see [SNOWFLAKE_SETTINGS](../../SNOWFLAKE_SETTINGS.md)):
->>>>>>> remote
 
 | Role | PII Access | Scope |
 |---|---|---|
@@ -61,15 +60,12 @@ Access is provisioned through Snowflake RBAC roles (see [SNOWFLAKE_SETTINGS](../
 | `POWERBI_ROLE` | Masked (***@domain) | MARTS only |
 | `ML_ROLE` | Row-filtered (no PII rows visible) | INTERMEDIATE + MARTS + ML_FEATURES |
 | `LOADER_ROLE` | None (write-only to RAW) | RAW schema |
->>>>>>> remote
 
 Masking and row access are enforced automatically by Snowflake policies — no application-level checks needed.
->>>>>>> remote
 
 To request or change access, contact Jeremy Myers.
 
 ---
->>>>>>> remote
 
 ## Classification on new models
 

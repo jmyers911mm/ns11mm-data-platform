@@ -1,6 +1,6 @@
 /*
   fct_ticket_utilization
-  Sources: silver_pos_tickets + silver_ticket_scans
+  Sources: int_pos_tickets + int_ticket_scans
   STATUS: Awaiting RAW data. Deprecated in POC (2026-07-01) — retained here
   as it may be useful for operational reporting. Evaluate before publishing.
   Logic migrated from POC.
@@ -12,7 +12,7 @@ with tickets as (
     select
         transaction_id, transaction_date, ticket_type_id, visitor_category,
         quantity, total_amount, is_discounted, has_email, _extracted_at
-    from {{ ref('silver_pos_tickets') }}
+    from {{ ref('int_pos_tickets') }}
 ),
 
 scans as (
@@ -25,7 +25,7 @@ scans as (
         max(scan_date)                                      as last_scan_date,
         min(case when is_valid_scan then gate_id end)       as entry_gate,
         sum(case when is_valid_scan then visitor_count else 0 end) as visitors_admitted
-    from {{ ref('silver_ticket_scans') }}
+    from {{ ref('int_ticket_scans') }}
     group by scan_id
 )
 

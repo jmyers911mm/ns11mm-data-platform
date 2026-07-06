@@ -1,6 +1,6 @@
 /*
   ml_ad_creative_features
-  Sources: silver_google_ads + silver_meta_ads
+  Sources: int_google_ads + int_meta_ads
   STATUS: Awaiting RAW data. Logic migrated from POC — updated refs.
 */
 
@@ -13,7 +13,7 @@ with google_creative as (
         impressions, clicks, cost as spend, conversions,
         click_through_rate as ctr, cost_per_click as cpc,
         cost_per_conversion as cpa, roas
-    from {{ ref('silver_google_ads') }}
+    from {{ ref('int_google_ads') }}
 ),
 
 meta_creative as (
@@ -23,7 +23,7 @@ meta_creative as (
         impressions, clicks, spend,
         null::float as conversions, ctr, cost_per_click as cpc,
         null::number as cpa, roas
-    from {{ ref('silver_meta_ads') }}
+    from {{ ref('int_meta_ads') }}
 ),
 
 combined as (

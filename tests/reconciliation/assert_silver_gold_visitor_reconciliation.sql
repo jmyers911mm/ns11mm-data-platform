@@ -2,9 +2,9 @@
 -- Validates that Gold visitor counts reconcile with Silver source
 -- STATUS: Awaiting production models
 /*
-with silver_visitors as (
+with int_visitors as (
     select count(distinct ticket_id) as total
-    from {{ ref('silver_pos_tickets') }}
+    from {{ ref('int_pos_tickets') }}
     where transaction_date >= '2024-01-01'
 ),
 gold_visitors as (
@@ -14,7 +14,7 @@ gold_visitors as (
 ),
 check as (
     select abs(s.total - g.total) / nullif(s.total, 0) as diff_pct
-    from silver_visitors s, gold_visitors g
+    from int_visitors s, gold_visitors g
 )
 select diff_pct from check where diff_pct > 0.01
 */

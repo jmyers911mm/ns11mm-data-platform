@@ -2,12 +2,11 @@
 
 
 Run-operation macros for deployment, governance, ML forecasting, GDPR compliance, and incident recovery.
->>>>>>> remote
 
 | Macro | Command | Purpose |
 |---|---|---|
 | `create_ticket_demand_forecast` | `dbt run-operation create_ticket_demand_forecast` | Creates Snowflake ML FORECAST model for 90-day ticket demand |
-| `sync_verified_queries` | `dbt run-operation sync_verified_queries` | Lists and validates all verified queries |
+| `sync_verified_queries` | `dbt run-operation sync_verified_queries` | Lists/validates verified queries — **inactive:** the `analyses/verified_queries/` dir was removed in 1.3.1 |
 | `validate_before_deploy` | `dbt run-operation validate_before_deploy` | Compares dev/prod row counts before deployment |
 | `compare_model_to_prod` | `dbt run-operation compare_model_to_prod --args '{"model_name": "fct_ticket_sales"}'` | Deep single-model diff between dev and prod |
 | `smart_retry` | `dbt run-operation smart_retry` | Identifies failed models and suggests rerun commands |
@@ -25,4 +24,3 @@ The following macros run automatically after every `dbt run` or `dbt build`:
 - `apply_governance_tags()` — ensures all tables have correct sensitivity and domain tags
 - `apply_masking_policies()` — ensures PII columns have masking policies attached
 
->>>>>>> remote

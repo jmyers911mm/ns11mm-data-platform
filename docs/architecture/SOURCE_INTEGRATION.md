@@ -1,9 +1,13 @@
 # Data Platform Source Integration Plan
 
+> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
+> sources are connected, feeding the Daily Performance Report. Other sources, models, and
+> domains described below are part of the target design but are currently `enabled=false` /
+> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+
 **Project:** NS11MM Data Platform Modernization
 
 ** Integration of all identified source systems into the Snowflake RAW schema and through the dbt staging layer (STAGING schema)
->>>>>>> remote
 
 **Status:** Active v1.0 — 14 sources confirmed; Azure pipeline build in progress
 
@@ -17,7 +21,6 @@ This plan defines every source system that feeds the platform, the real API or e
 
 
 Two non-negotiable rules still frame the work. RAW is immutable, so this is landing and contracting raw data only. And no MARTS model or Power BI element may be built on a feed until its metric definitions clear the ADR-005 gate.
->>>>>>> remote
 
 ---
 

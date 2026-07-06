@@ -7,7 +7,7 @@
 {{ config(materialized='table') }}
 
 -- PLACEHOLDER: Replace with production source ref
--- Source: stg_vena__budget -> silver_vena -> this model
+-- Source: stg_vena__budget -> int_vena -> this model
 select
     null::varchar as budget_version_id,
     null::varchar as version_name,

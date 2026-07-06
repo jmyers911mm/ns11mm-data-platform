@@ -1,6 +1,6 @@
 /*
   ml_campaign_response_features
-  Sources: silver_sf_marketing_cloud + dim_campaign + fct_website_traffic
+  Sources: int_sf_marketing_cloud + dim_campaign + fct_website_traffic
   STATUS: Awaiting RAW data. Logic migrated from POC — updated refs.
 */
 
@@ -18,7 +18,7 @@ with subscriber_engagement as (
              count(distinct case when event_type = 'Open'  then campaign_id end)) as click_to_open_rate,
         max(case when event_type = 'Open' then event_date end) as last_open_date,
         datediff('day', max(case when event_type = 'Open' then event_date end), current_date()) as days_since_last_open
-    from {{ ref('silver_sf_marketing_cloud') }}
+    from {{ ref('int_sf_marketing_cloud') }}
     group by subscriber_key, email_address
 ),
 

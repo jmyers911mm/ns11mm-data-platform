@@ -1,6 +1,6 @@
 /*
   fct_daily_operations
-  Sources: silver_pos_tickets, silver_ticket_scans, silver_pos_retail
+  Sources: int_pos_tickets, int_ticket_scans, int_pos_retail
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
@@ -23,7 +23,7 @@ with ticket_sales as (
         sum(total_amount)                                   as ticket_revenue,
         sum(discount_amount)                                as ticket_discounts,
         count(distinct case when has_email then customer_email end) as identified_visitors
-    from {{ ref('silver_pos_tickets') }}
+    from {{ ref('int_pos_tickets') }}
     {% if is_incremental() %}
     where _extracted_at > (select max(_extracted_at) from {{ this }})
     {% endif %}
@@ -37,7 +37,7 @@ scans as (
         count(case when is_valid_scan then 1 end)           as valid_scans,
         count(case when not is_valid_scan then 1 end)       as rejected_scans,
         count(distinct gate_id)                             as gates_active
-    from {{ ref('silver_ticket_scans') }}
+    from {{ ref('int_ticket_scans') }}
     {% if is_incremental() %}
     where _extracted_at > (select max(_extracted_at) from {{ this }})
     {% endif %}
@@ -50,7 +50,7 @@ retail as (
         count(distinct order_id)                            as retail_transactions,
         sum(total_price)                                    as retail_revenue,
         sum(total_discounts)                                as retail_discounts
-    from {{ ref('silver_shopify') }}
+    from {{ ref('int_shopify') }}
     {% if is_incremental() %}
     where _extracted_at > (select max(_extracted_at) from {{ this }})
     {% endif %}

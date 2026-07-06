@@ -1,6 +1,6 @@
 /*
   ml_donor_churn_features
-  Sources: rpt_member_360 + silver_sf_crm
+  Sources: rpt_member_360 + int_sf_crm
   STATUS: Awaiting RAW data. Logic migrated from POC — updated ref from fct_member_360 to rpt_member_360.
 */
 
@@ -22,7 +22,7 @@ crm as (
            membership_start_date, membership_end_date, last_donation_date,
            datediff('month', created_at, current_date())    as tenure_months,
            datediff('day', last_donation_date, current_date()) as days_since_last_donation
-    from {{ ref('silver_sf_crm') }}
+    from {{ ref('int_sf_crm') }}
     where donation_total_ytd > 0
 )
 

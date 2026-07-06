@@ -1,6 +1,6 @@
 /*
   fct_fundraising
-  Source: silver_classy + stg_classy__campaigns
+  Source: int_classy + stg_classy__campaigns
   STATUS: Awaiting RAW data. New model — no POC equivalent.
 */
 
@@ -23,5 +23,5 @@ select
     t.is_anonymous,
     t.payment_type,
     current_timestamp()                                     as _loaded_at
-from {{ ref('silver_classy') }} t
+from {{ ref('int_classy') }} t
 left join {{ ref('stg_classy__campaigns') }} c on t.campaign_id = c.campaign_id

@@ -1,5 +1,10 @@
 # Test Orchestration & Alert Routing
 
+> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
+> sources are connected, feeding the Daily Performance Report. Other sources, models, and
+> domains described below are part of the target design but are currently `enabled=false` /
+> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+
 > **Source of truth:** `ns11mm/ns11mm-data-platform`  
 > **Last updated:** June 2026  ·  Jeremy Myers, VP of AI & Analytics  
 > **Legend:** `┌─┐` pipeline step  `╔═╗` custom test gate
@@ -18,7 +23,6 @@
 
  ┌────────────────────────────┐ ┌─────────────────────┐ ┌──────────────────┐
  │  TICKETING & OPERATIONS    │ │  CRM & FUNDRAISING     │ │  DIGITAL &       │
->>>>>>> remote
  │                            │ │                      │ │  MARKETING       │
 
  │  raw_gateway_transactions  │ │  raw_salesforce_nps_  │ │                  │
@@ -33,7 +37,6 @@
  │  High-frequency ops data   │ │                      │ │  warn  > 4 hrs   │
  │  drives real-time capacity │ │  Fundraising + CRM    │ │  error > 8 hrs   │
  │  planning & Cortex agent   │ │  enrichment           │ │                  │
->>>>>>> remote
  └────────────────────────────┘ └─────────────────────┘ └──────────────────┘
           │                              │                       │
           └──────────────────────────────┴───────────────────────┘
@@ -41,7 +44,6 @@
 
                             all 14 sources land in
                             NS11MM_DW_DEV.RAW (immutable)
->>>>>>> remote
                                          │
                                          ▼
 

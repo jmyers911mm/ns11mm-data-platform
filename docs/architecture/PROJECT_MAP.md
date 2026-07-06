@@ -4,6 +4,11 @@
 
 > **New to the repo?** Read this top to bottom once (~15 minutes). After that, use it as a lookup: the [Where does my new file go?](#where-does-my-new-file-go) and [Where do I find the answer to…?](#where-do-i-find-the-answer-to) sections are the ones you'll keep coming back to.
 
+> **Current scope:** only the **Gateway + CounterPoint → Daily Performance Report** slice is
+> live. All other domains (marketing, CRM/customer-360, membership, donor, GL, ML) are
+> scaffolded but `enabled=false`. This map describes the full target layout; the folder
+> READMEs under `models/*/` are the source of truth for what is enabled today.
+
 ---
 
 ## The other docs, and when to read them
@@ -26,17 +31,21 @@ This map is the front door. The deep content lives in these companions:
 
 Data flows through a **medallion architecture** — four layers, each with one job. Raw data lands once and is never edited; every transformation happens downstream in dbt; Power BI only displays the finished result.
 
+The schemas are named **RAW → STAGING → INTERMEDIATE → MARTS** (the medallion
+Bronze/Silver/Gold pattern, under this project's own names). **Live today** only the
+Gateway (ticketing) and CounterPoint (retail POS) sources are connected, feeding the
+Daily Performance Report; the other source systems below are scaffolded but disabled.
+
 ```
-  SOURCE SYSTEMS                 BRONZE            SILVER                 GOLD                        CONSUMERS
-  (8 systems)                  (raw landing)     (cleaned/typed)     (business-ready)            (display only)
- ───────────────              ─────────────     ───────────────    ──────────────────         ─────────────────
-  Ticketing/Gateway   ──┐                         staging (views)      dimensions (dim_)         Power BI  ◄── rpt_ only
-  Salesforce CRM        │     raw_*  tables  ──►   silver_*       ──►   facts      (fct_)   ──►   ML models ◄── ml_ / gold
-  GoFundMe/Classy       │     (immutable,          (incremental,       reports    (rpt_)         Snowsight ◄── semantic views
-  GA4                   ├──►  append-only)         tested, SCD2        ml_features (ml_)
-  Marketing Cloud       │                          snapshots)
-  Retail POS            │
-  Vena / GL (NXT)     ──┘
+  SOURCE SYSTEMS                 RAW               STAGING             INTERMEDIATE        MARTS                    CONSUMERS
+                               (raw landing)     (stg_ views)        (silver_)           (dim_/fct_/rpt_)         (display only)
+ ───────────────              ─────────────     ───────────────    ──────────────────  ──────────────────       ─────────────────
+  Ticketing/Gateway   ──┐  ◄ LIVE                  models/raw/         silver_gateway__    fct_daily_performance     Power BI  ◄── rpt_ only
+  Retail POS (CounterPoint)│  ◄ LIVE   raw_*  ──►   models/raw/    ──►  silver_dpr__   ──►  rpt_daily_performance ──► Cortex   ◄── MARTS.DPR
+  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│                       (immutable,         (incremental,       dimensions (dim_)         ML models ◄── ml_ (planned)
+  Salesforce CRM/SFMC     │  ◄ planned/disabled    append-only)        tested)             ml_features (planned)
+  GA4 / Google / Meta Ads ├──►                                                            reports (rpt_)
+  Classy / Blackbaud / Vena┘
 ```
 
 **Three rules that explain almost every design decision here:**
@@ -52,22 +61,24 @@ Data flows through a **medallion architecture** — four layers, each with one j
 This is the single most important thing to internalize, because it tells you where every model gets its input and how dbt links them together.
 
 ```
- RAW.raw_gateway_transactions
-        │   referenced by  →  {{ source('gateway', 'raw_gateway_transactions') }}
+ RAW.SEED_GATE_JNLTICKETS  (seed load; RAW landing once ingestion is live)
+        │   referenced by  →  {{ source('gateway_seed', 'seed_gate_jnltickets') }}
         ▼
- models/raw/stg_gateway__transactions.sql          (a VIEW in STAGING schema)
-        │   referenced by  →  {{ ref('stg_gateway__transactions') }}
+ models/raw/stg_gateway__jnltickets.sql            (a VIEW in STAGING schema)
+        │   referenced by  →  {{ ref('stg_gateway__jnltickets') }}
         ▼
- models/silver/silver_pos_tickets.sql        (INCREMENTAL table in SILVER)
-        │   referenced by  →  {{ ref('silver_pos_tickets') }}
+ models/intermediate/silver_gateway__ticket_journal_lines.sql   (INCREMENTAL in INTERMEDIATE)
+        │   referenced by  →  {{ ref('silver_gateway__ticket_journal_lines') }}
         ▼
- models/gold/facts/fct_ticket_sales.sql      (INCREMENTAL table in GOLD)   ◄── joins dim_* via ref()
-        │   referenced by  →  {{ ref('fct_ticket_sales') }}
+ models/intermediate/silver_dpr__admissions.sql    (day-grain DPR metric build)
+        │   referenced by  →  {{ ref('silver_dpr__admissions') }}
         ▼
- models/gold/reports/rpt_ticket_sales.sql    (the Power BI-facing table)
-        │   referenced by  →  ref('rpt_ticket_sales') in models/exposures.yml
+ models/marts/facts/fct_daily_performance.sql      (INCREMENTAL table in MARTS)  ◄── joins dim_date via ref()
+        │   referenced by  →  {{ ref('fct_daily_performance') }}
         ▼
- Power BI dashboard (declared as an exposure)
+ models/marts/reports/rpt_daily_performance_report.sql   (the Power BI-facing table)
+        ▼
+ Power BI / Cortex Analyst via the MARTS.DPR semantic view
 ```
 
 The rule of thumb: **only staging models use `source()`. Everything downstream uses `ref()`.** This is what lets dbt build the dependency graph (DAG), run things in the right order, and know what to rebuild when something upstream changes.
@@ -82,24 +93,24 @@ Everything below is relative to the repo root. Anything not listed here is eithe
 |---|---|---|
 | `dbt_project.yml` | The project's control file: paths, per-layer materialization, schemas, tags, hooks, grants | `@jwmyers82` (Tier 1) |
 | `models/` | All dbt models — the heart of the project (see layer breakdown below) | varies by layer |
-| `models/staging/` | 9 `stg_*` views; one per source feed; light renaming/typing only | Data Engineering |
-| `models/silver/` | 9 `silver_*` incremental models; cleaned, typed, deduplicated, hashdiff'd | Data Engineering |
-| `models/gold/dimensions/` | 9 `dim_*` conformed dimension tables | Analytics |
-| `models/gold/facts/` | 22 models: 21 `fct_*` facts + `bridge_session_customer` | Domain owners + infra |
-| `models/gold/reports/` | 8 `rpt_*` denormalized tables — **the Power BI surface** | Analytics |
-| `models/ml_features/` | 14 `ml_*` feature tables in the `ML_FEATURES` schema | Data Science |
-| `models/staging/sources.yml` | **The Bronze contract** — declares every raw source table + freshness + source-level tests | Data Engineering |
+| `models/raw/` | 21 `stg_*` views live (16 gateway + 5 counterpoint); light renaming/typing only | Data Engineering |
+| `models/intermediate/` | 8 `silver_*` incremental models live (gateway/counterpoint + dpr) of 16; cleaned, typed, deduplicated | Data Engineering |
+| `models/marts/dimensions/` | 4 `dim_*` live (date, fund, budget_version, marketing_channel) of 10 | Analytics |
+| `models/marts/facts/` | 1 `fct_*` live (fct_daily_performance) of 23 | Domain owners + infra |
+| `models/marts/reports/` | 1 `rpt_*` live (rpt_daily_performance_report) of 10 — **the Power BI surface** | Analytics |
+| `models/ml_features/` | 0 of 14 `ml_*` feature tables live (all disabled pending upstream facts) | Data Science |
+| `models/raw/sources.yml` | **The Bronze contract** — declares every raw source table + freshness + source-level tests | Data Engineering |
 | `models/*/schema.yml` | Per-folder model docs + tests + contracts (one `schema.yml` per layer folder) | layer owner |
 | `models/groups.yml` | dbt model *groups* and their owning teams | infra |
-| `models/exposures.yml` | Declares downstream consumers (Power BI dashboards, ML) and what they depend on | infra |
+| `models/exposures.yml` | Declares downstream consumers; currently placeholder (exposures removed in 1.3.1 pending re-enabled marts) | infra |
 | `macros/generic_tests/` | Reusable custom test macros (e.g. `hashdiff_integrity`, data-quality tests) | infra |
 | `macros/operations/` | Operational macros: custom schema naming, forecast creation, VQR sync | `@jwmyers82` (Tier 1) |
 | `tests/business_rules/` | 4 singular tests asserting business invariants (no negative revenue, etc.) | reviewer by topic |
 | `tests/reconciliation/` | 6 singular tests proving layer-to-layer counts/totals reconcile | reviewer by topic |
 | `tests/referential_integrity/` | 12 singular tests proving FKs and seed alignment hold | reviewer by topic |
-| `snapshots/` | 2 SCD2 snapshots (`snap_sf_crm`, `snap_dim_customer`) that preserve change history | infra |
-| `seeds/` | 8 CSVs: 3 `raw_*` (sample/test data) + 5 `ref_*` (reference/lookup tables) | infra |
-| `analyses/verified_queries/` | 35 certified VQR queries across 9 business domains (the "approved answers" library) | infra |
+| `snapshots/` | SCD2 snapshots (planned; land with the CRM/customer domain) | infra |
+| `seeds/` | 8 CSVs: `ref_*` reference tables + `seed_*` DPR mapping seeds (tour PLU, retail facility) | infra |
+| `semantic_models/` | The live DPR semantic view: `create_dpr_semantic_view.sql` + `dpr.yaml` | infra |
 | `terraform/` | Infrastructure-as-code: warehouses, Key Vault, monitor alerts, static web app, deploy pipelines | infra (Tier 1) |
 | `.github/workflows/dbt-ci.yml` | The CI pipeline that runs on every PR (Slim CI) | infra (Tier 1) |
 | `CODEOWNERS` | Maps paths → required reviewers; enforces the change-gate policy | `@jwmyers82` |
@@ -114,11 +125,11 @@ Each layer is configured as a block in `dbt_project.yml`. That file is the sourc
 
 | Layer | Folder | Prefix | Materialization | Lands in schema | Purpose |
 |---|---|---|---|---|---|
-| Staging | `models/staging/` | `stg_` | `view` | `SILVER` | One-to-one with each source; rename, cast, light cleanup. No joins, no business logic. |
-| Silver | `models/silver/` | `silver_` | `incremental` (merge) | `SILVER` | Cleaned, typed, deduplicated, hashdiff'd. The trustworthy "cleaned" layer. |
-| Gold — Dimensions | `models/gold/dimensions/` | `dim_` | `table` | `GOLD` | Conformed dimensions shared across facts (date, customer, product, gate, etc.). |
-| Gold — Facts | `models/gold/facts/` | `fct_` | `incremental` (merge) | `GOLD` | Business events and measures. Internal — not consumed by BI directly. |
-| Gold — Reports | `models/gold/reports/` | `rpt_` | `incremental` (merge) | `GOLD` | Pre-joined, denormalized, BI-ready. **The published surface for Power BI.** |
+| Staging | `models/raw/` | `stg_` | `view` | `SILVER` | One-to-one with each source; rename, cast, light cleanup. No joins, no business logic. |
+| Silver | `models/intermediate/` | `silver_` | `incremental` (merge) | `SILVER` | Cleaned, typed, deduplicated, hashdiff'd. The trustworthy "cleaned" layer. |
+| Gold — Dimensions | `models/marts/dimensions/` | `dim_` | `table` | `GOLD` | Conformed dimensions shared across facts (date, customer, product, gate, etc.). |
+| Gold — Facts | `models/marts/facts/` | `fct_` | `incremental` (merge) | `GOLD` | Business events and measures. Internal — not consumed by BI directly. |
+| Gold — Reports | `models/marts/reports/` | `rpt_` | `incremental` (merge) | `GOLD` | Pre-joined, denormalized, BI-ready. **The published surface for Power BI.** |
 | ML Features | `models/ml_features/` | `ml_` | `table` | `ML_FEATURES` | Feature tables for ML/Cortex; granted to `ML_ROLE`. |
 
 A few configured behaviors worth knowing (all set in `dbt_project.yml`):
@@ -134,8 +145,8 @@ A few configured behaviors worth knowing (all set in `dbt_project.yml`):
 
 If you've ever asked "where is this model getting its data from, and where is that defined?" — here's the full answer.
 
-**Sources (raw Bronze tables) are declared in `models/staging/sources.yml`.**
-This file is the contract for everything entering the project. It declares the `bronze` source, points at the `BRONZE` schema, sets freshness windows, and lists every raw table with its columns and source-level tests. A staging model pulls from it with `{{ source('bronze', 'raw_pos_tickets') }}`. If a raw table isn't in `sources.yml`, dbt can't see it.
+**Sources (raw Bronze tables) are declared in `models/raw/sources.yml`.**
+This file is the contract for everything entering the project. It declares the `bronze` source, points at the `BRONZE` schema, sets freshness windows, and lists every raw table with its columns and source-level tests. A staging model pulls from it with `{{ source('gateway_seed', 'seed_gate_jnltickets') }}`. If a raw table isn't in `sources.yml`, dbt can't see it.
 
 **Model-to-model references use `ref()`, and dbt resolves them automatically.**
 You never write a schema or database name in a model body. You write `{{ ref('silver_pos_tickets') }}` and dbt figures out the fully-qualified name and the build order. This is why the DAG is reliable: the references *are* the dependency graph.
@@ -153,7 +164,7 @@ So, the quick lookup:
 
 | To find / change… | Look in… |
 |---|---|
-| What raw tables exist and their freshness | `models/staging/sources.yml` |
+| What raw tables exist and their freshness | `models/raw/sources.yml` |
 | A model's input data | the `ref()`/`source()` calls in its `.sql` file |
 | Column docs and tests for a model | the `schema.yml` in that model's folder |
 | Which dashboard depends on a model | `models/exposures.yml` |
@@ -168,17 +179,17 @@ Use this when you're about to add something and aren't sure where it belongs. Fi
 
 | I want to… | Put the file in… | Naming | Then also… |
 |---|---|---|---|
-| Bring in a brand-new source feed | `models/staging/` as `stg_<source>.sql` | `stg_` prefix | Add the raw table(s) to `models/staging/sources.yml` first |
-| Clean / dedupe / type a staged feed | `models/silver/` as `silver_<source>.sql` | `silver_` prefix | Add it to `models/silver/schema.yml` with tests |
-| Add a shared lookup entity (date, product, gate…) | `models/gold/dimensions/` as `dim_<entity>.sql` | `dim_` prefix | Document in `gold/dimensions/schema.yml` |
-| Model a business event / measure | `models/gold/facts/` as `fct_<grain>.sql` | `fct_` prefix | Document in `gold/facts/schema.yml`; reference `dim_*` for keys |
-| Build something Power BI will consume | `models/gold/reports/` as `rpt_<subject>.sql` | `rpt_` prefix | Register the dashboard in `models/exposures.yml` |
+| Bring in a brand-new source feed | `models/raw/` as `stg_<source>.sql` | `stg_` prefix | Add the raw table(s) to `models/raw/sources.yml` first |
+| Clean / dedupe / type a staged feed | `models/intermediate/` as `silver_<source>.sql` | `silver_` prefix | Add it to `models/intermediate/schema.yml` with tests |
+| Add a shared lookup entity (date, product, gate…) | `models/marts/dimensions/` as `dim_<entity>.sql` | `dim_` prefix | Document in `gold/dimensions/schema.yml` |
+| Model a business event / measure | `models/marts/facts/` as `fct_<grain>.sql` | `fct_` prefix | Document in `gold/facts/schema.yml`; reference `dim_*` for keys |
+| Build something Power BI will consume | `models/marts/reports/` as `rpt_<subject>.sql` | `rpt_` prefix | Register the dashboard in `models/exposures.yml` |
 | Create a feature table for ML/Cortex | `models/ml_features/` as `ml_<subject>_features.sql` | `ml_` prefix | Document in `ml_features/schema.yml` |
 | Add a reusable test you'll apply in many places | `macros/generic_tests/` | `test_<name>.sql` | Reference it in the relevant `schema.yml` |
 | Add a one-off assertion ("this should always be true") | `tests/<category>/` | `assert_<thing>.sql` | Pick the folder: business_rules / reconciliation / referential_integrity |
 | Add a small static lookup or reference table | `seeds/` as `ref_<name>.csv` | `ref_` prefix | Document in `seeds/schema.yml` |
 | Track history of a slowly-changing entity | `snapshots/` as `snap_<entity>.sql` | `snap_` prefix | Lands in `SILVER`; configured under `snapshots:` in `dbt_project.yml` |
-| Save a blessed, reusable analytical query | `analyses/verified_queries/<domain>/` | descriptive name | Add an entry to that domain's `_verified_queries.yml` |
+| Save a blessed, reusable analytical query **(planned; VQR library removed in 1.3.1)** | `analyses/verified_queries/<domain>/` | descriptive name | Add an entry to that domain's `_verified_queries.yml` |
 | Add infrastructure (warehouse, alert, vault) | `terraform/` (module or env tfvars) | per Terraform convention | Tier 1 change — requires owner approval |
 
 **When you're not sure which layer:** ask "is this cleaning one source, or combining several?" One source → Silver. Combining sources or adding business meaning → Gold. If you find yourself wanting a giant cross-domain combination table, that's usually a sign a conformed `dim_` is missing — add the dimension instead of a mega-table.
@@ -190,12 +201,12 @@ Use this when you're about to add something and aren't sure where it belongs. Fi
 | Prefix | Meaning | Lives in |
 |---|---|---|
 | `raw_` | Untransformed source table (Bronze) or sample seed | Bronze / `seeds/` |
-| `stg_` | Staging view, 1:1 with a source | `models/staging/` |
-| `silver_` | Cleaned, typed, deduplicated model | `models/silver/` |
-| `dim_` | Conformed dimension | `models/gold/dimensions/` |
-| `fct_` | Fact / business event (internal) | `models/gold/facts/` |
-| `bridge_` | Many-to-many bridge table | `models/gold/facts/` |
-| `rpt_` | Report — Power BI-facing, denormalized | `models/gold/reports/` |
+| `stg_` | Staging view, 1:1 with a source | `models/raw/` |
+| `silver_` | Cleaned, typed, deduplicated model | `models/intermediate/` |
+| `dim_` | Conformed dimension | `models/marts/dimensions/` |
+| `fct_` | Fact / business event (internal) | `models/marts/facts/` |
+| `bridge_` | Many-to-many bridge table | `models/marts/facts/` |
+| `rpt_` | Report — Power BI-facing, denormalized | `models/marts/reports/` |
 | `ml_` | ML feature table | `models/ml_features/` |
 | `ref_` | Reference/lookup seed | `seeds/` |
 | `snap_` | SCD2 snapshot | `snapshots/` |
@@ -217,7 +228,7 @@ Use this when you're about to add something and aren't sure where it belongs. Fi
 | "Who has access to what in Snowflake?" | `README.md` (Access Control & Grants) |
 | "What changed recently?" | `CHANGELOG.md` |
 | "How is the warehouse / Key Vault / alerting set up?" | `terraform/README.md` |
-| "What's the approved query for metric Y?" | `analyses/verified_queries/<domain>/` |
+| "What's the approved query for metric Y?" | `analyses/verified_queries/` *(planned — removed in 1.3.1)* |
 | "Which dashboard will break if I change this model?" | `models/exposures.yml` |
 
 ---
@@ -230,7 +241,7 @@ Run these from the repo root with your virtual environment active. See `CONTRIBU
 dbt deps                      # install packages
 dbt build                     # run + test everything (dev target)
 dbt build --select staging    # one layer
-dbt build --select silver_pos_tickets+   # a model and everything downstream
+dbt build --select fct_daily_performance+   # a model and everything downstream
 dbt test                      # tests only
 dbt build --full-refresh      # rebuild incrementals from scratch
 dbt source freshness          # check Bronze freshness against sources.yml
