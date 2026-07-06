@@ -40,36 +40,62 @@ sources:
       - name: raw_salesforce_mc_tracking_unsubscribe
       - name: raw_salesforce_mc_subscribers
 
-  - name: gateway
-    description: Gateway Ticketing Galaxy — ticketing and attendance
-    database: NS11MM_DW_DEV
-    schema: RAW
-    loaded_at_field: _extracted_at
-    config:
-      freshness:
-          warn_after: {count: 180, period: minute}
-          error_after: {count: 360, period: minute}
-    tables:
-      - name: raw_gateway_transactions
-      - name: raw_gateway_reservations
-      - name: raw_gateway_tickettypes
-      - name: raw_gateway_customers
-      - name: raw_gateway_sessions
 
-  - name: counterpoint
-    description: NCR CounterPoint POS — retail point of sale
-    database: NS11MM_DW_DEV
+  - name: gateway_seed
+    description: Gateway Ticketing Galaxy — seed data from Galaxy SQL Server export
+    database: NS11MM_DW_DEV_JMYERS
     schema: RAW
-    loaded_at_field: _extracted_at
-    config:
-      freshness:
-          warn_after: {count: 180, period: minute}
-          error_after: {count: 360, period: minute}
+    loaded_at_field: _loaded_at
     tables:
-      - name: raw_counterpoint_transactions
-      - name: raw_counterpoint_lineitems
-      - name: raw_counterpoint_customers
-      - name: raw_counterpoint_items
+      - name: seed_gate_tickets
+        description: Issued tickets with status, usage, pricing, and customer info
+      - name: seed_gate_orders
+        description: Sales orders/transactions
+      - name: seed_gate_orderlines
+        description: Order line items
+      - name: seed_gate_items
+        description: Product/ticket type catalog
+      - name: seed_gate_usage
+        description: Ticket usage/scan events
+      - name: seed_gate_vusage
+        description: Ticket usage report view
+      - name: seed_gate_vattribute
+        description: Ticket attribute values report view
+      - name: seed_gate_facility
+        description: Facility/venue reference
+      - name: seed_gate_acps
+        description: Access control points reference
+      - name: seed_gate_rmevents
+        description: Resource management events
+      - name: seed_gate_jnlheaders
+        description: Journal entry headers
+      - name: seed_gate_jnldetails
+        description: Journal entry details
+      - name: seed_gate_jnlitems
+        description: Journal items reference
+      - name: seed_gate_jnltickets
+        description: Journal ticket associations
+      - name: seed_gate_coa
+        description: Chart of accounts
+      - name: seed_gate_disbursementdetails
+        description: Payment disbursement details
+
+  - name: counterpoint_seed
+    description: NCR CounterPoint POS — seed data from SQL Server export
+    database: NS11MM_DW_DEV_JMYERS
+    schema: RAW
+    loaded_at_field: _loaded_at
+    tables:
+      - name: seed_cp_imitem
+        description: Item master — product catalog with pricing, attributes, and dimensions
+      - name: seed_cp_pstkthist
+        description: POS ticket history headers — transaction summaries
+      - name: seed_cp_pstkthistlin
+        description: POS ticket history line items — individual sale lines
+      - name: seed_cp_vitkthist
+        description: Ticket history view — enriched transaction headers with billing/shipping
+      - name: seed_cp_vitkthistlin
+        description: Ticket history line view — enriched line items with pricing analysis
 
   - name: shopify
     description: Shopify — e-commerce orders and products

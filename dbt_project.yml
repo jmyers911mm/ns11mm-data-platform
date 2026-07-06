@@ -23,7 +23,6 @@ on-run-end:
   - "{% if target.name != 'dev' %}{{ apply_masking_policies() }}{% endif %}"
 
 models:
->>>>>>> remote
   +persist_docs:
     relation: true
     columns: true

@@ -1,0 +1,48 @@
+-- Staging model for Gateway Galaxy access control points (SEED_GATE_ACPS)
+-- Co-authored with CoCo
+
+{{ config(materialized='view') }}
+
+with source as (
+    select * from {{ source('gateway_seed', 'seed_gate_acps') }}
+),
+
+staged as (
+    select
+        -- Primary key
+        acpuniqueid                             as acp_unique_id,
+
+        -- Identifiers
+        acpid                                   as acp_id,
+        name                                    as acp_name,
+
+        -- Location
+        node                                    as node_no,
+        facilityid                              as facility_id,
+        exitfacilityid                          as exit_facility_id,
+        attractionid                            as attraction_id,
+
+        -- Classification
+        kind                                    as kind,
+        acpgroupid                              as acp_group_id,
+
+        -- Config
+        points                                  as points,
+        checkpointid                            as checkpoint_id,
+        layoutid                                as layout_id,
+        validateguestmovements                  as validate_guest_movements,
+
+        -- Audit
+        recordversion                           as record_version,
+        lastupdatedby                           as last_updated_by,
+
+        -- Dates
+        try_to_timestamp(lastupdate)            as last_updated_at,
+
+        -- Metadata
+        _loaded_at
+
+    from source
+)
+
+select * from staged

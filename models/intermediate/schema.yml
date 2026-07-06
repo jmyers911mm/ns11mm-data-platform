@@ -23,36 +23,37 @@ models:
               values: ['Major Donor', 'Mid-Level Donor', 'Donor', 'Small Donor', 'Non-Donor']
 
   - name: silver_pos_tickets
-    description: "Cleaned and enriched Gateway ticket transactions with customer identity from Gateway customers table"
+    description: "Cleaned and enriched Gateway ticket transactions from SEED_GATE_JNLTICKETS with pricing, customer, and usage data"
     columns:
-      - name: transaction_id
-        description: "Gateway transaction identifier — primary key"
+      - name: jnl_detail_id
+        description: "Gateway journal ticket detail identifier — primary key"
         tests:
           - unique
           - not_null
-      - name: transaction_date
-        description: "Date of ticket purchase"
+      - name: sold_at
+        description: "Timestamp ticket was sold"
         tests:
           - not_null
-      - name: total_amount
-        description: "Transaction total amount"
+      - name: price
+        description: "Ticket sale price"
         tests:
           - not_null
       - name: visitor_category
-        description: "Derived visitor type based on ticket_type_id pattern"
+        description: "Derived visitor type based on ticket code or product classification"
         tests:
           - accepted_values:
               values: ['Adult', 'Child', 'Senior', 'Member', 'School Group', 'Family', 'Other']
 
   - name: silver_pos_retail
-    description: "Unified retail transactions from CounterPoint (in-store) and Shopify (online)"
+    description: "Unified retail transactions from CounterPoint POS (SEED_CP_PSTKTHISTLIN) and Shopify (online)"
     columns:
-      - name: transaction_id
-        description: "CounterPoint line item ID or Shopify order ID — primary key"
+      - name: line_guid
+        description: "CounterPoint line GUID or Shopify line ID — primary key"
         tests:
           - unique
           - not_null
-      - name: transaction_date
+      - name: business_date
+        description: "Transaction business date"
         tests:
           - not_null
       - name: retail_channel
@@ -138,14 +139,14 @@ models:
     description: "Meta (Facebook/Instagram) Ads campaign performance metrics"
 
   - name: silver_ticket_scans
-    description: "Gate scan events derived from Gateway transactions where gate_id is present"
+    description: "Gate scan events from Gateway usage table (SEED_GATE_USAGE) with facility and ACP context"
     columns:
-      - name: scan_id
-        description: "Transaction ID used as scan identifier — primary key"
+      - name: usage_id
+        description: "Usage event identifier — primary key"
         tests:
           - unique
           - not_null
-      - name: scan_date
+      - name: use_time
         tests:
           - not_null
 

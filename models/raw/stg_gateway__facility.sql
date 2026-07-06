@@ -1,0 +1,38 @@
+-- Staging model for Gateway Galaxy facilities/venues (SEED_GATE_FACILITY)
+-- Co-authored with CoCo
+
+{{ config(materialized='view') }}
+
+with source as (
+    select * from {{ source('gateway_seed', 'seed_gate_facility') }}
+),
+
+staged as (
+    select
+        -- Primary key
+        facilityid                              as facility_id,
+
+        -- Identifiers
+        idno                                    as id_no,
+        name                                    as facility_name,
+        descr                                   as description,
+
+        -- Capacity
+        capacity                                as capacity,
+        velocitytimelimit                       as velocity_time_limit,
+        passholderscangap                       as passholder_scan_gap,
+
+        -- Audit
+        recordversion                           as record_version,
+        lastupdatedby                           as last_updated_by,
+
+        -- Dates
+        try_to_timestamp(lastupdate)            as last_updated_at,
+
+        -- Metadata
+        _loaded_at
+
+    from source
+)
+
+select * from staged

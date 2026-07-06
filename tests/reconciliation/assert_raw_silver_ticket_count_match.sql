@@ -1,25 +1,24 @@
--- Validates that Silver ticket row count is within 1% of RAW source
--- STATUS: Awaiting RAW data connection
--- TODO: Uncomment once RAW.RAW_GATEWAY_TRANSACTIONS is populated
+-- Reconciliation: Silver ticket count within 1% of raw Gateway seed source
+-- Co-authored with CoCo
 
-/*
 with raw_count as (
     select count(*) as cnt
-    from NS11MM_DW_DEV.RAW.RAW_GATEWAY_TRANSACTIONS
+    from {{ source('gateway_seed', 'seed_gate_jnltickets') }}
 ),
+
 silver_count as (
     select count(*) as cnt
     from {{ ref('silver_pos_tickets') }}
 ),
-check as (
+
+reconciliation as (
     select
         r.cnt as raw_cnt,
         s.cnt as silver_cnt,
         abs(r.cnt - s.cnt) / nullif(r.cnt, 0) as diff_pct
     from raw_count r, silver_count s
 )
+
 select raw_cnt, silver_cnt, diff_pct
-from check
+from reconciliation
 where diff_pct > 0.01
-*/
-select 1 where 1 = 0  -- placeholder until RAW is populated

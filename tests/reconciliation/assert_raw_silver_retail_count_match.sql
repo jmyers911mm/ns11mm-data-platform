@@ -1,18 +1,24 @@
--- Validates that Silver retail row count is within 1% of RAW source
--- STATUS: Awaiting RAW data connection
-/*
+-- Reconciliation: Silver retail count within 1% of raw CounterPoint seed source
+-- Co-authored with CoCo
+
 with raw_count as (
     select count(*) as cnt
-    from NS11MM_DW_DEV.RAW.RAW_COUNTERPOINT_TRANSACTIONS
+    from {{ source('counterpoint_seed', 'seed_cp_pstkthistlin') }}
 ),
+
 silver_count as (
     select count(*) as cnt
     from {{ ref('silver_pos_retail') }}
 ),
-check as (
-    select abs(r.cnt - s.cnt) / nullif(r.cnt, 0) as diff_pct
+
+reconciliation as (
+    select
+        r.cnt as raw_cnt,
+        s.cnt as silver_cnt,
+        abs(r.cnt - s.cnt) / nullif(r.cnt, 0) as diff_pct
     from raw_count r, silver_count s
 )
-select diff_pct from check where diff_pct > 0.01
-*/
-select 1 where 1 = 0
+
+select raw_cnt, silver_cnt, diff_pct
+from reconciliation
+where diff_pct > 0.01
