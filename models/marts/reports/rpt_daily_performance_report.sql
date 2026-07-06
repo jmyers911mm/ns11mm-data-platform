@@ -1,4 +1,5 @@
 -- Marts report: Daily Performance Report (Power BI consumption layer)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
 -- Grain:  one row per date_value
@@ -21,11 +22,11 @@
 with fct as (
     select
         f.*,
-        dd.calendar_year,
-        dd.calendar_month
+        dd.year_number   as calendar_year,
+        dd.month_of_year as calendar_month
     from {{ ref('fct_daily_performance') }} f
     inner join {{ ref('dim_date') }} dd
-        on f.date_key = dd.date_key
+        on f.date_id = dd.date_id
 ),
 
 with_periods as (
@@ -67,7 +68,7 @@ with_periods as (
 )
 
 select
-    date_key,
+    date_id,
     date_value,
     is_commemoration_day,
 

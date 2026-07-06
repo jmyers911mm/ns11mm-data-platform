@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates ticket types in facts exist in ref_ticket_types seed
 -- STATUS: Awaiting production models
 /*

@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates that Gold revenue totals reconcile with Silver source within 0.1%
 -- STATUS: Awaiting production models
 /*

@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates no transactions dated in the future
 -- STATUS: Awaiting production models
 /*

@@ -1,4 +1,5 @@
 -- Marts fact: daily performance (additive measures, one row per day)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
 -- Grain:  one row per date_key
@@ -19,7 +20,7 @@
 
 {{ config(
     materialized='table',
-    cluster_by=['date_key']
+    cluster_by=['date_id']
 ) }}
 
 with tours as (
@@ -47,11 +48,11 @@ admissions as (
 -- downstream inner join to dim_date is 1:1 (grain-integrity guard for the
 -- unique/not_null test on date_key).
 date_spine as (
-    select cast(key_date as date) as key_date from tours
-    union select cast(key_date as date) from fees
-    union select cast(key_date as date) from retail
-    union select cast(key_date as date) from donations
-    union select cast(key_date as date) from admissions
+    select cast(key_date as date) as key_date from tours where key_date is not null
+    union select cast(key_date as date) from fees where key_date is not null
+    union select cast(key_date as date) from retail where key_date is not null
+    union select cast(key_date as date) from donations where key_date is not null
+    union select cast(key_date as date) from admissions where key_date is not null
 ),
 
 combined as (
@@ -120,10 +121,10 @@ combined as (
 )
 
 select
-    dd.date_key,
+    dd.date_id,
     c.key_date                                                             as date_value,
     dd.is_commemoration_day,
     c.* exclude (key_date)
 from combined c
 inner join {{ ref('dim_date') }} dd
-    on c.key_date = dd.date_value
+    on c.key_date = dd.date_id

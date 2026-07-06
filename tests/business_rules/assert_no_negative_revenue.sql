@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates no negative revenue in Gold fact tables
 -- STATUS: Awaiting production models
 /*

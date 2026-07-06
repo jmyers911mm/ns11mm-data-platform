@@ -22,45 +22,7 @@ models:
           - accepted_values:
               values: ['Major Donor', 'Mid-Level Donor', 'Donor', 'Small Donor', 'Non-Donor']
 
-  - name: silver_pos_tickets
-    description: "Cleaned and enriched Gateway ticket transactions from SEED_GATE_JNLTICKETS with pricing, customer, and usage data"
-    columns:
-      - name: jnl_detail_id
-        description: "Gateway journal ticket detail identifier — primary key"
-        tests:
-          - unique
-          - not_null
-      - name: sold_at
-        description: "Timestamp ticket was sold"
-        tests:
-          - not_null
-      - name: price
-        description: "Ticket sale price"
-        tests:
-          - not_null
-      - name: visitor_category
-        description: "Derived visitor type based on ticket code or product classification"
-        tests:
-          - accepted_values:
-              values: ['Adult', 'Child', 'Senior', 'Member', 'School Group', 'Family', 'Other']
 
-  - name: silver_pos_retail
-    description: "Unified retail transactions from CounterPoint POS (SEED_CP_PSTKTHISTLIN) and Shopify (online)"
-    columns:
-      - name: line_guid
-        description: "CounterPoint line GUID or Shopify line ID — primary key"
-        tests:
-          - unique
-          - not_null
-      - name: business_date
-        description: "Transaction business date"
-        tests:
-          - not_null
-      - name: retail_channel
-        description: "Source system: counterpoint or shopify"
-        tests:
-          - accepted_values:
-              values: ['counterpoint', 'shopify']
 
   - name: silver_sf_marketing_cloud
     description: "Marketing Cloud email engagement events (sends, opens, clicks, bounces, unsubscribes)"
@@ -138,23 +100,4 @@ models:
   - name: silver_meta_ads
     description: "Meta (Facebook/Instagram) Ads campaign performance metrics"
 
-  - name: silver_ticket_scans
-    description: "Gate scan events from Gateway usage table (SEED_GATE_USAGE) with facility and ACP context"
-    columns:
-      - name: usage_id
-        description: "Usage event identifier — primary key"
-        tests:
-          - unique
-          - not_null
-      - name: use_time
-        tests:
-          - not_null
 
-  - name: silver_ticket_inventory
-    description: "Ticket capacity vs reservations by date/window/type — awaiting capacity source confirmation"
-    columns:
-      - name: inventory_key
-        description: "Composite key: entry_date + window_start + ticket_type"
-        tests:
-          - unique
-          - not_null

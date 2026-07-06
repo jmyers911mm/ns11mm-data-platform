@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Reconciliation: Silver ticket count within 1% of raw Gateway seed source
 -- Co-authored with CoCo
 

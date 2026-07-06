@@ -77,3 +77,4 @@ joined as (
 )
 
 select * from joined
+where key_date is not null

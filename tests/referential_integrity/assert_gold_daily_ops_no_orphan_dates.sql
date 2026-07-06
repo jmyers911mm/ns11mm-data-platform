@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates that all dates in fct_daily_operations exist in dim_date
 -- STATUS: Awaiting production models
 /*

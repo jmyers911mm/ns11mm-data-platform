@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates campaign open/click rates are between 0 and 1
 -- STATUS: Awaiting production models
 /*

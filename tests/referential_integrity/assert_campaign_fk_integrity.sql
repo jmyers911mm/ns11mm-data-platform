@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Campaign IDs in Gold facts resolve to dim_campaign
 -- STATUS: Awaiting production models
 /*

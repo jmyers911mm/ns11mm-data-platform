@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates customer segment values in dim_customer match ref_customer_segments seed
 -- STATUS: Awaiting production models
 /*

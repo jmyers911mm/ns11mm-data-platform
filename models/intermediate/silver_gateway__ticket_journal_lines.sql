@@ -1,4 +1,5 @@
 -- Silver intermediate: enriched Gateway (Galaxy) ticket journal lines
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing
 -- Grain:  one row per JnlDetails line for a ticket (jnl_code_id = 101)
@@ -103,9 +104,10 @@ joined as (
     -- Exclude the external-event placeholder PLU that legacy queries always drop
     where it.plu <> 'EXTEVENTAD001'
       and (
-             va.itm_default_customer_id not in (20056, 23361)
+             try_cast(va.itm_default_customer_id as number) not in (20056, 23361)
           or va.itm_default_customer_id is null
       )
 )
 
 select * from joined
+where key_date is not null

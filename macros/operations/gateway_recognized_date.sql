@@ -22,9 +22,9 @@
 {% macro gateway_recognized_date(va, jt, rme) -%}
     cast(
         case
-            when {{ va }}.itm_recognize_basis_id = 182 then cast({{ rme }}.start_at as date)
-            when {{ va }}.itm_recognize_basis_id = 185 then cast({{ jt }}.ticket_date as date)
-            when {{ va }}.itm_recognize_basis_id = 349 then dateadd('day', 14, cast({{ jt }}.sold_at as date))
+            when try_cast({{ va }}.itm_recognize_basis_id as number) = 182 then cast({{ rme }}.start_at as date)
+            when try_cast({{ va }}.itm_recognize_basis_id as number) = 185 then cast({{ jt }}.ticket_date as date)
+            when try_cast({{ va }}.itm_recognize_basis_id as number) = 349 then dateadd('day', 14, cast({{ jt }}.sold_at as date))
             else cast({{ jt }}.ticket_date as date)
         end
     as date)

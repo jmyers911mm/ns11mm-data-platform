@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates payment method IDs in facts exist in ref_payment_methods seed
 -- STATUS: Awaiting production models
 /*

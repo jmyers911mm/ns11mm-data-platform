@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 -- Validates that Gold visitor counts reconcile with Silver source
 -- STATUS: Awaiting production models
 /*
