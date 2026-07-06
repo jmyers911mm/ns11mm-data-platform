@@ -5,7 +5,7 @@
   Hourly gate-level visitor traffic.
 */
 
-{{ config(materialized='table', cluster_by=['scan_date', 'gate_id']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['scan_date', 'gate_id']) }}
 
 select
     scan_date || '-' || scan_hour || '-' || gate_id        as scan_date_hour_gate,

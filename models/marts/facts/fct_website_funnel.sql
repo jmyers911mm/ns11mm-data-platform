@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC with GA4 field names.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with session_pages as (
     select session_date, session_date as user_pseudo_id,

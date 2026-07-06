@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. New model — no POC equivalent.
 */
 
-{{ config(materialized='table', cluster_by=['transaction_date']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['transaction_date']) }}
 
 select
     t.transaction_id,

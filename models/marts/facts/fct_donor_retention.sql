@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC with Classy added.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with donors as (
     select

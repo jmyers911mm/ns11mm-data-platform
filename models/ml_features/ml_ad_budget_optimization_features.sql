@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC — no ref changes needed.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with platform_daily as (
     select report_date, ad_platform, campaign_category,

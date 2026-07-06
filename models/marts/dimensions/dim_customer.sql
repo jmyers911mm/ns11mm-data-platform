@@ -6,7 +6,7 @@
   Identity resolution: shared email OR phone merges records into one customer_id.
 */
 
-{{ config(materialized='table', cluster_by=['customer_id']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['customer_id']) }}
 
 with tickets as (
     select lower(trim(customer_email)) as identifier_value, 'EMAIL' as identifier_type, 'GATEWAY' as source_system, transaction_id as source_id

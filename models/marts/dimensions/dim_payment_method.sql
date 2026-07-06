@@ -5,7 +5,7 @@
   Logic migrated from POC.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with from_silver as (
     select distinct payment_method as payment_method_id from {{ ref('silver_pos_tickets') }} where payment_method is not null

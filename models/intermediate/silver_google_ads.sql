@@ -7,6 +7,7 @@
 
 {{
     config(
+        enabled=false,
         materialized='incremental',
         unique_key='hashdiff',
         incremental_strategy='merge',

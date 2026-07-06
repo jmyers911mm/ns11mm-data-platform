@@ -5,7 +5,7 @@
   90-day rolling benchmarks by ticket type, day-of-week, and entry window.
 */
 
-{{ config(materialized='table', tags=['daily', 'critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'critical']) }}
 
 with historical as (
     select

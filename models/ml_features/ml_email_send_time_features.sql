@@ -5,7 +5,7 @@
   Identifies optimal email send time per subscriber.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with campaign_sends as (
     select

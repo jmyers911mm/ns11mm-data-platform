@@ -7,6 +7,7 @@
 
 {{
     config(
+        enabled=false,
         materialized='incremental',
         unique_key='send_id',
         incremental_strategy='merge',

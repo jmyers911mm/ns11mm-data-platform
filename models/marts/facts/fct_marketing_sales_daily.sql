@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', cluster_by=['report_date']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['report_date']) }}
 
 with marketing as (
     select report_date, channel, is_paid, sum(impressions) as impressions,

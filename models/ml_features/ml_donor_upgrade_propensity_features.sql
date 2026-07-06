@@ -5,7 +5,7 @@
   Scores Known Members for likelihood to upgrade membership tier or increase giving.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with customer_base as (
     select customer_id, customer_segment, membership_type, membership_status,

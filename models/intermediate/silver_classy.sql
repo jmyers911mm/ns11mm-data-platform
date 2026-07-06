@@ -6,6 +6,7 @@
 
 {{
     config(
+        enabled=false,
         materialized='incremental',
         unique_key='transaction_id',
         incremental_strategy='merge',

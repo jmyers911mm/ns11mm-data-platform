@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC with GA4 field names.
 */
 
-{{ config(materialized='table', cluster_by=['report_date']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['report_date']) }}
 
 select
     session_date                                            as report_date,

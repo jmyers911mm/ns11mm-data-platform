@@ -5,7 +5,7 @@
   Campaign-level daily summary across all ad platforms.
 */
 
-{{ config(materialized='table', cluster_by=['report_date', 'ad_platform']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['report_date', 'ad_platform']) }}
 
 select
     report_date,

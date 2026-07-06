@@ -5,7 +5,7 @@
   Feeds Snowflake ML FORECAST — see macros/operations/create_ticket_demand_forecast.sql
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 select
     visit_date::timestamp_ntz                              as ds,

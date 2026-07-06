@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', cluster_by=['report_date', 'ad_platform']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['report_date', 'ad_platform']) }}
 
 select
     ad_date                                                 as report_date,

@@ -5,7 +5,7 @@
   First-touch and last-touch attribution for converting users.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with sessions as (
     select

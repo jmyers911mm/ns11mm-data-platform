@@ -5,7 +5,7 @@
   Note: POC used deprecated fct_retail_performance — updated to use fct_retail_line_items.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with daily as (
     select

@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: Conformed calendar date dimension with commemoration-window flag.
+    columns:
+      - name: date_key
+        description: Integer YYYYMMDD surrogate key.
+        data_tests: [not_null, unique]
+      - name: date_value
+        data_tests: [not_null, unique]
+      - name: is_commemoration_day
+        description: True for Sep 6-16 (fixed structural exception).
+        data_tests:
+          - accepted_values:
+              values: [true, false]
+
+  - name: fct_daily_performance
+    description: >
+      Day-grain DPR fact. One additive measure per column; ratios excluded
+      by design (computed in rpt_ layer). Replaces legacy fact_dpr_report_data.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: tickets_sold
+        data_tests: [not_null]
+      - name: ticket_revenue
+        data_tests: [not_null]
+
+  - name: rpt_daily_performance_report
+    description: >
+      Power BI consumption layer for the Daily Performance Report. Today /
+      MTD / YTD additive roll-ups plus non-additive ratios computed at this
+      grain. Budget/variance columns gated on budget-source staging + ADR-005.
+    columns:
+      - name: date_key
+        data_tests: [not_null, unique]
+      - name: date_value
+        data_tests: [not_null, unique]
+      - name: avg_ticket_price
+        description: Non-additive; total_admission_revenue / tickets_sold.

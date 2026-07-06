@@ -6,7 +6,7 @@
   on same-day ticket purchase. Used for multi-touch attribution.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with ga_sessions as (
     select

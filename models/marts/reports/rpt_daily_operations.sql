@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 select
     ops.visit_date,

@@ -6,6 +6,7 @@
 
 {{
     config(
+        enabled=false,
         materialized='incremental',
         unique_key='availability_key',
         incremental_strategy='merge',

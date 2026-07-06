@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', cluster_by=['report_date', 'channel_grouping']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['report_date', 'channel_grouping']) }}
 
 with campaign_spend as (
     select report_date, ad_platform, campaign_id, campaign_name, campaign_category,

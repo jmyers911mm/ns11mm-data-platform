@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC. Added Classy donations.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with ticket_agg as (
     select

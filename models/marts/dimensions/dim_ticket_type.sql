@@ -5,7 +5,7 @@
   Seed provides reference data; Silver provides actuals from Gateway.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with from_silver as (
     select distinct

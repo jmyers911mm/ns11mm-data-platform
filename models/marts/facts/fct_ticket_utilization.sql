@@ -6,7 +6,7 @@
   Logic migrated from POC.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with tickets as (
     select

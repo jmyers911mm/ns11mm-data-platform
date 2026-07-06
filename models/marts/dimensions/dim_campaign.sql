@@ -5,7 +5,7 @@
   Logic migrated from POC.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with sfmc_campaigns as (
     select

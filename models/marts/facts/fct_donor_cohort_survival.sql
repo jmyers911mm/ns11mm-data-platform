@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', cluster_by=['months_since_acquisition']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['months_since_acquisition']) }}
 
 with retention as (
     select * from {{ ref('fct_donor_retention') }}

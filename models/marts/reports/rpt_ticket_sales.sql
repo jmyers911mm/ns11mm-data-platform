@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC. Updated refs to production column names.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 select
     ts.transaction_id,

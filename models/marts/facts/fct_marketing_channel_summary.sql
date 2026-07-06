@@ -5,7 +5,7 @@
   Cross-channel daily performance rollup.
 */
 
-{{ config(materialized='table', cluster_by=['report_date']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['report_date']) }}
 
 with paid_search as (
     select report_date, 'Paid Search' as channel, true as is_paid,

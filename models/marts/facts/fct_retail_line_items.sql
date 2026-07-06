@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', cluster_by=['transaction_date', 'item_category']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['transaction_date', 'item_category']) }}
 
 with retail as (
     select * from {{ ref('silver_pos_retail') }}

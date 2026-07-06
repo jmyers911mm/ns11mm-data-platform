@@ -1,0 +1,55 @@
+version: 2
+
+seeds:
+  - name: seed_tour_plu
+    description: >
+      One row per PLU that maps to a specific DPR tour line item (field trips,
+      revealed, ask-educator, architecture). Any PLU present here is excluded
+      from the core museum guided-tour cohort. Matrix-code cohorts (%TOU%,
+      %VTM%, %VTU%, %VTF%) are pattern matches and are NOT enumerated here.
+    columns:
+      - name: plu
+        description: Galaxy product PLU.
+        data_tests: [not_null, unique]
+      - name: dpr_line_item
+        description: Target DPR line item this PLU rolls up to.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [mem_field_trip, mus_field_trip, revealed_tour,
+                       architecture_tour, ask_educator]
+
+  - name: seed_retail_item_facility
+    description: >
+      CounterPoint item_no overrides for facility assignment. Checked before
+      the store-id fallback (legacy t_fact_retail CASE precedence).
+    config:
+      # item_no is a string in the source (mix of numeric and alpha codes);
+      # pin the type so dbt seed inference does not coerce it to a number and
+      # break the varchar join in silver_counterpoint__retail_lines.
+      column_types:
+        item_no: varchar
+        key_facility: integer
+    columns:
+      - name: item_no
+        description: CounterPoint item number.
+        data_tests: [not_null, unique]
+      - name: key_facility
+        description: 911dw facility key the item rolls up to.
+        data_tests: [not_null]
+
+  - name: seed_retail_store_facility
+    description: >
+      CounterPoint store_id to facility fallback mapping, applied when no
+      item-number override matches.
+    config:
+      column_types:
+        store_id: varchar
+        key_facility: integer
+    columns:
+      - name: store_id
+        description: CounterPoint store id.
+        data_tests: [not_null, unique]
+      - name: key_facility
+        description: 911dw facility key the store rolls up to.
+        data_tests: [not_null]

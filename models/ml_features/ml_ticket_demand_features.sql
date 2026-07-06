@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC — no ref changes needed.
 */
 
-{{ config(materialized='table', transient=true, tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', transient=true, tags=['daily', 'non-critical']) }}
 
 with daily_demand as (
     select entry_date, ticket_type,

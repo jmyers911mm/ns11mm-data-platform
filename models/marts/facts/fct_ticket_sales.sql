@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', cluster_by=['transaction_date', 'ticket_type_id']) }}
+{{ config(enabled=false,materialized='table', cluster_by=['transaction_date', 'ticket_type_id']) }}
 
 with tickets as (
     select * from {{ ref('silver_pos_tickets') }}

@@ -6,6 +6,7 @@
 
 {{
     config(
+        enabled=false,
         unique_key='visit_date',
         incremental_strategy='merge',
         on_schema_change='append_new_columns',

@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC.
 */
 
-{{ config(materialized='table', tags=['daily', 'critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'critical']) }}
 
 with daily_revenue as (
     select

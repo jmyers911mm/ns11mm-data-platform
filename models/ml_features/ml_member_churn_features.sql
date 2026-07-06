@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC — updated ref from fct_member_360 to rpt_member_360.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 select
     m.contact_id, m.membership_type, m.membership_status, m.donor_tier,

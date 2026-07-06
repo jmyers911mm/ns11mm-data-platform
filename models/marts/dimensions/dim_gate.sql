@@ -5,7 +5,7 @@
   Gate names/locations are hardcoded mappings — update once Gateway schema confirmed.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 with gates as (
     select distinct gate_id

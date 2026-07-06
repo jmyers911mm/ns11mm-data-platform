@@ -4,7 +4,7 @@
   STATUS: Awaiting RAW data. Logic migrated from POC — updated refs.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with marketing_signals as (
     select report_date,

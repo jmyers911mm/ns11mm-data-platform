@@ -5,7 +5,7 @@
   Identifies product pair co-purchase lift for cross-sell recommendations.
 */
 
-{{ config(materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
 
 with item_pairs as (
     select
