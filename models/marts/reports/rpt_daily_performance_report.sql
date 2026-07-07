@@ -49,6 +49,9 @@ with_periods as (
         sum(mus_attendance) over (
             partition by calendar_year, calendar_month order by date_value
         )                                                                  as mus_attendance_mtd,
+        sum(mem_attendance) over (
+            partition by calendar_year, calendar_month order by date_value
+        )                                                                  as mem_attendance_mtd,
 
         -- YTD sums
         sum(ticket_revenue) over (
@@ -62,7 +65,10 @@ with_periods as (
         )                                                                  as mus_store_gross_profit_ytd,
         sum(mus_attendance) over (
             partition by calendar_year order by date_value
-        )                                                                  as mus_attendance_ytd
+        )                                                                  as mus_attendance_ytd,
+        sum(mem_attendance) over (
+            partition by calendar_year order by date_value
+        )                                                                  as mem_attendance_ytd
 
     from fct
 )
@@ -78,6 +84,7 @@ select
     pass_revenue,
     total_admission_revenue,
     mus_attendance,
+    mem_attendance,
     service_fees,
     ticketing_donations,
     box_office_mem_don,
@@ -96,6 +103,7 @@ select
     audio_tour_headset,
     mem_audio_guide_revenue,
     mus_guided_tour_revenue,
+    mem_guided_tour_revenue,
     mem_mus_tour_revenue,
     mem_field_trip_revenue,
     mus_field_trip_revenue,
@@ -105,6 +113,7 @@ select
     virtual_mus_tour_revenue,
     virtual_yf_mem_tour_revenue,
     mus_guided_tours,
+    mem_guided_tours,
     mem_mus_tours,
 
     -- ============ PERIOD ROLL-UPS (additive) ============
@@ -112,10 +121,12 @@ select
     tickets_sold_mtd,
     mus_store_gross_profit_mtd,
     mus_attendance_mtd,
+    mem_attendance_mtd,
     ticket_revenue_ytd,
     tickets_sold_ytd,
     mus_store_gross_profit_ytd,
     mus_attendance_ytd,
+    mem_attendance_ytd,
 
     -- ============ NON-ADDITIVE RATIOS (computed here, never re-aggregated) ============
     -- Average ticket price = total admission revenue / tickets sold

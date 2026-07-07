@@ -10,8 +10,8 @@
 -- PLU-enumerable cohorts (field trips, revealed, ask-educator, and the set of
 -- PLUs excluded from core museum guided tours) are seed-driven via
 -- seed_tour_plu -- edit that seed to add/retire a PLU, no model change needed.
--- Matrix-code cohorts (%TOU%, %VTM%, %VTU%, %VTF%) stay inline because they are
--- pattern matches over an open set of PLUs, not an enumerable list.
+-- Matrix-code cohorts (%TOU%, %MGT%, %VTM%, %VTU%, %VTF%) stay inline because
+-- they are pattern matches over an open set of PLUs, not an enumerable list.
 --
 -- Legacy lineage: t_reporting_mus_guided_tours_revenue,
 -- t_reporting_mem_guided_tours_revenue, t_reporting_virtual_*_revenue,
@@ -22,7 +22,8 @@
 -- NOTE: buyout components (fact_museum_guided_tour_buyout) and the
 -- issued/unissued split of the ORIGINAL Pentaho flow are consolidated here
 -- into recognized-line revenue. Confirm buyout handling with Chris Wogas
--- before go-live (flagged in build notes).
+-- before go-live (flagged in build notes). Early-access (ea_mem_mus) tour
+-- revenue is buyout-derived and remains gated on that decision.
 
 {{ config(materialized='view') }}
 
@@ -36,9 +37,9 @@ tour_plu as (
     from {{ ref('seed_tour_plu') }}
 ),
 
--- Any PLU present in the seed is NOT a core museum guided tour (it is a field
--- trip, revealed, architecture, ask-educator, etc.). This replaces the former
--- hardcoded exclusion list.
+-- Any PLU present in the seed is NOT a core museum/memorial guided tour (it is
+-- a field trip, revealed, architecture, ask-educator, etc.). This replaces the
+-- former hardcoded exclusion list.
 labeled as (
     select
         l.*,
@@ -56,6 +57,14 @@ aggregated as (
                  then quantity else 0 end)                                 as mus_guided_tours,
         sum(case when matrix_code like '%TOU%' and plu_line_item is null
                  then amount else 0 end)                                   as mus_guided_tour_revenue,
+
+        -- Memorial guided tours: MGT matrix, excluding any seed-listed PLU.
+        -- Distinct from mem_mus_tour (%MTG%, combined) and from field trips
+        -- (seed-labeled), so no double-count. Legacy: t_reporting_mem_guided_tours_revenue.
+        sum(case when matrix_code like '%MGT%' and plu_line_item is null
+                 then quantity else 0 end)                                 as mem_guided_tours,
+        sum(case when matrix_code like '%MGT%' and plu_line_item is null
+                 then amount else 0 end)                                   as mem_guided_tour_revenue,
 
         -- Memorial field trips (seed-labeled)
         sum(case when plu_line_item = 'mem_field_trip' then quantity else 0 end)

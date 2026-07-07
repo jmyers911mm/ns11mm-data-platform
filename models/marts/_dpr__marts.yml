@@ -17,6 +17,14 @@ models:
         data_tests: [not_null]
       - name: ticket_revenue
         data_tests: [not_null]
+      - name: mem_attendance
+        description: >
+          Memorial attendance (valid Gateway scans at memorial facilities).
+          Scan component only; Sensource blend gated (see int_dpr__attendance).
+        data_tests: [not_null]
+      - name: mem_guided_tour_revenue
+        description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
+        data_tests: [not_null]
 
   - name: rpt_daily_performance_report
     description: >

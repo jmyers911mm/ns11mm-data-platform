@@ -43,6 +43,10 @@ admissions as (
     select * from {{ ref('int_dpr__admissions') }}
 ),
 
+attendance as (
+    select * from {{ ref('int_dpr__attendance') }}
+),
+
 -- Union all contributing dates to form the day spine.
 -- key_date is normalized to DATE at every source to guarantee the
 -- downstream inner join to dim_date is 1:1 (grain-integrity guard for the
@@ -53,6 +57,7 @@ date_spine as (
     union select cast(key_date as date) from retail where key_date is not null
     union select cast(key_date as date) from donations where key_date is not null
     union select cast(key_date as date) from admissions where key_date is not null
+    union select cast(key_date as date) from attendance where key_date is not null
 ),
 
 combined as (
@@ -64,9 +69,13 @@ combined as (
         coalesce(a.ticket_revenue, 0)                                      as ticket_revenue,
         coalesce(a.pass_revenue, 0)                                        as pass_revenue,
         coalesce(a.mus_attendance, 0)                                      as mus_attendance,
+        -- Memorial attendance: valid scans at memorial facilities (Gateway).
+        -- See int_dpr__attendance scope note (facility-name classification).
+        coalesce(att.mem_attendance, 0)                                    as mem_attendance,
 
         -- Tours (quantities)
         coalesce(t.mus_guided_tours, 0)                                    as mus_guided_tours,
+        coalesce(t.mem_guided_tours, 0)                                    as mem_guided_tours,
         coalesce(t.mem_field_trips, 0)                                     as mem_field_trips,
         coalesce(t.mus_field_trips, 0)                                     as mus_field_trips,
         coalesce(t.virtual_mem_tours, 0)                                   as virtual_mem_tours,
@@ -76,6 +85,7 @@ combined as (
 
         -- Tours (revenue)
         coalesce(t.mus_guided_tour_revenue, 0)                             as mus_guided_tour_revenue,
+        coalesce(t.mem_guided_tour_revenue, 0)                             as mem_guided_tour_revenue,
         coalesce(t.mem_field_trip_revenue, 0)                              as mem_field_trip_revenue,
         coalesce(t.mus_field_trip_revenue, 0)                              as mus_field_trip_revenue,
         coalesce(t.revealed_tour_revenue, 0)                               as revealed_tour_revenue,
@@ -113,11 +123,12 @@ combined as (
         coalesce(r.cafe1_donations, 0)                                     as cafe1_donations
 
     from date_spine s
-    left join tours      t on s.key_date = cast(t.key_date as date)
-    left join fees       f on s.key_date = cast(f.key_date as date)
-    left join retail     r on s.key_date = cast(r.key_date as date)
-    left join donations  d on s.key_date = cast(d.key_date as date)
-    left join admissions a on s.key_date = cast(a.key_date as date)
+    left join tours       t   on s.key_date = cast(t.key_date as date)
+    left join fees        f   on s.key_date = cast(f.key_date as date)
+    left join retail      r   on s.key_date = cast(r.key_date as date)
+    left join donations   d   on s.key_date = cast(d.key_date as date)
+    left join admissions  a   on s.key_date = cast(a.key_date as date)
+    left join attendance  att on s.key_date = cast(att.key_date as date)
 )
 
 select

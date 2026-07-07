@@ -28,10 +28,15 @@ models:
         data_tests: [not_null]
 
   - name: int_dpr__tour_revenue
-    description: Guided/virtual/field-trip tour quantities and revenue per day.
+    description: >
+      Guided (museum + memorial), virtual, field-trip and program tour
+      quantities and revenue per day.
     columns:
       - name: key_date
         data_tests: [not_null, unique]
+      - name: mem_guided_tour_revenue
+        description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
+        data_tests: [not_null]
 
   - name: int_dpr__fees_and_services
     description: Service fees, audio guide revenue, memorial+museum tour per day.
@@ -59,3 +64,20 @@ models:
     columns:
       - name: key_date
         data_tests: [not_null, unique]
+
+  - name: int_dpr__attendance
+    description: >
+      Scan-based museum and memorial attendance per day, from int_ticket_scans
+      (valid Gateway scans) classified to area by facility name. mem_attendance
+      feeds fct_daily_performance; mus_attendance_scanned is a QA companion to
+      the ga-ticket attendance proxy in int_dpr__admissions. See model header
+      scope note (facility-name classification; Sensource blend not yet staged).
+    columns:
+      - name: key_date
+        data_tests: [not_null, unique]
+      - name: mem_attendance
+        description: Valid scans at memorial-classified facilities.
+        data_tests: [not_null]
+      - name: mus_attendance_scanned
+        description: Valid scans at museum-classified facilities (QA only).
+        data_tests: [not_null]
