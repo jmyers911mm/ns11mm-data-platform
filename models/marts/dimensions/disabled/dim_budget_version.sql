@@ -4,7 +4,7 @@
   TODO: Update source ref once Vena pipeline is active and MODELS dict is populated.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 -- PLACEHOLDER: Replace with production source ref
 -- Source: stg_vena__budget -> int_vena -> this model

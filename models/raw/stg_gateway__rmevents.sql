@@ -71,4 +71,5 @@ staged as (
 )
 
 select * from staged
+where event_id is not null
 qualify row_number() over (partition by event_id order by _loaded_at desc) = 1

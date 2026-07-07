@@ -4,7 +4,7 @@
   TODO: Update source ref once Blackbaud pipeline is active.
 */
 
-{{ config(materialized='table') }}
+{{ config(enabled=false,materialized='table') }}
 
 -- PLACEHOLDER: Replace with production source ref
 -- Source: stg_blackbaud__accounts -> int_blackbaud -> this model

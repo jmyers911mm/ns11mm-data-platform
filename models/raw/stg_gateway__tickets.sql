@@ -101,4 +101,5 @@ staged as (
 )
 
 select * from staged
+where ticket_id is not null
 qualify row_number() over (partition by ticket_id order by _loaded_at desc) = 1

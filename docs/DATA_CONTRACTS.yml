@@ -4,49 +4,13 @@ data_contracts:
   - name: raw_source_freshness
     description: "SLA for RAW data landing from source pipelines"
     sla:
-      - source: salesforce_nps
-        max_stale_hours: 3
-        severity: critical
-        owner: Jeremy Myers
-      - source: salesforce_mc
-        max_stale_hours: 4
-        severity: critical
-        owner: Jeremy Myers
       - source: gateway
         max_stale_hours: 6
         severity: critical
-        owner: Kenny (IT)
+        owner: Jeremy Myers
       - source: counterpoint
         max_stale_hours: 6
         severity: critical
-        owner: Kenny (IT)
-      - source: shopify
-        max_stale_hours: 3
-        severity: high
-        owner: Jeremy Myers
-      - source: classy
-        max_stale_hours: 4
-        severity: high
-        owner: Jeremy Myers
-      - source: blackbaud
-        max_stale_hours: 8
-        severity: medium
-        owner: Jeremy Myers
-      - source: ga4
-        max_stale_hours: 4
-        severity: high
-        owner: Jeremy Myers
-      - source: google_ads
-        max_stale_hours: 4
-        severity: medium
-        owner: Jeremy Myers
-      - source: meta_ads
-        max_stale_hours: 4
-        severity: medium
-        owner: Jeremy Myers
-      - source: vena
-        max_stale_hours: 8
-        severity: low
         owner: Jeremy Myers
 
   - name: marts_refresh_sla

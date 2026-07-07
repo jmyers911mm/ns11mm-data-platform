@@ -1,6 +1,7 @@
 -- Rebuild ML_TICKET_DEMAND_FEATURES and run forecast model
 -- Co-authored with CoCo
 
+/***
 -- Step 1: Rebuild fct_ticket_availability (incremental table is empty, force full refresh)
 CREATE OR REPLACE TABLE NS11MM_DW_DEV_JMYERS.MARTS.FCT_TICKET_AVAILABILITY AS
 WITH inventory AS (
@@ -81,6 +82,7 @@ FROM with_features;
 SELECT COUNT(*) AS total_rows, COUNT(DISTINCT ticket_type) AS series_count,
        MIN(visit_date) AS min_date, MAX(visit_date) AS max_date
 FROM NS11MM_DW_DEV_JMYERS.ML_FEATURES.ML_TICKET_DEMAND_FEATURES;
+***/
 
 -- Step 3b: Create a filtered training view (series need 10+ data points for stable forecasting)
 CREATE OR REPLACE VIEW NS11MM_DW_DEV_JMYERS.ML_FEATURES.ML_TICKET_DEMAND_FEATURES_FILTERED AS

@@ -120,4 +120,5 @@ staged as (
 )
 
 select * from staged
+where order_id is not null
 qualify row_number() over (partition by order_id order by _loaded_at desc) = 1

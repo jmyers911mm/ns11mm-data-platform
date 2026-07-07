@@ -32,9 +32,12 @@ models:
   - name: stg_gateway__items
     description: "Staged gateway product/ticket type catalog"
     columns:
-      - name: plu
+      - name: item_id
         tests:
           - unique
+          - not_null
+      - name: plu
+        tests:
           - not_null
 
   - name: stg_gateway__usage
@@ -56,7 +59,7 @@ models:
   - name: stg_gateway__acps
     description: "Staged gateway access control points"
     columns:
-      - name: acp_id
+      - name: acp_unique_id
         tests:
           - unique
           - not_null
@@ -72,7 +75,7 @@ models:
   - name: stg_gateway__jnlheaders
     description: "Staged gateway journal headers"
     columns:
-      - name: journal_header_id
+      - name: jnl_tran_id
         tests:
           - unique
           - not_null

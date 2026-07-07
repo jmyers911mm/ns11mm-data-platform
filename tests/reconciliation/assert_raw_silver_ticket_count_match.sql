@@ -1,10 +1,10 @@
--- Reconciliation: int_pos_tickets count within 1% of raw gateway tickets with sold dates
+-- Reconciliation: int_pos_tickets count within 1% of deduplicated staging tickets with sold dates
 -- Co-authored with CoCo
 
-with raw_count as (
+with stg_count as (
     select count(*) as cnt
-    from {{ source('gateway_seed', 'seed_gate_tickets') }}
-    where try_to_timestamp(datesold) is not null
+    from {{ ref('stg_gateway__tickets') }}
+    where sold_at is not null
 ),
 
 int_count as (
@@ -14,12 +14,12 @@ int_count as (
 
 reconciliation as (
     select
-        r.cnt as raw_cnt,
+        r.cnt as stg_cnt,
         s.cnt as int_cnt,
         abs(r.cnt - s.cnt) / nullif(r.cnt, 0) as diff_pct
-    from raw_count r, int_count s
+    from stg_count r, int_count s
 )
 
-select raw_cnt, int_cnt, diff_pct
+select stg_cnt, int_cnt, diff_pct
 from reconciliation
 where diff_pct > 0.01
