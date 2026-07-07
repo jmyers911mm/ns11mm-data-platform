@@ -2,12 +2,16 @@
 
 Layer-to-layer count and value reconciliation tests.
 
-All tests are currently commented out pending RAW data connection.
-Uncomment each test once the corresponding RAW source is confirmed populated.
+## Active Tests
 
-| Test | Status |
-|---|---|
-| `assert_raw_int_ticket_count_match` | Awaiting RAW connection |
-| `assert_raw_int_retail_count_match` | Awaiting RAW connection |
-| `assert_int_gold_revenue_reconciliation` | Awaiting production models |
-| `assert_int_gold_visitor_reconciliation` | Awaiting production models |
+| Test | Validates |
+|------|-----------|
+| `assert_raw_silver_ticket_count_match` | int_pos_tickets count within 1% of raw gateway tickets (with sold_at) |
+| `assert_silver_gold_revenue_reconciliation` | fct_daily_operations ticket_revenue within 0.1% of int_pos_tickets total |
+
+## Disabled Tests — in `disabled/` subfolder
+
+| Test | Blocked By |
+|------|-----------|
+| `assert_raw_silver_retail_count_match` | int_pos_retail (doesn't exist yet — no Shopify) |
+| `assert_silver_gold_visitor_reconciliation` | Logic needs rework (ticket count ≠ gate scan count) |

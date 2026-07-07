@@ -1,103 +1,83 @@
 version: 2
 
 models:
-  - name: int_sf_crm
-    description: "Enriched CRM contacts with membership and donation data from Salesforce Opportunities"
+  - name: int_gateway__ticket_demand_features
+    description: "Ticket demand features with presale lead time and temporal patterns"
     columns:
-      - name: contact_id
-        description: "Salesforce Contact Id — primary key"
+      - name: ticket_id
         tests:
           - unique
           - not_null
-      - name: email
-        description: "Contact email address"
-      - name: computed_membership_status
-        description: "Derived membership status: Active, Inactive, or Unknown"
+      - name: entry_date
         tests:
-          - accepted_values:
-              values: ['Active', 'Inactive', 'Unknown']
-      - name: donor_tier
-        description: "Donor classification based on YTD donation amount"
+          - not_null
+      - name: plu
         tests:
-          - accepted_values:
-              values: ['Major Donor', 'Mid-Level Donor', 'Donor', 'Small Donor', 'Non-Donor']
+          - not_null
 
+  - name: int_gateway__item_journal_lines
+    description: "Gateway item journal lines enriched with account details"
 
+  - name: int_gateway__ticket_journal_lines
+    description: "Gateway ticket journal lines with ticket associations"
 
-  - name: int_sf_marketing_cloud
-    description: "Marketing Cloud email engagement events (sends, opens, clicks, bounces, unsubscribes)"
+  - name: int_counterpoint__retail_lines
+    description: "CounterPoint retail line items with facility assignment"
     columns:
-      - name: send_id
-        description: "Unique send event identifier — primary key"
-        tests:
-          - unique
-          - not_null
-      - name: event_type
-        description: "Email event type"
+      - name: doc_id
         tests:
           - not_null
-          - accepted_values:
-              values: ['Sent', 'Open', 'Click', 'Bounce', 'Unsubscribe']
-      - name: email_address
+      - name: line_seq_no
         tests:
           - not_null
 
-  - name: int_shopify
-    description: "Cleaned Shopify orders excluding test orders, with derived revenue metrics"
-    columns:
-      - name: order_id
-        description: "Shopify order ID — primary key"
-        tests:
-          - unique
-          - not_null
-      - name: order_date
-        tests:
-          - not_null
-
-  - name: int_classy
-    description: "GoFundMe Pro / Classy donation transactions with recurring flag"
+  - name: int_pos_tickets
+    description: "Daily POS ticket transactions from gateway for revenue reporting"
     columns:
       - name: transaction_id
-        description: "Classy transaction ID — primary key"
         tests:
           - unique
           - not_null
-      - name: gross_amount
+      - name: transaction_date
         tests:
           - not_null
 
-  - name: int_blackbaud
-    description: "Blackbaud Financial Edge NXT journal entries with posting type derivation"
+  - name: int_ticket_scans
+    description: "Gate scan events for visitor admission counts"
     columns:
-      - name: journal_entry_id
-        description: "Journal entry ID — primary key"
+      - name: scan_id
         tests:
           - unique
           - not_null
-      - name: posting_type
-        description: "Derived: Actual or Encumbrance"
+      - name: scan_date
         tests:
-          - accepted_values:
-              values: ['Actual', 'Encumbrance']
+          - not_null
 
-  - name: int_google_analytics
-    description: "GA4 session-level web analytics with derived channel grouping and page categories"
+  - name: int_ticket_inventory
+    description: "Derived daily ticket inventory (reservations vs capacity)"
     columns:
-      - name: hashdiff
-        description: "Hash-based unique key for session record"
+      - name: inventory_key
         tests:
           - unique
           - not_null
-      - name: channel_grouping
-        description: "Derived marketing channel from source/medium"
+      - name: entry_date
         tests:
-          - accepted_values:
-              values: ['Paid Search', 'Paid Social', 'Organic Search', 'Email', 'Direct', 'Other']
+          - not_null
+      - name: ticket_type_id
+        tests:
+          - not_null
 
-  - name: int_google_ads
-    description: "Google Ads campaign performance metrics"
+  - name: int_dpr__admissions
+    description: "DPR admissions revenue allocation"
 
-  - name: int_meta_ads
-    description: "Meta (Facebook/Instagram) Ads campaign performance metrics"
+  - name: int_dpr__donations
+    description: "DPR donation revenue allocation"
 
+  - name: int_dpr__fees_and_services
+    description: "DPR fees and services revenue allocation"
 
+  - name: int_dpr__retail
+    description: "DPR retail revenue allocation"
+
+  - name: int_dpr__tour_revenue
+    description: "DPR tour revenue allocation"

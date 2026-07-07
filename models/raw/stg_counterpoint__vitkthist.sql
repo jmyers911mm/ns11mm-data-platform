@@ -360,9 +360,13 @@ staged as (
         try_to_timestamp(orig_ord_dat)          as orig_order_date,
         try_to_timestamp(orig_ord_tim)          as orig_order_time,
         try_to_timestamp(orig_lwy_dat)          as orig_layaway_date,
-        try_to_timestamp(orig_lwy_tim)          as orig_layaway_time
+        try_to_timestamp(orig_lwy_tim)          as orig_layaway_time,
+
+        -- Metadata
+        _loaded_at
 
     from source
 )
 
 select * from staged
+qualify row_number() over (partition by doc_id order by _loaded_at desc) = 1

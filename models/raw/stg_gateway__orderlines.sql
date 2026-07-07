@@ -163,3 +163,4 @@ staged as (
 )
 
 select * from staged
+qualify row_number() over (partition by order_line_id order by _loaded_at desc) = 1

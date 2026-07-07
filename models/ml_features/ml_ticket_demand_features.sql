@@ -1,10 +1,7 @@
-/*
-  ml_ticket_demand_features
-  Sources: fct_ticket_availability + dim_date
-  STATUS: Awaiting RAW data. Logic migrated from POC — no ref changes needed.
-*/
+-- ML feature table for ticket demand forecasting with Snowflake ML FORECAST
+-- Co-authored with CoCo
 
-{{ config(enabled=false,materialized='table', transient=true, tags=['daily', 'non-critical']) }}
+{{ config(materialized='table', transient=true, tags=['daily', 'non-critical']) }}
 
 with daily_demand as (
     select entry_date, ticket_type,
@@ -30,5 +27,24 @@ with_features as (
     left join {{ ref('dim_date') }} dd on d.entry_date = dd.date_id
 )
 
-select *, current_timestamp() as _feature_computed_at
+select
+    entry_date as visit_date,
+    ticket_type,
+    daily_reserved as daily_visitors,
+    daily_capacity,
+    daily_utilization_pct,
+    windows_sold_out,
+    windows_high_demand,
+    total_windows,
+    day_of_week_num,
+    day_name,
+    is_weekend,
+    month_num,
+    fiscal_year,
+    reserved_lag_1d,
+    reserved_lag_7d,
+    reserved_7d_avg,
+    reserved_30d_avg,
+    reserved_30d_stddev,
+    current_timestamp() as _feature_computed_at
 from with_features

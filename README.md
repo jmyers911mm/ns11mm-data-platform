@@ -19,16 +19,16 @@ This repo contains the **full target architecture** for the platform, but only t
 outside the Gateway (ticketing) and CounterPoint (retail POS) domains is scaffolded
 but **disabled** (`enabled=false`) pending source connectivity.
 
-**Live today — the DPR pipeline (Gateway + CounterPoint → Daily Performance Report):**
+**Live today — DPR pipeline + ticket demand forecasting:**
 
 | Layer | Live | Of total | What's live |
 |-------|:----:|:--------:|-------------|
 | Staging (`models/raw/`) | **21** | 21 | 16 `stg_gateway__*` + 5 `stg_counterpoint__*` |
-| Intermediate (`models/intermediate/`) | **8** | 16 | 3 `silver_gateway__*/counterpoint__*` + 5 `silver_dpr__*` |
+| Intermediate (`models/intermediate/`) | **12** | 20 | 3 gateway + 5 DPR + `int_pos_tickets`, `int_ticket_scans`, `int_ticket_inventory`, `int_gateway__ticket_demand_features` |
 | Mart dimensions (`models/marts/dimensions/`) | **4** | 10 | `dim_date`, `dim_fund`, `dim_budget_version`, `dim_marketing_channel` |
-| Mart facts (`models/marts/facts/`) | **1** | 23 | `fct_daily_performance` |
+| Mart facts (`models/marts/facts/`) | **4** | 24 | `fct_daily_performance`, `fct_daily_operations`, `fct_ticket_availability`, `fct_ticket_demand_forecast` |
 | Mart reports (`models/marts/reports/`) | **1** | 10 | `rpt_daily_performance_report` |
-| ML features (`models/ml_features/`) | **0** | 14 | none (all depend on disabled facts) |
+| ML features (`models/ml_features/`) | **2** | 14 | `ml_ticket_demand_features`, `ml_visitor_forecast_training` |
 | Semantic views (`semantic_models/`) | **1** | 1 | `MARTS.DPR` (DPR only) |
 
 **Planned / disabled** (present in the repo, `enabled=false`): all marketing, digital
@@ -213,7 +213,7 @@ for the target platform but not yet connected.
 | Staging | STAGING | View | — | daily, critical | Type casting, trimming, column renaming |
 | Intermediate | INTERMEDIATE | Incremental | Merge | daily, critical | Business logic, computed columns, dedup |
 | Marts | MARTS | Incremental / Table | Merge | daily, critical | Star schema: dimensions + facts + reports |
-| ML Features | ML_FEATURES | Table | Full rebuild | daily, non-critical | Feature tables (planned) |
+| ML Features | ML_FEATURES | Table | Full rebuild | daily, non-critical | Feature tables for Snowflake ML FORECAST |
 
 ---
 

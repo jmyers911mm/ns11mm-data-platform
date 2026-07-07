@@ -46,3 +46,4 @@ staged as (
 )
 
 select * from staged
+qualify row_number() over (partition by acp_unique_id order by _loaded_at desc) = 1

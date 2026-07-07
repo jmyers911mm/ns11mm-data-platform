@@ -6,11 +6,11 @@
 
 {{
     config(
-        enabled=false,
+        enabled=true,
         materialized='incremental',
         unique_key='availability_key',
         incremental_strategy='merge',
-        cluster_by=['entry_date', 'ticket_type_id'],
+        cluster_by=['entry_date', 'ticket_type'],
         tags=['intraday', 'critical']
     )
 }}

@@ -195,9 +195,13 @@ staged as (
         try_to_timestamp(ecomm_lst_chng_utc_dt) as ecomm_last_changed_utc,
 
         -- Maintenance user
-        lst_maint_usr_id                        as last_maintained_by
+        lst_maint_usr_id                        as last_maintained_by,
+
+        -- Metadata
+        _loaded_at
 
     from source
 )
 
 select * from staged
+qualify row_number() over (partition by item_no order by _loaded_at desc) = 1

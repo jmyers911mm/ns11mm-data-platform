@@ -1,0 +1,144 @@
+version: 2
+
+models:
+  # ─── Gateway staging ───────────────────────────────────────────────────────
+  - name: stg_gateway__tickets
+    description: "Staged gateway tickets with parsed dates and deduplication"
+    columns:
+      - name: ticket_id
+        tests:
+          - unique
+          - not_null
+      - name: sold_at
+        description: "Timestamp ticket was sold — null for unsold/reserved"
+      - name: ticket_date
+        description: "Entry/visit date (sourced from endoflifedate)"
+
+  - name: stg_gateway__orders
+    description: "Staged gateway sales orders"
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__orderlines
+    description: "Staged gateway order line items"
+    columns:
+      - name: order_line_id
+        tests:
+          - not_null
+
+  - name: stg_gateway__items
+    description: "Staged gateway product/ticket type catalog"
+    columns:
+      - name: plu
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__usage
+    description: "Staged gateway ticket usage/scan events"
+    columns:
+      - name: usage_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__facility
+    description: "Staged gateway facility reference"
+    columns:
+      - name: facility_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__acps
+    description: "Staged gateway access control points"
+    columns:
+      - name: acp_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__rmevents
+    description: "Staged gateway resource management events"
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__jnlheaders
+    description: "Staged gateway journal headers"
+    columns:
+      - name: journal_header_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_gateway__jnldetails
+    description: "Staged gateway journal details"
+
+  - name: stg_gateway__jnlitems
+    description: "Staged gateway journal items"
+
+  - name: stg_gateway__jnltickets
+    description: "Staged gateway journal ticket associations"
+
+  - name: stg_gateway__coa
+    description: "Staged gateway chart of accounts"
+
+  - name: stg_gateway__vusage
+    description: "Staged gateway ticket usage report view"
+
+  - name: stg_gateway__vattribute
+    description: "Staged gateway ticket attribute values"
+
+  - name: stg_gateway__disbursementdetails
+    description: "Staged gateway payment disbursement details"
+
+  # ─── CounterPoint staging ──────────────────────────────────────────────────
+  - name: stg_counterpoint__imitem
+    description: "Staged CounterPoint item master"
+    columns:
+      - name: item_no
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_counterpoint__pstkthist
+    description: "Staged CounterPoint POS ticket history headers"
+    columns:
+      - name: doc_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_counterpoint__pstkthistlin
+    description: "Staged CounterPoint POS ticket history line items"
+    columns:
+      - name: doc_id
+        tests:
+          - not_null
+      - name: line_seq_no
+        tests:
+          - not_null
+
+  - name: stg_counterpoint__vitkthist
+    description: "Staged CounterPoint ticket history enriched view"
+    columns:
+      - name: doc_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_counterpoint__vitkthistlin
+    description: "Staged CounterPoint ticket history line enriched view"
+    columns:
+      - name: doc_id
+        tests:
+          - not_null
+      - name: line_seq_no
+        tests:
+          - not_null

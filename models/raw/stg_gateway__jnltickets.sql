@@ -143,3 +143,4 @@ staged as (
 )
 
 select * from staged
+qualify row_number() over (partition by jnl_detail_id order by _loaded_at desc) = 1

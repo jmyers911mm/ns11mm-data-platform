@@ -7,6 +7,9 @@ sources:
     database: NS11MM_DW_DEV_JMYERS
     schema: RAW
     loaded_at_field: _loaded_at
+    freshness:
+      warn_after: {count: 7, period: day}
+      error_after: {count: 14, period: day}
     tables:
       - name: seed_gate_tickets
         description: Issued tickets with status, usage, pricing, and customer info
@@ -46,6 +49,9 @@ sources:
     database: NS11MM_DW_DEV_JMYERS
     schema: RAW
     loaded_at_field: _loaded_at
+    freshness:
+      warn_after: {count: 7, period: day}
+      error_after: {count: 14, period: day}
     tables:
       - name: seed_cp_imitem
         description: Item master — product catalog with pricing, attributes, and dimensions

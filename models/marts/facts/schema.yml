@@ -1,112 +1,50 @@
 version: 2
 
 models:
-  - name: fct_ticket_sales
-    description: "Ticket sales fact table joining transactions with gate scans and resolved customer IDs"
-    columns:
-      - name: transaction_id
-        description: "Gateway transaction identifier"
-        tests:
-          - not_null
-      - name: transaction_date
-        tests:
-          - not_null
-      - name: total_amount
-        tests:
-          - not_null
-      - name: visitor_category
-        tests:
-          - accepted_values:
-              values: ['Adult', 'Child', 'Senior', 'Member', 'School Group', 'Family', 'Other']
-
-  - name: fct_retail_line_items
-    description: "Retail line-item fact from CounterPoint and Shopify with resolved customer IDs"
-    columns:
-      - name: transaction_id
-        tests:
-          - not_null
-      - name: transaction_date
-        tests:
-          - not_null
-      - name: retail_channel
-        tests:
-          - accepted_values:
-              values: ['counterpoint', 'shopify']
-
-  - name: fct_fundraising
-    description: "Donation transactions from Classy/GoFundMe Pro enriched with campaign metadata"
-    columns:
-      - name: transaction_id
-        tests:
-          - unique
-          - not_null
-      - name: transaction_date
-        tests:
-          - not_null
-      - name: gross_amount
-        tests:
-          - not_null
-
   - name: fct_ticket_availability
-    description: "Real-time ticket capacity and utilization by date/window/type — tagged intraday for frequent refresh"
+    description: "Real-time ticket capacity and utilization by date/window/type"
     columns:
       - name: availability_key
         tests:
           - unique
           - not_null
+      - name: entry_date
+        tests:
+          - not_null
+      - name: ticket_type
+        tests:
+          - not_null
       - name: utilization_pct
         description: "Percentage of capacity reserved (0-100)"
+        tests:
+          - not_null
 
-  - name: fct_gl_transactions
-    description: "General ledger transactions from Blackbaud Financial Edge NXT"
-
-  - name: fct_donor_retention
-    description: "Donor retention cohort analysis tracking year-over-year giving"
-
-  - name: fct_donor_cohort_survival
-    description: "Donor survival curves by acquisition cohort month"
-
-  - name: fct_campaign_performance
-    description: "Salesforce campaign performance metrics (responses, conversions, ROI)"
-
-  - name: fct_campaign_attribution
-    description: "Multi-touch campaign attribution linking web sessions to conversions"
-
-  - name: fct_digital_ad_performance
-    description: "Unified Google Ads + Meta Ads daily performance metrics"
-
-  - name: fct_ad_campaign_daily
-    description: "Daily ad campaign spend and conversion metrics"
-
-  - name: fct_marketing_channel_summary
-    description: "Aggregated marketing channel performance across all digital channels"
-
-  - name: fct_marketing_sales_daily
-    description: "Daily revenue and marketing metrics combined for executive dashboard"
+  - name: fct_ticket_demand_forecast
+    description: "Ticket demand aggregated for forecasting and presale analysis"
+    columns:
+      - name: entry_date
+        tests:
+          - not_null
+      - name: plu
+        tests:
+          - not_null
+      - name: ticket_count
+        tests:
+          - not_null
+      - name: total_revenue
+        tests:
+          - not_null
 
   - name: fct_daily_operations
-    description: "Daily operational metrics: visitors, revenue, retail, weather correlation"
-
-  - name: fct_monthly_operations
-    description: "Monthly roll-up of operational KPIs"
-
-  - name: fct_monthly_retail
-    description: "Monthly retail performance by channel and category"
-
-  - name: fct_visitor_traffic
-    description: "Daily visitor traffic from gate scans with day-of-week patterns"
-
-  - name: fct_website_traffic
-    description: "Daily website traffic metrics from GA4"
-
-  - name: fct_website_funnel
-    description: "Website conversion funnel from session to ticket purchase"
-
-  - name: fct_ticket_demand_benchmarks
-    description: "Historical demand benchmarks for forecasting ticket sales"
-
-  - name: fct_ticket_utilization
-    description: "Capacity utilization trends for operational planning"
-
-  - name: bridge_session_customer
-    description: "Bridge table linking GA4 web sessions to resolved customer IDs"
+    description: "Daily operational metrics: visitors, ticket sales, revenue"
+    columns:
+      - name: visit_date
+        tests:
+          - unique
+          - not_null
+      - name: total_visitors
+        tests:
+          - not_null
+      - name: ticket_revenue
+        tests:
+          - not_null

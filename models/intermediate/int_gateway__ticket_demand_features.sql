@@ -21,6 +21,7 @@ with tickets as (
     from {{ ref('stg_gateway__tickets') }}
     where sold_at is not null
       and ticket_date is not null
+      and ticket_date < '2030-01-01'
 ),
 
 items as (

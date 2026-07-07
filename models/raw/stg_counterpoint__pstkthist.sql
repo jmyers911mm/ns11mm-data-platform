@@ -101,9 +101,13 @@ staged as (
 
         -- Dates
         try_to_timestamp(tkt_dt)                as ticket_date,
-        try_to_timestamp(ship_dat)              as ship_date
+        try_to_timestamp(ship_dat)              as ship_date,
+
+        -- Metadata
+        _loaded_at
 
     from source
 )
 
 select * from staged
+qualify row_number() over (partition by doc_id order by _loaded_at desc) = 1

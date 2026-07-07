@@ -1,11 +1,7 @@
-/*
-  ml_visitor_forecast_training
-  Source: fct_daily_operations
-  STATUS: Awaiting RAW data. Logic migrated from POC.
-  Feeds Snowflake ML FORECAST — see macros/operations/create_ticket_demand_forecast.sql
-*/
+-- ML visitor forecast training table for Snowflake ML FORECAST
+-- Co-authored with CoCo
 
-{{ config(enabled=false,materialized='table', tags=['daily', 'non-critical']) }}
+{{ config(materialized='table', tags=['daily', 'non-critical']) }}
 
 select
     visit_date::timestamp_ntz                              as ds,

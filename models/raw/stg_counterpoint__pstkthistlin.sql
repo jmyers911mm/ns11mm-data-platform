@@ -131,9 +131,13 @@ staged as (
         ec_seq_no                               as ecommerce_seq_no,
 
         -- Reference
-        ref                                     as reference
+        ref                                     as reference,
+
+        -- Metadata
+        _loaded_at
 
     from source
 )
 
 select * from staged
+qualify row_number() over (partition by doc_id, line_seq_no order by _loaded_at desc) = 1

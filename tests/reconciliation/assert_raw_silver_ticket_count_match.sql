@@ -1,10 +1,10 @@
-{{ config(enabled=false) }}
--- Reconciliation: Silver ticket count within 1% of raw Gateway seed source
+-- Reconciliation: int_pos_tickets count within 1% of raw gateway tickets with sold dates
 -- Co-authored with CoCo
 
 with raw_count as (
     select count(*) as cnt
-    from {{ source('gateway_seed', 'seed_gate_jnltickets') }}
+    from {{ source('gateway_seed', 'seed_gate_tickets') }}
+    where try_to_timestamp(datesold) is not null
 ),
 
 int_count as (

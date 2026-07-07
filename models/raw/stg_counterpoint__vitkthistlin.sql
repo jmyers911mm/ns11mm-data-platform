@@ -216,9 +216,13 @@ staged as (
 
         -- Dates
         post_dat                                as post_date,
-        try_to_timestamp(tkt_dat)               as ticket_date
+        try_to_timestamp(tkt_dat)               as ticket_date,
+
+        -- Metadata
+        _loaded_at
 
     from source
 )
 
 select * from staged
+qualify row_number() over (partition by doc_id, line_seq_no, seq_no order by _loaded_at desc) = 1

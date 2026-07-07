@@ -4,9 +4,21 @@ Feature tables for Snowflake ML models (forecasting, classification, propensity 
 
 ## Enabled Models
 
-None currently enabled — all ML feature models depend on mart-layer facts that are themselves disabled pending source connectivity.
+| Model | Sources | Description |
+|-------|---------|-------------|
+| `ml_ticket_demand_features` | `fct_ticket_availability`, `dim_date` | Daily ticket demand with lag features, rolling averages, and capacity utilization for Snowflake ML FORECAST |
+| `ml_visitor_forecast_training` | `fct_daily_operations`, `dim_date` | Daily visitor count training dataset for visitor forecasting |
 
-## Disabled Models (`enabled=false`)
+### Forecast Model
+
+The ticket demand forecast uses Snowflake ML FORECAST (`ns11mm_ticket_demand_model`):
+- **Training table:** `ML_TICKET_DEMAND_FEATURES` (filtered to series with 10+ observations)
+- **Series column:** `TICKET_TYPE` (PLU-based)
+- **Target:** `DAILY_VISITORS` (reserved ticket count per day)
+- **Forecast horizon:** 90 days with 95% prediction interval
+- **Run via:** `MANUAL_ML_RUN.sql` or `dbt run-operation create_ticket_demand_forecast`
+
+## Disabled Models (`enabled=false`) — in `disabled/` subfolder
 
 | Model | Blocked By | Re-enable When |
 |-------|-----------|----------------|
@@ -21,6 +33,4 @@ None currently enabled — all ML feature models depend on mart-layer facts that
 | `ml_marketing_attribution_features` | int_google_analytics | GA4 connected |
 | `ml_member_churn_features` | rpt_member_360 | Upstream enabled |
 | `ml_retail_cross_sell_features` | fct_retail_line_items | Mart rewired |
-| `ml_ticket_demand_features` | fct_ticket_availability | Capacity source confirmed |
 | `ml_ticket_no_show_features` | fct_ticket_sales | Mart rewired |
-| `ml_visitor_forecast_training` | fct_daily_operations | Upstream enabled |

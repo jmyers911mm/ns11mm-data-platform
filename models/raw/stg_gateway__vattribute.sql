@@ -182,3 +182,4 @@ staged as (
 )
 
 select * from staged
+qualify row_number() over (partition by avg_id order by _loaded_at desc) = 1

@@ -55,11 +55,10 @@ staged as (
 
         -- Dates
         try_to_timestamp(datesold)              as sold_at,
-        try_to_timestamp(ticketdate)            as ticket_date,
+        try_to_timestamp(endoflifedate)         as ticket_date,
         try_to_timestamp(lastuse)               as last_use_at,
         try_to_timestamp(expiration)            as expires_at,
         try_to_timestamp(activatebydate)        as activate_by_date,
-        try_to_timestamp(endoflifedate)         as end_of_life_date,
         try_to_timestamp(lastupdate)            as last_updated_at,
 
         -- Customer
@@ -102,3 +101,4 @@ staged as (
 )
 
 select * from staged
+qualify row_number() over (partition by ticket_id order by _loaded_at desc) = 1
