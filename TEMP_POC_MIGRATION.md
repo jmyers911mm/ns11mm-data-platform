@@ -2,7 +2,15 @@
 
 **Source (POC):** `jmyers911mm/ns11mm-dbt`  
 **Destination (Production):** `ns11mm/ns11mm-data-platform`  
-**Last updated:** June 23, 2026
+**Last updated:** July 8, 2026 (v1.5.0 reconciliation sprint)
+
+> **What changed since June 23:** the Gateway + CounterPoint → DPR slice is now **built,
+> validated, and reconciled against legacy** (see Section 0). Interim ingestion is
+> seed-based extracts, not the VARIANT pipelines this inventory originally assumed —
+> those remain the target state. Naming migrated `silver_*` → `int_*` in 1.4.0.
+> Remaining blockers are extract-scope issues owned by Diana (Section 0b) and two ADR
+> decisions. Companions: `CHANGELOG.md` (1.5.0), `docs/architecture/DPR_LINEAGE.md`,
+> `dpr_metric_reconciliation_audit_v3.xlsx`.
 
 ---
 
@@ -16,6 +24,47 @@
 | 🔨 Rebuild | Must be substantially rewritten for production — not a copy |
 | ❌ Exclude | POC artifact not needed in production |
 | 📌 Decision required | Blocked on an open architectural decision |
+
+---
+
+## 0. Live today — the DPR slice (built July 2026, after this inventory was written)
+
+Everything below is ✅ in production-dev, validated against Snowflake and reconciled
+against the legacy Pentaho definitions. It supersedes the corresponding
+target-state rows in Sections 2–6 for the Gateway/CounterPoint domain.
+
+| Layer | Live objects |
+|---|---|
+| Seeds (interim ingestion) | `seed_gate_*` (15 Gateway extracts), `seed_cp_*` (CounterPoint extracts), `seed_tour_plu` (rebuilt 1.5.0), `seed_retail_store_facility`, `seed_retail_item_facility` |
+| Staging | 21 `stg_gateway__*` / `stg_counterpoint__*` models — seed-based (rename, safe parsing, `trim(plu)`, dedup); the VARIANT shells in Section 2 remain target-state for pipeline ingestion |
+| Intermediate — conformance | `int_gateway__ticket_journal_lines` (101; `key_date`, `ga_flag`), `int_gateway__item_journal_lines` (102–104), `int_counterpoint__retail_lines` (facility resolution), `int_ticket_scans`, `int_pos_tickets`, `int_ticket_inventory` |
+| Intermediate — metrics | `int_dpr__admissions`, `int_dpr__tour_revenue`, `int_dpr__fees_and_services`, `int_dpr__donations`, `int_dpr__retail`, `int_dpr__attendance` |
+| Marts | `dim_date`, `fct_daily_performance` (~45 additive measures), `rpt_daily_performance_report`, `fct_daily_operations`, `fct_ticket_availability`, `fct_ticket_demand_forecast` |
+| Semantic | `MARTS.DPR` via `semantic_models/dpr.yaml` (49 metrics, fiscal calendar); native DDL twin pending regeneration |
+| Macros | `gateway_recognized_date` (recognize-basis + visit-date fallbacks), `gateway_general_admission_flag` |
+| Validated totals (July extract window) | tickets_sold 96,326 / $2.68M · journal partition reconciles to the penny · mem_mus_tour $107K · cafe $68K/$7.2K · box-office donations $36.5K · full evidence in the reconciliation workbook |
+
+## 0b. Outstanding data-dependency issues (extract scope — owner: Diana)
+
+These block specific metrics, not the platform. All four are proven **not** to be
+model bugs; the legacy documentation shows each working in production.
+
+| # | Issue | Tables | Blocks | Nature |
+|---|---|---|---|---|
+| 1 | FK columns arrive as literal 0 | `JnlTickets.disbursement_id` (all rows), `JnlDetails.order_line_id` (codes 33/35/37/52); `DisbursementDetails` join never fires | Tour-with-GA cohort in `tickets_sold`; MGT XGA/XXX split; identifying codes 33/35/37/52 | **Export defect** — sampling reduces rows, not values |
+| 2 | COA extract incomplete | `COA` missing accounts behind codes 33/35/37/52 (~$7.8M); `JnlItems`/`JnlTickets` bridges likely partial for non-101–104 codes | `service_fees` (code 33 = likely fee postings; FEE products exist in `Items`, transact nowhere visible) | Partial **lookup** extract — dimensions must be pulled whole |
+| 3 | Recent-window-only extracts | `ps_tkt_hist_lin` (Jun 1–Jul 6; stores 8/10 absent), Gateway facts similar window, `Orders`/`OrderLines` | Retired/seasonal products (virtual tours, Revealed, masks), lifetime/JTD roll-ups, historical unissued | **Time-sliced sample** — resolved by the history load |
+| 4 | `RMEvents.start_at` unresolved | `RMEvents` vs `JnlTickets.event_no` (111K basis-182 rows null; 202 legacy fields depend on this join) | True event dates for tour products (GA volume recovered via `end_of_life_date` fallback) | Inconsistent companion extract **or** join-key mismatch |
+
+Extraction rule for the full load: time-slice fact tables if needed, but pull lookup
+and bridge tables **complete**, preserve every column, and extract related tables from
+the same snapshot. Issues 2–4 disappear under that rule; issue 1 needs the export
+mapping fixed.
+
+Also open (not extract): ADR-005 definitional decisions with Revenue (unissued —
+confirmed present in `orderlines`, 5,703 units / $1.9M; CityPASS/bulk/child-subtraction;
+buyout treatment — $18.7K evidence in the order book); ADR-007 (Drupal); ADR-008
+(retail split); `create_dpr_semantic_view.sql` regeneration.
 
 ---
 
@@ -45,7 +94,7 @@
 
 ## 2. Models — Staging
 
-**Critical note:** All staging models read from RAW VARIANT columns using `:field::TYPE` syntax. The model shells are created with the correct structure but require RAW data to confirm field names.
+**Critical note:** All staging models below read from RAW VARIANT columns using `:field::TYPE` syntax — that remains the **target state for pipeline ingestion**. For Gateway and CounterPoint, the live interim path is **seed-based staging** (21 `stg_gateway__*` / `stg_counterpoint__*` models per Section 0), which supersedes the four Gateway/CounterPoint shells below until the push-based agent lands. The other sources are unchanged.
 
 | File | Status | Unblock condition |
 |---|---|---|
@@ -55,10 +104,10 @@
 | `stg_salesforce_nps__opportunities.sql` | 🔶 Needs data feed | Same as above |
 | `stg_salesforce_nps__campaigns.sql` | 🔶 Needs data feed | Same as above |
 | `stg_salesforce_mc__tracking.sql` | 🔶 Needs data feed | Confirm SFMC JSON structure from pipeline |
-| `stg_gateway__transactions.sql` | 🔶 Needs data feed | Confirm Gateway SQL column names from Kenny |
-| `stg_gateway__ticket_types.sql` | 🔶 Needs data feed | Same as above |
-| `stg_counterpoint__transactions.sql` | 🔶 Needs data feed | Confirm CounterPoint TKT_HIST columns |
-| `stg_counterpoint__line_items.sql` | 🔶 Needs data feed | Same as above |
+| `stg_gateway__transactions.sql` | ❌ Exclude (superseded) | Replaced by the live seed-based `stg_gateway__*` family (Section 0) |
+| `stg_gateway__ticket_types.sql` | ❌ Exclude (superseded) | Same — item/attribute data lives in `stg_gateway__items` / `__vattribute` |
+| `stg_counterpoint__transactions.sql` | ❌ Exclude (superseded) | Replaced by live `stg_counterpoint__pstkthist(lin)` seed-based models |
+| `stg_counterpoint__line_items.sql` | ❌ Exclude (superseded) | Same as above |
 | `stg_shopify__orders.sql` | 🔶 Needs data feed | Shopify API response fields well-documented; low risk |
 | `stg_shopify__customers.sql` | 🔶 Needs data feed | Same as above |
 | `stg_shopify__products.sql` | 🔶 Needs data feed | Same as above |
@@ -76,9 +125,9 @@
 
 ---
 
-## 3. Models — Silver
+## 3. Models — Silver (renamed `int_*` in 1.4.0)
 
-All Silver models migrated and production-ready. Bugs fixed: `silver_sf_crm` (NULL placeholders → real joins), `silver_blackbaud` (CASE NULL logic), `silver_pos_tickets` (customer join via `stg_gateway__customers`).
+**Naming note:** the `silver_` prefix was retired in 1.4.0; production uses `int_<domain>__<entity>`. The Gateway/CounterPoint DPR intermediates are live (Section 0); the models below cover the other sources. All Silver models migrated and production-ready. Bugs fixed: `silver_sf_crm` (NULL placeholders → real joins), `silver_blackbaud` (CASE NULL logic), `silver_pos_tickets` (customer join via `stg_gateway__customers`).
 
 | File | Status | Notes |
 |---|---|---|
@@ -122,10 +171,12 @@ All fact models migrated from POC with production refs. Schema.yml created with 
 
 | File | Status | Notes |
 |---|---|---|
-| `fct_daily_operations.sql` | 📋 Migrate from POC | Update refs to production Silver models |
+| `fct_daily_performance.sql` | ✅ Complete | **Live** — DPR additive fact, reconciled against legacy (1.5.0) |
+| `rpt_daily_performance_report.sql` | ✅ Complete | **Live** — period roll-ups + ratios at query grain |
+| `fct_daily_operations.sql` | ✅ Complete | Migrated + live in 1.4.0 |
 | `fct_ticket_sales.sql` | 📋 Migrate from POC | Update refs; confirm Gateway transaction fields |
 | `fct_retail_line_items.sql` | 📋 Migrate from POC | Update refs; per ADR-008 decision |
-| `fct_ticket_availability.sql` | 📋 Migrate from POC | Update refs |
+| `fct_ticket_availability.sql` | ✅ Complete | Migrated + live in 1.4.0 (incremental) |
 | `fct_ticket_demand_benchmarks.sql` | 📋 Migrate from POC | Update refs |
 | `fct_ticket_utilization.sql` | 📋 Migrate from POC | Deprecated in POC (2026-07-01) — evaluate before migrating |
 | `fct_retail_performance.sql` | 📋 Migrate from POC | Deprecated in POC (2026-07-01) — evaluate before migrating |
@@ -373,6 +424,7 @@ Folder structure created. All 36 SQL files must be migrated from POC with databa
 
 | Object | Type | Status | Notes |
 |---|---|---|---|
+| `MARTS.DPR` (dev) | Semantic View | ✅ Complete | **Live** — generated from `semantic_models/dpr.yaml` (49 metrics, fiscal calendar); regenerate `create_dpr_semantic_view.sql` DDL twin to match |
 | `NS11MM_DW_PROD.GOLD.SV_MUSEUM_OPERATIONS` | Semantic View | 📋 Migrate from POC | Rename + update entity/metric defs for production data |
 | `NS11MM_DW_PROD.GOLD.SV_DONOR_RETENTION` | Semantic View | 📋 Migrate from POC | Rename + update |
 | `NS11MM_DW_PROD.GOLD.SV_MARKETING_PERFORMANCE` | Semantic View | 📋 Migrate from POC | Update for production |
@@ -395,6 +447,10 @@ Folder structure created. All 36 SQL files must be migrated from POC with databa
 ---
 
 ## 19. Summary
+
+> Counts below are as of June 23 and do **not** reflect the live DPR slice (Section 0)
+> or the four superseded staging shells; read them as the remaining *target-state*
+> migration surface for the non-DPR sources.
 
 | Category | ✅ Complete | 🔶 Needs feed | 📋 Migrate | 🔨 Rebuild | 📌 Decision | ❌ Exclude |
 |---|---|---|---|---|---|---|
@@ -422,11 +478,19 @@ Folder structure created. All 36 SQL files must be migrated from POC with databa
 ## 20. What to do next (in order)
 
 ### Right now (no data dependency)
-1. Add the `ns11mm-platform/` folder contents to the production repo via VS Code + git
-2. Resolve ADR-007 (Drupal path) and ADR-008 (retail split) — small decisions that unblock staging builds
-3. Migrate 36 verified query SQL files from POC → `analyses/verified_queries/` with find-and-replace (see Section 21)
-4. Migrate `docs/ONBOARDING.md` and `docs/README.md` from POC
-5. Migrate Terraform `notifications/teams_webhook_setup.sql` from POC
+1. Merge the 1.5.0 reconciliation PR through change control (Ginabell intake → Diana Change ID); attach `dpr_metric_reconciliation_audit_v3.xlsx`
+2. Send the extract-scope request to Diana (Section 0b — zeroed FK columns, COA completeness, history depth, RMEvents); longest lead time on the board
+3. Regenerate `create_dpr_semantic_view.sql` from the rebuilt `dpr.yaml` (DDL twin drift)
+4. Schedule the ADR-005 definition session with Chris Wogas (unissued / CityPASS / bulk / child-subtraction / buyout) — evidence is in hand
+5. Resolve ADR-007 (Drupal path) and ADR-008 (retail split)
+6. Confirm with Gennady: cafe = CP store 1; stores 8/10 register status; remaining `mus_store_donations` surrogate items
+7. Migrate 36 verified query SQL files from POC → `analyses/verified_queries/` (see Section 21)
+8. Migrate `docs/ONBOARDING.md`, `docs/README.md`, and Terraform `notifications/teams_webhook_setup.sql` from POC
+
+### Once Diana's extract fixes land (Section 0b)
+9. Reload seeds; re-run the reconciliation funnel (raw → enriched → GA/tour partition must reconcile exactly)
+10. Verify `service_fees` populates (code 33 / COA); un-gate the memorial-tours history metrics (revealed, field trips, virtual, ask-educator); re-check `disbursement_id`-dependent cohorts
+11. Build the unissued population from `orderlines` per the ADR-005 decision
 
 ### Once first RAW pipeline is live (SFMC first per current priority)
 6. Inspect `_raw_data` JSON: `SELECT _raw_data FROM NS11MM_DW_DEV.RAW.RAW_SALESFORCE_MC_TRACKING_SENT LIMIT 1`
