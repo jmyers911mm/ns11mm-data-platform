@@ -89,7 +89,10 @@ mapped as (
     left join store_facility stf on cast(l.store_id as varchar) = cast(stf.store_id as varchar)
 
     -- Legacy t_fact_retail store scope + hygiene filters
-    where l.store_id in ('3','8','9','10','11','12','13','14')
+    -- Store 1 = Museum Cafe (facility 4007); added 2026-07-08 to fix
+    -- cafe1_all_profit / cafe1_donations always reading zero (store was
+    -- outside scope and 4007 unmapped). Confirm store id with Gennady.
+    where l.store_id in ('1','3','8','9','10','11','12','13','14')
       and coalesce(l.description, '') not ilike '%shipping%'
       and l.item_no <> '201205'
 )

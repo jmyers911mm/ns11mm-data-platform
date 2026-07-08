@@ -54,12 +54,19 @@ fees as (
 
 mem_mus_tour as (
     -- Memorial + Museum combined tour product cohort.
-    -- Legacy fact_memorial_museum_tour is fed by t_fact_memorial_museum_tour
-    -- from the same Galaxy journal join; identified here by matrix %MTG%.
+    -- Legacy fact_memorial_museum_tour keys on rItmProductID = 178 and notes
+    -- these PLUs carry NO matrix code, so the former %MTG% matrix filter
+    -- matched nothing (verified 2026-07-08: MUSMMUADW001 = 1,426 rows /
+    -- $107,270 with empty matrix_code). Keyed on the product-178 PLU list:
+    --   MUSMMUADW001 (Memorial + Museum Tour)
+    --   MUSMMUADW003 (Memorial + Museum Tour Buyout)
+    --   MUSMMUADW005 (Architecture Memorial + Museum Tour)
     select
         key_date,
-        sum(case when matrix_code like '%MTG%' then quantity else 0 end)   as mem_mus_tours,
-        sum(case when matrix_code like '%MTG%' then amount else 0 end)     as mem_mus_tour_revenue
+        sum(case when plu in ('MUSMMUADW001','MUSMMUADW003','MUSMMUADW005')
+                 then quantity else 0 end)                                 as mem_mus_tours,
+        sum(case when plu in ('MUSMMUADW001','MUSMMUADW003','MUSMMUADW005')
+                 then amount else 0 end)                                   as mem_mus_tour_revenue
     from ticket_lines
     group by key_date
 ),

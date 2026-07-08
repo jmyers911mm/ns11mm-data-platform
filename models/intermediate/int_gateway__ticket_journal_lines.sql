@@ -64,7 +64,7 @@ joined as (
         {{ gateway_recognized_date('va', 'jt', 'rme') }}                     as key_date,
 
         -- Product classification
-        it.plu,
+        trim(it.plu)                                                        as plu,
         it.item_filter,
         it.description                                                      as item_description,
         it.kind                                                             as item_kind,

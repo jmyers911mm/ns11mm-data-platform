@@ -10,7 +10,7 @@
 --
 -- Legacy lineage: t_reporting_donations (ticketing portion),
 -- fact_museum_ticketing_donations_issued, fact_donations_analysis_report
--- (box_office_mem_don, box_office_mus_exit_don, coatcheck_don, mask_donations).
+-- (box_office_mem_don, box_office_mus_exit_don, coatcheck_don).
 --
 -- Category keys (legacy key_museum_category):
 --   3221 -> box_office_mem_don (DONOPSMEM003 Plaza Box)
@@ -37,6 +37,9 @@ donations as (
               when matrix_code like '%MUS%' and matrix_code like '%DON%'
                and matrix_code not like '%OPS-MEM%'
                and matrix_code not like '%OPS-MUS%'
+               -- Member-desk donations excluded per legacy spec (booked to
+               -- Membership, not DPR ticketing donations). Added 2026-07-08.
+               and plu <> 'DONMBRMUS001'
               then amount else 0 end)                                       as ticketing_donations,
 
         -- Box office memorial plaza donation (DONOPSMEM003)
@@ -46,16 +49,17 @@ donations as (
         sum(case when plu = 'DONOPSMUS003' then amount else 0 end)         as box_office_mus_exit_don,
 
         -- Coatcheck donations (matrix like %DON-OPS-MUS%)
+        -- Excludes DONOPSMUS003: that PLU is box_office_mus_exit_don above, and
+        -- its matrix also matches %DON-OPS-MUS%. Before the staging plu trim the
+        -- exit-box dollars silently landed here (exact-equality filter dead);
+        -- with the trim both filters fire, so exclude it to avoid double-count.
         sum(case when matrix_code like '%DON-OPS-MUS%'
-                 then amount else 0 end)                                    as coatcheck_don,
+                  and plu <> 'DONOPSMUS003'
+                 then amount else 0 end)                                    as coatcheck_don
 
-        -- Mask donations (donation product family; matrix %DON% with mask PLU)
-        sum(case when matrix_code like '%DON%' and item_description ilike '%mask%'
-                 then amount else 0 end)                                    as mask_donations,
-
-        -- Donation box (Museum general donation deposit)
-        sum(case when matrix_code like '%DON%' and matrix_code like '%BOX%'
-                 then amount else 0 end)                                    as donation_box
+        -- mask_donations and donation_box moved to int_dpr__retail 2026-07-08:
+        -- legacy sources them from CounterPoint retail (items 200704 / 101165),
+        -- not the Gateway item journal. See int_dpr__retail.
 
     from item_lines
     group by key_date

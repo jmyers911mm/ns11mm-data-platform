@@ -13,7 +13,9 @@ staged as (
         itemid                                  as item_id,
 
         -- Product identifiers
-        plu                                     as plu,
+        -- trim: Galaxy stores plu as space-padded CHAR(20); padding defeats every
+        -- downstream equality join/filter (proven 2026-07-08). Trim once at source.
+        trim(plu)                               as plu,
         upc                                     as upc,
         name                                    as item_name,
         descr                                   as description,

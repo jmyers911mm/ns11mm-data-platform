@@ -17,7 +17,8 @@ staged as (
         tranitemno                              as tran_item_no,
 
         -- Product
-        plu                                     as plu,
+        -- trim: keep aligned with stg_gateway__items.plu (CHAR(20) padded in source)
+        trim(plu)                               as plu,
         fkeyno                                  as function_key_no,
         productno                               as product_no,
 

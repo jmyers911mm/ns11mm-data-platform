@@ -78,6 +78,11 @@ models:
       +post-hook:
         - "GRANT SELECT ON {{ this }} TO ROLE ML_ROLE"
 
+seeds:
+  ns11mm_data_platform:
+    seed_tour_plu:
+      +schema: RAW
+
 snapshots:
   ns11mm_data_platform:
     +target_schema: INTERMEDIATE

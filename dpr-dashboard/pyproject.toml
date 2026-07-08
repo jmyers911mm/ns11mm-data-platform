@@ -1,0 +1,6 @@
+[project]
+name = "dpr-dashboard"
+version = "0.1.0"
+description = "Daily Performance Report Dashboard"
+requires-python = ">=3.11"
+dependencies = ["snowflake-connector-python"]

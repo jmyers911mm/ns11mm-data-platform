@@ -1,16 +1,41 @@
 plu,dpr_line_item,notes
-MUSGTOFTAB001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTAW001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTCW001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTNW001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTYB001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTYW001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTAC001,mem_field_trip,Memorial field trip PLU
-MUSGTOFTYC001,mem_field_trip,Memorial field trip PLU
-MUSGTOADW004,mus_field_trip,Museum field trip PLU
-MUSGTOADB004,mus_field_trip,Museum field trip PLU
-MUSGTOADR005,mus_field_trip,Museum field trip PLU (also youth/family per legacy)
-MUSGTOADW008,revealed_tour,Revealed tour PLU
-MUSGTOADW011,revealed_tour,Revealed tour PLU
-MUSARCADW001,architecture_tour,Architecture tour PLU (excluded from core museum guided tours)
-VTEDUMUSGTOADR010,ask_educator,Ask an Educator program PLU
+VTEDUMEMGTOADR001,mem_field_trip,Virtual Memorial School Tour (account_idno %VTE%) - excl buyouts
+VTEDUMEMGTOADR004,mem_field_trip,Virtual Memorial School Tour (account_idno %VTE%) - excl buyouts
+VTEDUMEMGTOADR006,mem_field_trip,Virtual Memorial School Tour (account_idno %VTE%) - excl buyouts
+VTEDUMEMGTOADR007,mem_field_trip,Virtual Memorial School Tour (account_idno %VTE%) - excl buyouts
+VTEDUMUSGTOADR001,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR002,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR003,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR004,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR005,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR006,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR007,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR008,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR009,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR0010,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR0011,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTEDUMUSGTOADR0012,mus_field_trip,"Virtual Museum School Tour (account_idno %VTS%) - note 010 (3-digit) is ask_educator, NOT here"
+VTMUSOBLOADW001,revealed_tour,Live Virtual Revealed: The Hunt for Bin Laden Tour
+VTEDUMUSGTOADR010,ask_educator,Ask An Educator Program
+MUSGTOFTAB001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTAC001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTAW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTAW002,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTCW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTMW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTNW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTSW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTTW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTVW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTYB001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTYC001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOFTYW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
+MUSGTOADW004,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADB004,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADR005,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADR007,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOBUY009,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADW005,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADW011,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADW008,ea_mem_mus_tour,All-Inclusive Early Access Tour - excluded from core museum guided tours
+MUSARCADW001,architecture_tour,Architecture tour - excluded from core museum guided tours (confirm full PLU set)

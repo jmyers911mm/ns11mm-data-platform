@@ -1,23 +1,17 @@
 version: 2
-
 seeds:
   - name: seed_tour_plu
-    description: >
-      One row per PLU that maps to a specific DPR tour line item (field trips,
-      revealed, ask-educator, architecture). Any PLU present here is excluded
-      from the core museum guided-tour cohort. Matrix-code cohorts (%TOU%,
-      %VTM%, %VTU%, %VTF%) are pattern matches and are NOT enumerated here.
+    description: "One row per PLU mapping to a DPR tour line item. Labels the field-trip, revealed, and ask-educator cohorts, and enumerates the tour PLUs excluded from the core museum guided-tour cohort (youth and family, early access, all-inclusive early access, architecture). Any PLU here is excluded from mus_guided_tours."
     columns:
       - name: plu
-        description: Galaxy product PLU.
+        description: "Galaxy product PLU."
         data_tests: [not_null, unique]
       - name: dpr_line_item
-        description: Target DPR line item this PLU rolls up to.
+        description: "Target DPR line item this PLU rolls up to."
         data_tests:
           - not_null
           - accepted_values:
-              values: [mem_field_trip, mus_field_trip, revealed_tour,
-                       architecture_tour, ask_educator]
+              values: [mem_field_trip, mus_field_trip, revealed_tour, ask_educator, architecture_tour, youth_fam_tour, early_access_tour, ea_mem_mus_tour]
 
   - name: seed_retail_item_facility
     description: >

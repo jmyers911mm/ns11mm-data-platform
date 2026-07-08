@@ -30,7 +30,8 @@ staged as (
         -- Product / pricing
         company                                 as company_id,
         tktcode                                 as ticket_code,
-        plu                                     as plu,
+        -- trim: keep aligned with stg_gateway__items.plu (CHAR(20) padded in source)
+        trim(plu)                               as plu,
         productno                               as product_no,
         fkeyno                                  as function_key_no,
         qty                                     as quantity,

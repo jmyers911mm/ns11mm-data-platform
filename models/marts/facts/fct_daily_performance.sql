@@ -97,7 +97,8 @@ combined as (
 
         -- Fees & audio
         coalesce(f.service_fees, 0)                                        as service_fees,
-        coalesce(f.mem_audio_guide_revenue, 0)                             as mem_audio_guide_revenue,
+        coalesce(f.mem_audio_guide_revenue, 0)
+          + coalesce(r.mag_cp_revenue, 0)                                  as mem_audio_guide_revenue,
         -- Audio tour & headset: Galaxy guide/headset + CounterPoint MUS AG (2024-01-16+)
         coalesce(f.mus_audio_guide_revenue, 0)
           + coalesce(r.musag_profit, 0)                                    as audio_tour_headset,
@@ -114,8 +115,8 @@ combined as (
         coalesce(d.box_office_mem_don, 0)                                  as box_office_mem_don,
         coalesce(d.box_office_mus_exit_don, 0)                             as box_office_mus_exit_don,
         coalesce(d.coatcheck_don, 0)                                       as coatcheck_don,
-        coalesce(d.mask_donations, 0)                                      as mask_donations,
-        coalesce(d.donation_box, 0)                                        as donation_box,
+        coalesce(r.mask_donations, 0)                                      as mask_donations,
+        coalesce(r.donation_box, 0)                                        as donation_box,
         coalesce(r.mus_store_donations, 0)                                 as mus_store_donations,
         coalesce(r.mus_exit_donations, 0)                                  as mus_exit_donations,
         coalesce(r.cart_donation_ask, 0)                                   as cart_donation_ask,
