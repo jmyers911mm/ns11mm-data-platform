@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Pre-commit hook: regenerate semantic view DDL from YAML source of truth.
+# Ensures create_dpr_semantic_view.sql is always in sync with dpr.yaml.
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Only run if the YAML or generator changed (or if the SQL is staged)
+STAGED_FILES="$(git diff --cached --name-only)"
+
+if echo "$STAGED_FILES" | grep -qE '(semantic_models/dpr\.yaml|scripts/generate_dpr_semantic_view\.py)'; then
+    echo "[pre-commit] Regenerating semantic view DDL from dpr.yaml..."
+    python "$REPO_ROOT/scripts/generate_dpr_semantic_view.py"
+    git add "$REPO_ROOT/semantic_models/create_dpr_semantic_view.sql"
+    echo "[pre-commit] create_dpr_semantic_view.sql regenerated and staged."
+fi

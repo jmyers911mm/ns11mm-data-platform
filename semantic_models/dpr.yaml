@@ -63,7 +63,7 @@ tables:
       - name: total_admission_revenue
         synonyms: ["total admission revenue"]
         description: Ticket revenue plus pass revenue.
-        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
+        expr: SUM(TOTAL_ADMISSION_REVENUE)
       - name: total_museum_attendance
         synonyms: ["museum attendance", "museum visitors"]
         description: Museum attendance (scanned general-admission component; see notes for Sensource blend).
@@ -270,11 +270,12 @@ tables:
       # NON-ADDITIVE RATIOS (ratio-of-sums; recomputed at query grain)
       # ======================================================================
       - name: avg_ticket_price
+        kind: ratio
         synonyms: ["average ticket price", "avg admission price"]
         description: >
           Non-additive: total admission revenue divided by tickets sold,
           recomputed at the query grain (never averaged across days).
-        expr: (SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)) / NULLIF(SUM(TICKETS_SOLD), 0)
+        expr: SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)
       - name: mus_store_rev_per_visitor
         synonyms: ["museum store revenue per visitor", "store per cap", "per capita store profit"]
         description: >

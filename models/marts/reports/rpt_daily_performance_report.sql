@@ -33,13 +33,13 @@ with_periods as (
     select
         *,
 
-        -- Total admission revenue used by the avg-ticket-price ratio
-        ticket_revenue + pass_revenue                                      as total_admission_revenue,
-
         -- MTD sums (additive measures only)
         sum(ticket_revenue) over (
             partition by calendar_year, calendar_month order by date_value
         )                                                                  as ticket_revenue_mtd,
+        sum(total_admission_revenue) over (
+            partition by calendar_year, calendar_month order by date_value
+        )                                                                  as total_admission_revenue_mtd,
         sum(tickets_sold) over (
             partition by calendar_year, calendar_month order by date_value
         )                                                                  as tickets_sold_mtd,
@@ -132,8 +132,8 @@ select
     -- Average ticket price = total admission revenue / tickets sold
     case when tickets_sold = 0 then 0
          else total_admission_revenue / tickets_sold end                   as avg_ticket_price,
-    case when tickets_sold_mtd = 0 then 0
-         else ticket_revenue_mtd / tickets_sold_mtd end                    as avg_ticket_price_mtd,
+        case when tickets_sold_mtd = 0 then 0
+             else total_admission_revenue_mtd / tickets_sold_mtd end       as avg_ticket_price_mtd,
 
     -- Museum store revenue per museum visitor (per-cap)
     case when mus_attendance = 0 then 0

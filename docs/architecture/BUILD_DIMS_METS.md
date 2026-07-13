@@ -83,6 +83,50 @@ The test for whether an `rpt_` is justified: **if you deleted it, could you repr
 
 ## Building a semantic view
 
+### Source of truth: `dpr.yaml` → `create_dpr_semantic_view.sql`
+
+Metric definitions live in **one place**: `semantic_models/dpr.yaml`. The SQL DDL that deploys the semantic view (`semantic_models/create_dpr_semantic_view.sql`) is a **generated artifact** — never hand-edited.
+
+```
+dpr.yaml  ──→  generate_dpr_semantic_view.py  ──→  create_dpr_semantic_view.sql
+(edit here)       (transformer script)              (deploy this, never edit)
+```
+
+**How they stay in sync:**
+
+1. A pre-commit hook (`.githooks/pre-commit`) detects staged changes to `dpr.yaml` or `generate_dpr_semantic_view.py`.
+2. It re-runs the generator and auto-stages the updated SQL.
+3. The commit therefore always contains a SQL file that matches the YAML.
+
+To verify manually: `python scripts/generate_dpr_semantic_view.py --check` exits non-zero if the SQL has drifted.
+
+**Non-additive ratios (e.g. `avg_ticket_price`):**
+
+Ratios are defined once in the YAML as ratio-of-sums expressions:
+
+```yaml
+- name: avg_ticket_price
+  expr: SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)
+```
+
+The generator emits this verbatim into the semantic view DDL. Because the expression uses `SUM(numerator) / SUM(denominator)`, Snowflake recomputes it at whatever grain the query requests — it is never pre-aggregated and re-averaged.
+
+**Future-proofing for multiple views:** The generator is structured so that additional semantic views (at different grains or for different audiences) can inherit ratio definitions from the same YAML without duplicating the formula. Today it produces one view; adding more requires only extending the generator's output targets while the metric definitions remain in a single place.
+
+### Drift detection: `assert_rpt_avg_ticket_price.sql`
+
+The reconciliation test `tests/reconciliation/assert_rpt_avg_ticket_price.sql` catches formula drift between the `rpt_` materialization and the governed fact:
+
+```sql
+-- Compares rpt_daily_performance_report.avg_ticket_price against
+-- fct_daily_performance.total_admission_revenue / tickets_sold at day grain.
+-- Fails if any day diverges by more than $0.01.
+```
+
+This test fires in CI on every build. If the `rpt_` table's formula ever diverges from the governed upstream components — because someone edited the report model's SQL rather than the YAML — the build goes red. The semantic view itself cannot drift (it is generated from the YAML), so the test specifically guards the `rpt_` layer where hand-edits are still possible.
+
+### General rules for semantic views
+
 1. Every metric in the view resolves to a governed upstream measure. Confirm each one is "same" or a named "cousin" per the classification above.
 2. Keep it thin. A metric declaration should look like an aggregation over a governed column (`SUM(ticket_count)`, `COUNT(*)` over a governed population), not a re-encoding of the population.
 3. Vary only grain and dimension across views. Two views summing the same governed column may roll up by month here and by campaign there. They may not each decide what a ticket is.

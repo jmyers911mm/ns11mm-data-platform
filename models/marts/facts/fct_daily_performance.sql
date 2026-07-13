@@ -68,6 +68,10 @@ combined as (
         coalesce(a.tickets_sold, 0)                                        as tickets_sold,
         coalesce(a.ticket_revenue, 0)                                      as ticket_revenue,
         coalesce(a.pass_revenue, 0)                                        as pass_revenue,
+        -- Governed numerator for admission-yield rates. Additive, defined ONCE here;
+        -- every avg_ticket_price everywhere references this column.
+        coalesce(a.ticket_revenue, 0)
+          + coalesce(a.pass_revenue, 0)                                    as total_admission_revenue,
         coalesce(a.mus_attendance, 0)                                      as mus_attendance,
         -- Memorial attendance: valid scans at memorial facilities (Gateway).
         -- See int_dpr__attendance scope note (facility-name classification).
