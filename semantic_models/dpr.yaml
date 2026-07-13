@@ -275,7 +275,7 @@ tables:
         description: >
           Non-additive: total admission revenue divided by tickets sold,
           recomputed at the query grain (never averaged across days).
-        expr: SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)
+        expr: total_admission_revenue / NULLIF(total_tickets_sold, 0)
       - name: mus_store_rev_per_visitor
         synonyms: ["museum store revenue per visitor", "store per cap", "per capita store profit"]
         description: >

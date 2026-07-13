@@ -81,7 +81,7 @@ METRICS (
     dp.total_pass_revenue AS SUM(PASS_REVENUE)
         WITH SYNONYMS = ('pass revenue', 'CityPASS revenue', 'C3 revenue')
         COMMENT = 'CityPASS / C3 pass revenue.',
-    dp.total_admission_revenue AS SUM(TOTAL_ADMISSION_REVENUE)
+    dp.total_admission_revenue AS SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) 
         WITH SYNONYMS = ('total admission revenue')
         COMMENT = 'Ticket revenue plus pass revenue.',
     dp.total_museum_attendance AS SUM(MUS_ATTENDANCE)
@@ -213,7 +213,7 @@ METRICS (
     dp.total_donations AS SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MEM_DON) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MASK_DONATIONS) + SUM(DONATION_BOX) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CART_DONATION_ASK) + SUM(ECOM_DONATION_ASK) + SUM(CAFE1_DONATIONS)
         WITH SYNONYMS = ('total donations', 'all donations', 'donation revenue')
         COMMENT = 'Sum of every DPR donation line.',
-    dp.avg_ticket_price AS SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)
+    dp.avg_ticket_price AS TOTAL_ADMISSION_REVENUE / NULLIF(SUM(TICKETS_SOLD), 0)
         WITH SYNONYMS = ('average ticket price', 'avg admission price')
         COMMENT = 'Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days).',
     dp.mus_store_rev_per_visitor AS SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)
