@@ -1,5 +1,14 @@
--- Staging model for Gateway Galaxy items/products catalog (SEED_GATE_ITEMS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) item / product catalog
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per item_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_items, the PLU/product catalog. plu is the join key to the
+-- ticket and journal tables and is trimmed at source (CHAR(20) padding) so it
+-- aligns with the trimmed plu everywhere else. Supplies item_name / kind to
+-- int_gateway__ticket_demand_features.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

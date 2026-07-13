@@ -1,5 +1,13 @@
--- Staging model for Gateway Galaxy journal details (SEED_GATE_JNLDETAILS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) journal details
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (DPR base)
+-- Grain:  one row per jnl_detail_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_jnldetails (JnlDetails). This is the DPR base table: the
+-- jnl_code_id = 101 rows carry tickets_sold and ticket_revenue, joined to
+-- jnltickets / items / coa in int_gateway__ticket_journal_lines. Renames only.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

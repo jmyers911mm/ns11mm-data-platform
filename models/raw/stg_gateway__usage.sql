@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy ticket usage/scans (SEED_GATE_USAGE)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) ticket usage / scans
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (attendance)
+-- Grain:  one row per usage_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_usage, the raw scan events (access point, facility, status,
+-- entry method, use time). Base source for scan-based attendance.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

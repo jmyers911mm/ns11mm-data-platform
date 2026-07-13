@@ -1,5 +1,13 @@
--- Staging model for CounterPoint ticket history view - headers (SEED_CP_VITKTHIST)
--- Co-authored with CoCo
+-- Bronze staging: CounterPoint ticket-history VIEW, headers
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per doc_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_cp_vitkthist, the reporting-view header (vi_tkt_hist) counterpart
+-- to the posted pstkthist headers. Kept as a separate staged source so the
+-- view-based and posted-table grains never get silently mixed downstream.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

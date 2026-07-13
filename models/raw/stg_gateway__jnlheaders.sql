@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy journal headers (SEED_GATE_JNLHEADERS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) journal headers
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (DPR base)
+-- Grain:  one row per jnl_tran_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_jnlheaders, the transaction header (jnl_tran_id) parent for
+-- the jnldetails / jnltickets / jnlitems line tables. Renames only.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

@@ -1,5 +1,13 @@
--- Staging model for CounterPoint POS ticket history headers (SEED_CP_PSTKTHIST)
--- Co-authored with CoCo
+-- Bronze staging: CounterPoint POS ticket-history headers
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per doc_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_cp_pstkthist (posted POS ticket headers: store, station,
+-- business date, totals) into snake_case. The header partner to
+-- stg_counterpoint__pstkthistlin.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

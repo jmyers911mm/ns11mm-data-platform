@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy journal items (SEED_GATE_JNLITEMS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) journal items
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (DPR base)
+-- Grain:  one row per jnl_item_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_jnlitems, the item (non-ticket) detail rows off a journal
+-- transaction. Feeds int_gateway__item_journal_lines. Renames only.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

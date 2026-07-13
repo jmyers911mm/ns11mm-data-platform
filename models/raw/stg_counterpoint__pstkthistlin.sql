@@ -1,5 +1,13 @@
--- Staging model for CounterPoint POS ticket history lines (SEED_CP_PSTKTHISTLIN)
--- Co-authored with CoCo
+-- Bronze staging: CounterPoint POS ticket-history lines
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per doc_id + line_seq_no (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_cp_pstkthistlin (posted POS sale/return lines: item, quantity,
+-- ext price/cost, line_type) into snake_case. This is the primary source for
+-- int_counterpoint__retail_lines and the whole retail gross-profit chain.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

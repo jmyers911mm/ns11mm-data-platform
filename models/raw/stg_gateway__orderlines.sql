@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy order lines (SEED_GATE_ORDERLINES)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) order lines
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per order_line_id (null keys dropped; dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_orderlines, the line detail under an order (order_id /
+-- invoice_id). Renames only.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

@@ -1,5 +1,16 @@
--- Staging model for Gateway Galaxy tickets (SEED_GATE_TICKETS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) tickets
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per ticket_id (null keys dropped; dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_tickets, the individual-ticket record (sold_at, plu, price,
+-- quantity, status, use_count, channel). Primary source for int_pos_tickets and
+-- int_gateway__ticket_demand_features.
+-- NOTE: ticket_date is mapped from source endoflifedate. The demand / forecast
+-- stack treats ticket_date as the entry date, so confirm endoflifedate is the
+-- intended entry-date basis before these feed anything certified.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

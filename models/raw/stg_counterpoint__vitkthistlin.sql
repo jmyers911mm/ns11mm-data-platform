@@ -1,5 +1,13 @@
--- Staging model for CounterPoint ticket history view - lines (SEED_CP_VITKTHISTLIN)
--- Co-authored with CoCo
+-- Bronze staging: CounterPoint ticket-history VIEW, lines
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per doc_id + line_seq_no + seq_no (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_cp_vitkthistlin, the reporting-view line (vi_tkt_hist_lin)
+-- counterpart to pstkthistlin. Carries the extra seq_no grain component the view
+-- exposes; staged separately from the posted-table lines.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

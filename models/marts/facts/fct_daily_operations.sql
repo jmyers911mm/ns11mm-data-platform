@@ -1,5 +1,19 @@
--- Mart fact: daily museum operations combining ticket sales, gate scans, and retail
--- Co-authored with CoCo
+-- Marts fact: daily museum operations (ticket sales + gate scans + retail)
+-- ---------------------------------------------------------------------------
+-- Domain: operations
+-- Grain:  one row per visit_date
+--
+-- Full-outer-joins daily ticket sales (int_pos_tickets) and gate scans
+-- (int_ticket_scans) into a single day-grain operations fact: visitors admitted,
+-- valid/rejected scans, active gates, ticket transactions/revenue/discounts,
+-- identified buyers, and a total_revenue rollup. Incremental merge on visit_date
+-- (append_new_columns), clustered by visit_date, tagged daily / critical.
+-- NOTE: retail_transactions, retail_revenue, retail_discounts and
+-- retail_revenue_per_visitor are hardcoded 0 placeholders pending the CounterPoint
+-- retail join, so total_revenue currently equals ticket_revenue. Feeds
+-- ml_visitor_forecast_training.
+--
+-- ADR-004: all business logic lives here, not in Power BI.
 
 {{
     config(

@@ -1,5 +1,13 @@
--- Staging model for Gateway Galaxy usage report view (SEED_GATE_VUSAGE)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) usage report VIEW
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (attendance)
+-- Grain:  one row per usage_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_vusage, the denormalized usage reporting view (facility /
+-- acp / agent / item names already resolved). Convenience counterpart to the raw
+-- stg_gateway__usage for reporting-shaped scan data.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

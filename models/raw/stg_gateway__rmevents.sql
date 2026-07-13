@@ -1,5 +1,15 @@
--- Staging model for Gateway Galaxy resource management events (SEED_GATE_RMEVENTS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) resource-management events
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (timed entry)
+-- Grain:  one row per event_id (null keys dropped; dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_rmevents, the timed-entry / resource-managed events (start,
+-- end, on/off sale, seating, capacity flags). Supplies event context to the DPR
+-- fees/tour logic.
+-- NOTE: start_at (source startdatetime) is null for a meaningful volume of rows,
+-- which is why downstream models coalesce off it rather than trusting it.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

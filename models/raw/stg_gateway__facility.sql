@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy facilities/venues (SEED_GATE_FACILITY)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) facilities / venues
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per facility_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_facility (venue / facility catalog with capacity). Reference
+-- dimension for facility attribution across the ticketing domain.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

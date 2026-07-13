@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy orders (SEED_GATE_ORDERS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) orders
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per order_id (null keys dropped; dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_orders, the order header (external id, channel, customer)
+-- parent for orderlines. Renames only.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

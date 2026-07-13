@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy access control points (SEED_GATE_ACPS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) access control points
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per acp_unique_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_acps, the scan gates / access control points that produce
+-- the usage (scan) events. Reference source for attendance and gate attribution.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

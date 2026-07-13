@@ -1,5 +1,20 @@
--- Intermediate: derives ticket inventory (reservations vs capacity) from demand features
--- Co-authored with CoCo
+-- Silver intermediate: derived ticket inventory (reservations vs. capacity)
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (capacity)
+-- Grain:  one row per entry_date + ticket_type_id (plu)
+--
+-- Rolls the demand features up to a daily per-type reservation count, then derives
+-- a capacity figure and the availability measures on top of it: tickets_available,
+-- utilization_pct, and a demand_level band (Sold Out / High Demand / Moderate /
+-- Low). is_override is a hardcoded false placeholder for a future manual override.
+-- NOTE: Gateway exposes no explicit capacity table, so capacity here is a PROXY,
+-- the rolling 90-day max of daily reserved per type. Adequate for the ML demand
+-- use case; it is not an authoritative sellable-capacity number. This proxy
+-- propagates into fct_ticket_availability and both ml_ tables, so replace it once
+-- a real capacity source lands. Feeds fct_ticket_availability.
+--
+-- ADR-001: reads only from stg_/int_ (RAW is upstream and immutable).
+-- ADR-004: all business logic lives here, not in Power BI.
 
 {{ config(materialized='view') }}
 

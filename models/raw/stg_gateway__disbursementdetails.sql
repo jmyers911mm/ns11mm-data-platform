@@ -1,5 +1,13 @@
--- Staging model for Gateway Galaxy disbursement details (SEED_GATE_DISBURSEMENTDETAILS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) disbursement details
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (donations / disbursement)
+-- Grain:  one row per disbursement_detail_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_disbursementdetails, the disbursement breakdown used by the
+-- DPR donations and fees logic. Joined at line grain in the enriched journal
+-- intermediate models.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

@@ -1,5 +1,16 @@
--- ML visitor forecast training table for Snowflake ML FORECAST
--- Co-authored with CoCo
+-- ML training table: visitor forecast training set for Snowflake ML FORECAST
+-- ---------------------------------------------------------------------------
+-- Domain: operations (ML)
+-- Grain:  one row per visit_date, where total_visitors > 0
+--
+-- Shapes fct_daily_operations into the ds/y contract Snowflake ML FORECAST
+-- expects: ds = visit_date timestamp, y = total_visitors, with day-of-week,
+-- weekend flag, month, revenue, transactions, and gates_active as exogenous
+-- features. Ordered by visit_date.
+-- NOTE: total_revenue = ticket_revenue + retail_revenue, so it tracks ticket
+-- revenue only until retail lands in fct_daily_operations.
+--
+-- ADR-004: all business logic lives here, not in Power BI.
 
 {{ config(materialized='table', tags=['daily', 'non-critical']) }}
 

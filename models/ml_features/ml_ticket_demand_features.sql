@@ -1,5 +1,16 @@
--- ML feature table for ticket demand forecasting with Snowflake ML FORECAST
--- Co-authored with CoCo
+-- ML feature table: ticket demand features for Snowflake ML FORECAST
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (ML)
+-- Grain:  one row per entry_date (visit_date) + ticket_type
+--
+-- Aggregates fct_ticket_availability to a daily per-type training row and adds
+-- calendar attributes (from dim_date) plus lag (1d, 7d) and rolling (7d/30d avg,
+-- 30d stddev) features on daily_reserved. Transient table, tagged daily /
+-- non-critical.
+-- NOTE: daily_reserved is surfaced as daily_visitors for FORECAST target naming.
+-- Carries the upstream proxy-capacity caveat.
+--
+-- ADR-004: feature logic lives here, not in Power BI.
 
 {{ config(materialized='table', transient=true, tags=['daily', 'non-critical']) }}
 

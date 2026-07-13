@@ -1,8 +1,16 @@
-/*
-  fct_ticket_availability
-  Source: int_ticket_inventory + dim_date
-  STATUS: Awaiting RAW data. Logic migrated from POC.
-*/
+-- Marts fact: ticket availability by entry date and ticket type
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (capacity)
+-- Grain:  one row per entry_date + ticket_type (availability_key)
+-- STATUS: Awaiting RAW data. Logic migrated from POC.
+--
+-- Publishes int_ticket_inventory joined to dim_date for calendar attributes.
+-- Incremental merge on availability_key with a 7-day reprocessing lookback;
+-- clustered by entry_date, ticket_type; tagged intraday / critical.
+-- NOTE: inherits the proxy-capacity caveat from int_ticket_inventory. Feeds
+-- ml_ticket_demand_features.
+--
+-- ADR-004: all business logic lives upstream in dbt, not in Power BI.
 
 {{
     config(

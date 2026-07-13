@@ -1,5 +1,12 @@
--- Staging model for Gateway Galaxy attribute values report view (SEED_GATE_VATTRIBUTE)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) attribute-values report VIEW
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain:  one row per avg_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_vattribute, the attribute-value-group report view used to
+-- classify tickets by matrix / attribute in the enriched journal intermediates.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

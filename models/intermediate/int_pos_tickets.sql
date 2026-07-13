@@ -1,5 +1,16 @@
--- Intermediate: daily POS ticket transactions from gateway orders and tickets
--- Co-authored with CoCo
+-- Silver intermediate: daily POS ticket transactions from Gateway tickets
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (POS)
+-- Grain:  one row per ticket_id (transaction), where sold_at is not null
+--
+-- Flattens stg_gateway__tickets to a transaction line: sale date, plu, quantity,
+-- total_amount (price * quantity), and discount. Feeds the ticket_sales CTE in
+-- fct_daily_operations.
+-- NOTE: customer_email / has_email are stopgaps derived from customer_id
+-- (customer_id cast to varchar), pending a real CRM identity join.
+--
+-- ADR-001: reads only from stg_ (RAW is upstream and immutable).
+-- ADR-004: all business logic lives here, not in Power BI.
 
 {{ config(materialized='view') }}
 

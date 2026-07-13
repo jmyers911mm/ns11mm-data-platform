@@ -1,5 +1,14 @@
--- Staging model for CounterPoint item master (SEED_CP_IMITEM)
--- Co-authored with CoCo
+-- Bronze staging: CounterPoint (NCR) item master
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per item_no (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_cp_imitem into the item dimension source: descriptions,
+-- classification (category/subcategory), attributes, and pricing. Renames to
+-- snake_case only. Feeds int_counterpoint__retail_lines (item_description,
+-- category) and any retail item lookups.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

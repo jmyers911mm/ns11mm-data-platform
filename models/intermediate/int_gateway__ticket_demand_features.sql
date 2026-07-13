@@ -1,5 +1,20 @@
--- Intermediate: ticket demand features with presale lead time and temporal patterns
--- Co-authored with CoCo
+-- Silver intermediate: ticket demand features (presale lead time + temporal)
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (demand)
+-- Grain:  one row per ticket_id (sold_at and ticket_date not null; ticket_date
+--         guarded < 2030-01-01 to drop bad far-future dates)
+--
+-- Enriches each sold ticket with presale lead time (sold_at to ticket_date) and a
+-- presale bucket, full entry-date and sale-time calendar parts, item/type via the
+-- items join, revenue, purchase channel (online/onsite from sales_channel_id),
+-- and usage/active flags. This is the base feature grain the demand and inventory
+-- models roll up from.
+-- NOTE: presale_lead_days can be negative (sold after the entry date, e.g. a
+-- walk-up/retroactive sale). ticket_type_name falls back to plu when the item
+-- lookup misses. Feeds int_ticket_inventory and fct_ticket_demand_forecast.
+--
+-- ADR-001: reads only from stg_ (RAW is upstream and immutable).
+-- ADR-004: all business logic lives here, not in Power BI.
 
 {{ config(materialized='view') }}
 

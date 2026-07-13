@@ -1,5 +1,21 @@
--- Mart fact: ticket demand aggregated for forecasting and presale analysis
--- Co-authored with CoCo
+-- Marts fact: ticket demand aggregated for forecasting and presale analysis
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (demand)
+-- Grain:  one row per entry_date + plu + ticket_type_name + presale_bucket +
+--         purchase_channel (the daily_demand grain)
+--
+-- Aggregates the demand feature grain into daily volume/revenue, presale-timing
+-- stats (avg/median/min/max lead days), and utilization, then left-joins a
+-- per-(entry_date, plu) presale curve: cumulative quantity sold at 90/30/14/7/1
+-- day-out thresholds plus same-day, and presale_pct. Table-materialized,
+-- clustered by entry_date.
+-- NOTE: the hourly_demand CTE is built for time-of-day analysis but is not
+-- currently emitted in the final select. The presale curve joins on
+-- entry_date + plu only (not the full daily grain), so its columns repeat across
+-- the bucket/channel rows for a given date+plu.
+--
+-- ADR-004: aggregation logic lives here, not in Power BI.
+-- ADR-005: metric definitions for these demand measures still owe the workshop.
 
 {{ config(
     materialized='table',

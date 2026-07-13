@@ -1,5 +1,14 @@
--- Staging model for Gateway Galaxy journal tickets (SEED_GATE_JNLTICKETS)
--- Co-authored with CoCo
+-- Bronze staging: Gateway (Galaxy) journal tickets
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (DPR base)
+-- Grain:  one row per jnl_detail_id (dedup: latest _loaded_at wins)
+--
+-- Conforms seed_gate_jnltickets, the ticket-specific detail (visual id, plu,
+-- price, discounts, seating, membership, gift aid) that joins 1:1 to jnldetails
+-- on jnl_detail_id. plu and custno are trimmed to stay aligned with the item
+-- catalog. Core input to int_gateway__ticket_journal_lines.
+--
+-- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
 {{ config(materialized='view') }}
 

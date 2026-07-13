@@ -5,6 +5,5 @@ dbt_packages/
 __pycache__/
 *.pyc
 .DS_Store
-Untitled.sql
-MANUAL_ML_RUN.sql
+SCRATCHPAD.sql
 .temp/
