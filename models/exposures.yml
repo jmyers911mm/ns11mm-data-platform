@@ -1,19 +1,54 @@
 version: 2
 
-exposures: []
-  # All exposures temporarily removed — they depend on mart models that are
-  # currently disabled pending source connectivity (Salesforce, GA4, Shopify, etc.)
-  # and mart-layer rewiring to new Gateway/CounterPoint silver models.
-  #
-  # Exposures will be re-added as upstream marts are re-enabled:
-  #   - powerbi_operations_dashboard (needs fct_daily_operations, fct_ticket_sales, etc.)
-  #   - powerbi_donor_retention_dashboard (needs fct_donor_retention, fct_fundraising)
-  #   - powerbi_member_360_dashboard (needs rpt_member_360, dim_customer)
-  #   - powerbi_digital_marketing_dashboard (needs fct_digital_ad_performance)
-  #   - powerbi_revenue_bridge (needs fct_daily_operations)
-  #   - cortex_analyst_operations (needs fct_daily_operations, fct_ticket_sales)
-  #   - cortex_analyst_fundraising (needs fct_fundraising, fct_donor_retention)
-  #   - cortex_analyst_marketing (needs fct_digital_ad_performance, fct_website_traffic)
-  #   - ml_donor_churn_model (needs ml_donor_churn_features)
-  #   - ml_ticket_demand_forecast (needs ml_ticket_demand_features)
-  #   - ml_member_churn_model (needs ml_member_churn_features)
+exposures:
+  # Sample exposure with every field the hub Report Registry page displays.
+  # Native dbt fields: name, label, type, maturity, url, description, depends_on, owner, tags.
+  # Everything under `meta:` is governance/display metadata read by the hub page.
+  # `meta:` is fully valid in dbt — no compatibility risk. The only dbt rule is that
+  # every ref() in depends_on must point to an ENABLED model, or `dbt parse` will fail.
+
+  - name: powerbi_daily_attendance_dashboard   # dbt identifier (unique)
+    label: Daily Attendance Dashboard          # display name (maps to Report Name)
+    type: dashboard                            # dbt enum: dashboard | notebook | analysis | ml | application
+    maturity: high                             # dbt enum: high | medium | low
+    url: https://app.powerbi.com/groups/REPLACE/reports/REPLACE
+    description: >
+      Daily paid and total attendance across museum and memorial, with commemoration-day
+      flagging. Used by Operations leadership for daily readiness and pacing to plan.
+    depends_on:                                # source models -> "Gold model sources" (native lineage)
+      - ref('fct_daily_performance')
+      - ref('dim_date')
+    owner:
+      name: Chris Wogas          # -> Business Owner
+      email: cwogas@911memorial.org
+    tags: [certified, revenue, daily]
+
+    meta:                                      # ---- read by the hub Report Registry ----
+      id: RPT-001                              # Report ID
+      slug: daily-attendance-dashboard         # Slug (else derived from name)
+      domain: Operations                       # Attendance | Fundraising | Membership | Marketing | Operations | Donor Relations
+      report_type: Dashboard                   # Dashboard | Paginated Report | Excel Report
+      platform: Power BI                       # Power BI | SSRS | Excel
+      status: live                             # draft | in-review | live | deprecated
+      scope: Rolling 90 days; excludes voided transactions; ET business date.
+      audience:                                # Audience (one per line)
+        - CIO
+        - Operations Leadership
+        - Visitor Experience
+      technical_owner: Jeremy Myers            # Technical Owner
+      approval_date: 2026-05-12                # Approval date
+      last_validated: 2026-07-10               # Last validated
+      refresh: Daily · 08:00 ET                # Refresh Schedule
+      metrics:                                 # Metrics Referenced (names from dpr.yaml, or MET- ids)
+        - total_tickets_sold
+        - total_museum_attendance
+        - total_memorial_attendance
+      packages:                                # Part of report packages
+        - Daily Operations Pack
+      caveats:                                 # Known caveats
+        - Sensource turnstile blend not yet included; scan component only.
+      version: "2.1"
+      changelog:                               # Version history
+        - {version: "2.1", date: 2026-07-10, note: Re-validated after DPR reconciliation.}
+        - {version: "2.0", date: 2026-05-12, note: Certified; approved by Revenue SVP.}
+        - {version: "1.0", date: 2026-04-30, note: Initial dashboard published.}

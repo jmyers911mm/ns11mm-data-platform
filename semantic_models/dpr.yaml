@@ -54,8 +54,31 @@ tables:
         expr: SUM(TICKETS_SOLD)
       - name: total_ticket_revenue
         synonyms: ["ticket revenue", "admission revenue"]
-        description: General-admission ticket revenue.
+        description: General-admission ticket revenue recognized on the business date.
         expr: SUM(TICKET_REVENUE)
+        kind: additive
+        meta:
+          display_name: Total Ticket Revenue
+          id: MET-002
+          type: Measure — Sum
+          domain: Revenue
+          status: approved            # approved | in-review | draft
+          grain: Daily
+          sla_tier: Tier 1
+          version: "3.0"
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: 2026-07-14
+          time_dimension: report_date
+          scope: General-admission tickets only; excludes CityPASS / C3 pass revenue.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
+          related_metrics: [total_admission_revenue, avg_ticket_price]
+          caveats:
+            - Recognize-date basis-182; null rme.start_at is coalesced (see DQI-001).
+          changelog:
+            - {version: "3.0", date: 2026-07-14, note: Certified after DPR reconciliation.}
+            - {version: "2.0", date: 2026-04-22, note: Re-sourced to FCT_DAILY_PERFORMANCE.}
+            - {version: "1.0", date: 2026-04-10, note: Initial draft definition.}
       - name: total_pass_revenue
         synonyms: ["pass revenue", "CityPASS revenue", "C3 revenue"]
         description: CityPASS / C3 pass revenue.
