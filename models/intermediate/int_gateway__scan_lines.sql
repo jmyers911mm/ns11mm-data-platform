@@ -27,7 +27,7 @@ with scans as (
         visual_id,
         scan_date,
         gate_id,
-        visitor_count                      as scanned_qty,
+        try_to_decimal(visitor_count::varchar, 18, 0) as scanned_qty,
         is_valid_scan
     from {{ ref('int_ticket_scans') }}
 ),
@@ -36,7 +36,7 @@ tickets as (
     select
         visual_id,
         plu,
-        quantity                           as ticket_qty,
+        try_to_decimal(quantity::varchar, 18, 0)      as ticket_qty,
         sales_channel_id,
         sales_program_id,
         attribute_value_group_id

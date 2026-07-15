@@ -21,7 +21,7 @@
 
 with fct as (
     select
-        f.date_key,
+        f.date_id                                  as date_key,
         f.date_value,
         dd.fiscal_year,
         dd.is_commemoration_day,
@@ -57,7 +57,7 @@ with fct as (
 
         cast(null as number)                            as civic_programs   -- source pending
     from {{ ref('fct_daily_performance') }} f
-    inner join {{ ref('dim_date') }} dd on f.date_key = dd.date_id
+    inner join {{ ref('dim_date') }} dd on f.date_id = dd.date_id
 ),
 
 with_ytd as (

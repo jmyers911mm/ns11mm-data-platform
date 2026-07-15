@@ -108,3 +108,4 @@ models:
         meta:
           classification: restricted_pii
           contains_pii: true
+      - name: rpt_retail_performance

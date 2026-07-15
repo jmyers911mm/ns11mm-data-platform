@@ -41,8 +41,8 @@ aggregated as (
         key_date,
         segment_key,
         max(segment_name)                                        as segment_name,
-        sum(case when is_valid_scan then scanned_qty else 0 end) as passes_scanned,
-        sum(ticket_qty)                                          as tickets_sold
+        sum(case when is_valid_scan then try_to_decimal(scanned_qty::varchar, 18, 0) else 0 end) as passes_scanned,
+        sum(try_to_decimal(ticket_qty::varchar, 18, 0))          as tickets_sold
     from classified
     group by 1, 2
 ),

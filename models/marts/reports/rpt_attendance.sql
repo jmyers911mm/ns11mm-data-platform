@@ -14,7 +14,7 @@
 -- ADR-004: no logic in Power BI.
 
 with dpr as (
-    select date_key, date_value, is_commemoration_day, mem_attendance, mus_attendance
+    select date_id as date_key, date_value, is_commemoration_day, mem_attendance, mus_attendance
     from {{ ref('fct_daily_performance') }}
 ),
 

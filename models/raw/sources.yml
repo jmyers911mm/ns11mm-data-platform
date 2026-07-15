@@ -79,7 +79,7 @@ sources:
         description: Same-day hourly CounterPoint retail. Feeds Today's Sales.
       - name: seed_fact_todays_retail_product_data
         description: Same-day product-level retail. Today's Sales detail.
-      - name: seed_fact_website_recurring_data_db
+      - name: seed_fact_website_recurring_data
         description: Recurring online donation/membership (Drupal commerce). Feeds Website Commerce. (confirm _db vs _d8)
       - name: seed_fact_shopify_orders
         description: Shopify orders. Ecom (ADR-008).
@@ -97,7 +97,7 @@ sources:
       - name: seed_dsr_budget
         description: Daily-scan budget/forecast, wide by market segment (fact_dsr_forecasts). ADR-005 budget seam.
       - name: seed_stage_acceptance_uap_daily
-      - name: seed_wifi_audience_real
+      - name: seed_wifi_audience
         description: >
           RESTRICTED / PII. WiFi captive-portal audience
           (911dw.stage_acceptance_uap_daily, from the SFTP CSV feed): email,

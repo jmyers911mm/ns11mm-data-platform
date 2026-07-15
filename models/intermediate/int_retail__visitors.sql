@@ -30,7 +30,7 @@ shopify as (
     select
         cast(business_date as date)                 as key_date,
         1234                                        as key_facility,
-        sum(order_count)                            as ecom_orders
+        count(distinct order_id)                    as ecom_orders
     from {{ ref('stg_shopify__orders') }}
     group by 1
 ),

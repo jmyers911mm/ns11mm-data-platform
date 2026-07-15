@@ -20,7 +20,7 @@ with passes as (
 ),
 
 dpr as (
-    select date_key, date_value, mus_attendance
+    select date_id as date_key, date_value, mus_attendance
     from {{ ref('fct_daily_performance') }}
 )
 

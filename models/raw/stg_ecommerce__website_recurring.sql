@@ -9,7 +9,7 @@
 {{ config(materialized='view') }}
 
 with source as (
-    select * from {{ source('report_estate_seed', 'seed_fact_website_recurring_data_db') }}
+    select * from {{ source('report_estate_seed', 'seed_fact_website_recurring_data') }}
 ),
 staged as (
     select

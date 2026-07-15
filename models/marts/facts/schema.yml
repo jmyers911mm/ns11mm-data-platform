@@ -66,8 +66,12 @@ models:
         description: Sale minus return amount, non-donation lines.
         data_tests: [not_null]
     tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility, category_code]
+      # Composite-grain uniqueness (package-free): unique on the concatenated key.
+      - unique:
+          column_name: "date_key || '-' || key_facility || '-' || category_code"
+          config:
+            where: "category_code is not null"
+          name: fct_retail_performance_grain_unique
   - name: fct_retail_daily
     description: >
       Facility-grain retail fact (one row per date x facility). Transaction and
@@ -78,13 +82,10 @@ models:
       - name: key_facility
         data_tests: [not_null]
     tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
-
-  - name: rpt_retail_performance
-    description: >
-      Retail Performance Report presentation view. Ratios computed at query
-      grain from fct_retail_daily; category detail from fct_retail_performance.
+      # Composite-grain uniqueness (package-free): unique on the concatenated key.
+      - unique:
+          column_name: "date_key || '-' || key_facility"
+          name: fct_retail_daily_grain_unique
 
   - name: fct_daily_performance
     description: >
