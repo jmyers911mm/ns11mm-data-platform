@@ -1,3 +1,5 @@
+-- Fix visual_id type mismatch join between usage (TEXT) and jnltickets (FLOAT)
+-- Co-authored with CoCo
 {{ config(materialized='view') }}
 
 -- Silver intermediate: gate scan lines with ticket market segment
@@ -23,7 +25,7 @@
 
 with scans as (
     select
-        usage_id,
+        scan_id                            as usage_id,
         visual_id,
         scan_date,
         gate_id,
@@ -63,7 +65,7 @@ joined as (
         -- for the legacy market category; the seed maps it to a segment.
         coalesce(a.acs_dynamic_channel, 'Unmapped') as category
     from scans s
-    left join tickets t on s.visual_id = t.visual_id
+    left join tickets t on s.visual_id = t.visual_id::varchar
     left join attr    a on t.attribute_value_group_id = a.avg_id
 )
 

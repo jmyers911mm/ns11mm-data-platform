@@ -97,6 +97,10 @@ sources:
       - name: seed_dsr_budget
         description: Daily-scan budget/forecast, wide by market segment (fact_dsr_forecasts). ADR-005 budget seam.
       - name: seed_stage_acceptance_uap_daily
+        description: >
+          WiFi captive-portal UAP (Unified Access Policy) acceptance log.
+          One row per acceptance event with MAC, IP, NAD, email, and name.
+          Feeds rpt_wifi_email_export.
       - name: seed_wifi_audience
         description: >
           RESTRICTED / PII. WiFi captive-portal audience

@@ -111,3 +111,26 @@ models:
       - name: mem_guided_tour_revenue
         description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
         data_tests: [not_null]
+
+  - name: fct_daily_scan
+    description: >
+      Day x segment grain Daily Scan fact. Passes scanned, tickets sold, and
+      budget by market segment per day. Feeds rpt_daily_scan.
+    columns:
+      - name: date_key
+        description: FK to dim_date.date_id.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_id
+      - name: segment_key
+        data_tests: [not_null]
+      - name: passes_scanned
+        data_tests: [not_null]
+      - name: tickets_sold
+        data_tests: [not_null]
+    tests:
+      - unique:
+          column_name: "date_key || '-' || segment_key"
+          name: fct_daily_scan_grain_unique

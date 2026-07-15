@@ -145,3 +145,12 @@ models:
       - name: line_seq_no
         tests:
           - not_null
+
+  # ─── Report-estate staging ─────────────────────────────────────────────────
+  - name: stg_budget__daily_scan
+    description: "Staged DSR budget/forecast by market segment (wide). Feeds fct_daily_scan budget CTE."
+    columns:
+      - name: business_date
+        tests:
+          - not_null
+          - unique

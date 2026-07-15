@@ -81,3 +81,19 @@ models:
       - name: mus_attendance_scanned
         description: Valid scans at museum-classified facilities (QA only).
         data_tests: [not_null]
+
+  - name: int_gateway__scan_lines
+    description: >
+      Gate scan lines with ticket market segment category. One row per scan
+      event joined to the ticket's attribute for segment classification.
+      Feeds fct_daily_scan.
+    columns:
+      - name: usage_id
+        description: Scan event identifier (from stg_gateway__usage).
+        data_tests: [not_null]
+      - name: key_date
+        description: Scan date.
+        data_tests: [not_null]
+      - name: category
+        description: Sales channel / market category string for segment mapping.
+        data_tests: [not_null]
