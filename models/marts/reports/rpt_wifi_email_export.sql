@@ -27,12 +27,17 @@
 
 with audience as (
     select
-        cast(business_date as date)     as capture_date,
-        lower(email_address)            as email_address,
+        business_date                   as capture_date,
+        email_address,
         coalesce(first_name, '')        as first_name,
         coalesce(last_name, '')         as last_name
-    from {{ ref('tmp_seed_wifi__audience') }}
-    where email_address is not null
+    from {{ ref('stg_wifi__audience') }}
+    -- Legacy Blue State export contract (t_bluestate_write_to_excel):
+    -- accepted-AUP rows with non-null MAC / NAD / email.
+    where aup_acceptance = 'Guest user has accepted the use policy'
+      and mac_address is not null
+      and nad_address is not null
+      and email_address is not null
 )
 
 select distinct

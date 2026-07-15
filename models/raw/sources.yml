@@ -96,10 +96,11 @@ sources:
         description: Retail budget/forecast by facility/day (fact_retail_forecasts). ADR-005 budget seam.
       - name: seed_dsr_budget
         description: Daily-scan budget/forecast, wide by market segment (fact_dsr_forecasts). ADR-005 budget seam.
-      - name: seed_wifi_audience
+      - name: seed_stage_acceptance_uap_daily
+      - name: seed_wifi_audience_real
         description: >
-          MISNAMED IN SOURCE. Not a WiFi email list -- a wide daily DPR-metrics
-          table (attendance, ticket/tour/donation/retail measures) with a
-          daily_wifi_visitors column. Consumed by stg_dpr__daily_metrics_wide as
-          a reconciliation source. The real PII email audience
-          (stage_acceptance_uap_daily: email/name) is NOT yet loaded.
+          RESTRICTED / PII. WiFi captive-portal audience
+          (911dw.stage_acceptance_uap_daily, from the SFTP CSV feed): email,
+          name, MAC/IP/NAD, AUP acceptance. Feeds the governed
+          rpt_wifi_email_export. This is the REAL audience table (distinct from
+          the misnamed wide-metrics seed_wifi_audience in 1.6.2).
