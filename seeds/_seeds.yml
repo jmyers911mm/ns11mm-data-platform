@@ -47,3 +47,63 @@ seeds:
       - name: key_facility
         description: 911dw facility key the store rolls up to.
         data_tests: [not_null]
+
+  - name: seed_facility_area
+    description: "Selling-area labels and grouping for retail facility keys (1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships)."
+    config:
+      column_types:
+        key_facility: integer
+        is_selling: boolean
+    columns:
+      - name: key_facility
+        data_tests: [not_null, unique]
+      - name: area_name
+        data_tests: [not_null]
+
+  - name: tmp_seed_sensource__visitors
+    description: "STUB: Sensource/Atrium visitor counts per facility per day. Empty until sensordata (ServerManager) is ingested. Populates conversion-rate and rev-per-visitor ratios."
+    config:
+      schema: raw_seed
+      tags: ['build_temp', 'stub']
+      column_types:
+        business_date: date
+        key_facility: integer
+        visitor_count: integer
+
+  - name: tmp_seed_shopify__orders
+    description: "STUB: Shopify ecommerce order counts/sales/donations per day. Empty until the Shopify pipeline lands (ADR-008)."
+    config:
+      schema: raw_seed
+      tags: ['build_temp', 'stub']
+      column_types:
+        business_date: date
+        order_count: integer
+        ecom_sales: float
+        ecom_donations: float
+
+  - name: tmp_seed_retail__budget
+    description: "STUB: retail budget/goal values per facility per day per metric. Empty until the budget source is staged (ADR-005)."
+    config:
+      schema: raw_seed
+      tags: ['build_temp', 'stub']
+      column_types:
+        business_date: date
+        key_facility: integer
+        metric_name: varchar
+        budget_value: float
+
+  - name: tmp_seed_sensource__attendance
+    description: "STUB: Sensource attendance by area (memorial only, store, store-Vesey). Empty until sensordata (ServerManager) is ingested."
+    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, area: varchar, attendance: integer } }
+  - name: tmp_seed_gateway__passes_by_hour
+    description: "STUB: hourly gate passes (legacy fact_passes_by_hour). Empty until the hourly passes feed lands."
+    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, hour_of_day: integer, facility: integer, passes: integer } }
+  - name: tmp_seed_cp__today_sales
+    description: "STUB: real-time same-day CounterPoint hourly sales (legacy fact_todays_retail_data). Empty until the intraday CP feed exists."
+    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, hour_of_day: integer, key_facility: integer, transactions: integer, sales: float, units: integer } }
+  - name: tmp_seed_ecom__recurring
+    description: "STUB: recurring online donation/membership revenue (Classy/Shopify). Empty until the ecom pipeline lands (ADR-008)."
+    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, revenue_type: varchar, revenue_year: integer, amount: float } }
+  - name: tmp_seed_wifi__audience
+    description: "STUB + PII: WiFi captive-portal marketing audience (email, name). RESTRICTED. Empty until the WiFi feed is ingested; treat as PII when populated."
+    config: { schema: raw_seed, tags: ['build_temp','stub','pii','restricted'], column_types: { business_date: date, email_address: varchar, first_name: varchar, last_name: varchar } }

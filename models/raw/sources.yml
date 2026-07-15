@@ -63,3 +63,43 @@ sources:
         description: Ticket history view — enriched transaction headers with billing/shipping
       - name: seed_cp_vitkthistlin
         description: Ticket history line view — enriched line items with pricing analysis
+
+  - name: report_estate_seed
+    description: Report-estate 911dw tables loaded from stage (attendance, today's sales, ecommerce)
+    database: NS11MM_DW_DEV_JMYERS
+    schema: RAW
+    loaded_at_field: _loaded_at
+    freshness:
+      warn_after: {count: 2, period: day}
+      error_after: {count: 4, period: day}
+    tables:
+      - name: seed_fact_passes_by_hour
+        description: Hourly gate passes (Galaxy1). Feeds Daily Attendance.
+      - name: seed_fact_todays_retail_data
+        description: Same-day hourly CounterPoint retail. Feeds Today's Sales.
+      - name: seed_fact_todays_retail_product_data
+        description: Same-day product-level retail. Today's Sales detail.
+      - name: seed_fact_website_recurring_data_db
+        description: Recurring online donation/membership (Drupal commerce). Feeds Website Commerce. (confirm _db vs _d8)
+      - name: seed_fact_shopify_orders
+        description: Shopify orders. Ecom (ADR-008).
+      - name: seed_fact_shopify_discounts
+        description: Shopify discounts. Ecom support.
+      - name: seed_fact_shopify_cost_values
+        description: Shopify cost values (COGS). Ecom profit support.
+
+      - name: seed_sensource_visitors
+        description: Sensource entries/exits/passes by facility (fact_visitors). Feeds visitor ratios + true attendance.
+      - name: seed_sensource_attendance
+        description: Pre-aggregated daily attendance by area (mem/mus + memorial-only/store/Vesey). Feeds Attendance Report.
+      - name: seed_retail_budget
+        description: Retail budget/forecast by facility/day (fact_retail_forecasts). ADR-005 budget seam.
+      - name: seed_dsr_budget
+        description: Daily-scan budget/forecast, wide by market segment (fact_dsr_forecasts). ADR-005 budget seam.
+      - name: seed_wifi_audience
+        description: >
+          MISNAMED IN SOURCE. Not a WiFi email list -- a wide daily DPR-metrics
+          table (attendance, ticket/tour/donation/retail measures) with a
+          daily_wifi_visitors column. Consumed by stg_dpr__daily_metrics_wide as
+          a reconciliation source. The real PII email audience
+          (stage_acceptance_uap_daily: email/name) is NOT yet loaded.

@@ -14,22 +14,26 @@ A production dbt project for the Museum Data Warehouse on Snowflake.
 
 ## ⚠️ Current scope: what is live today vs. planned
 
-This repo contains the **full target architecture** for the platform, but only the
-**Daily Performance Report (DPR)** slice is built and enabled right now. Everything
-outside the Gateway (ticketing) and CounterPoint (retail POS) domains is scaffolded
-but **disabled** (`enabled=false`) pending source connectivity.
+This repo contains the **full target architecture** for the platform. The
+**Daily Performance Report (DPR)** slice plus the **active Pentaho report estate**
+(retail, scan, attendance, tracker) are built and enabled on the Gateway
+(ticketing) and CounterPoint (retail POS) domains. Reports that need a
+not-yet-connected source (Sensource, real-time CP, Classy/Shopify, WiFi) are
+**wired to stub seeds** and populate on a seed swap. Everything outside these
+domains remains scaffolded but **disabled** (`enabled=false`) pending source
+connectivity.
 
-**Live today — DPR pipeline + ticket demand forecasting:**
+**Live today — DPR pipeline + report estate + ticket demand forecasting:**
 
 | Layer | Live | Of total | What's live |
 |-------|:----:|:--------:|-------------|
 | Staging (`models/raw/`) | **21** | 21 | 16 `stg_gateway__*` + 5 `stg_counterpoint__*` |
-| Intermediate (`models/intermediate/`) | **12** | 20 | 3 gateway + 5 DPR + `int_pos_tickets`, `int_ticket_scans`, `int_ticket_inventory`, `int_gateway__ticket_demand_features` |
+| Intermediate (`models/intermediate/`) | **17** | 25 | 4 gateway (+`int_gateway__scan_lines`) + 5 DPR + 3 retail (`int_retail__performance/customers/visitors`) + `int_pos_tickets`, `int_ticket_scans`, `int_ticket_inventory`, `int_gateway__ticket_demand_features` |
 | Mart dimensions (`models/marts/dimensions/`) | **4** | 10 | `dim_date`, `dim_fund`, `dim_budget_version`, `dim_marketing_channel` |
-| Mart facts (`models/marts/facts/`) | **4** | 24 | `fct_daily_performance`, `fct_daily_operations`, `fct_ticket_availability`, `fct_ticket_demand_forecast` |
-| Mart reports (`models/marts/reports/`) | **1** | 10 | `rpt_daily_performance_report` |
+| Mart facts (`models/marts/facts/`) | **8** | 28 | + report estate: `fct_retail_performance`, `fct_retail_daily`, `fct_daily_scan`, `fct_today_sales_hourly` (stub) |
+| Mart reports (`models/marts/reports/`) | **10** | 19 | DPR + 9 migrated Pentaho reports (5 live, 4 stub-wired) |
 | ML features (`models/ml_features/`) | **2** | 14 | `ml_ticket_demand_features`, `ml_visitor_forecast_training` |
-| Semantic views (`semantic_models/`) | **1** | 1 | `MARTS.DPR` (DPR only) |
+| Semantic views (`semantic_models/`) | **4** | 4 | `MARTS.DPR`, `MARTS.RETAIL`, `MARTS.ATTENDANCE`, `MARTS.FUNDRAISING_ECOM` |
 
 **Planned / disabled** (present in the repo, `enabled=false`): all marketing, digital
 (GA4/Google Ads/Meta Ads), CRM/customer-360, membership, fundraising/donor, GL, website,
@@ -109,10 +113,11 @@ Cortex agent, ML forecasting, the verified-query library) are marked **[PLANNED]
 │  Pipelines (in-network agent)   Power BI / Snowsight                      │
 │                                      │                                     │
 │                                      ▼                                     │
-│                          SEMANTIC VIEW (Cortex Analyst / PBI)             │
-│                      ┌──────────────────────────────────────────┐         │
-│                      │ MARTS.DPR   (Daily Performance Report)   │  ← live │
-│                      └──────────────────────────────────────────┘         │
+│                       SEMANTIC VIEWS (Cortex Analyst / PBI)               │
+│              ┌──────────────────────────────────────────────────┐         │
+│              │ MARTS.DPR · MARTS.RETAIL · MARTS.ATTENDANCE ·     │  ← live │
+│              │ MARTS.FUNDRAISING_ECOM (stub-fed)                 │         │
+│              └──────────────────────────────────────────────────┘         │
 │                                                                            │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -263,24 +268,34 @@ section. They are not re-listed here to avoid drift.
 
 ---
 
-## Semantic View
+## Semantic Views
 
-### `MARTS.DPR` — Daily Performance Report (live)
+**Four domain-grouped semantic views** for Cortex Analyst and the Power BI
+Semantic Views connector -- one per business domain, each spanning its facts so
+every report (and its drill-down dimensions) is chattable. Defined in
+`semantic_models/`:
 
-A single semantic view over `fct_daily_performance` + `dim_date`, for Cortex Analyst and the
-Power BI Semantic Views connector. Defined in `semantic_models/`:
+| View | Domain | Facts | Status |
+|---|---|---|---|
+| `MARTS.DPR` | Daily Performance Report | `fct_daily_performance` × `dim_date` | Live |
+| `MARTS.RETAIL` | Retail (Performance, Carts, Monthly KPI) | `fct_retail_daily` + `fct_retail_performance` | Live |
+| `MARTS.ATTENDANCE` | Scanning + attendance + today's sales | `fct_daily_scan` + attendance + `fct_today_sales_hourly` | Live / partial-stub |
+| `MARTS.FUNDRAISING_ECOM` | Website Commerce | `rpt_website_commerce` | Stub-fed |
 
-- `create_dpr_semantic_view.sql` — native `CREATE SEMANTIC VIEW MARTS.DPR` DDL (environment-portable via `USE DATABASE`)
-- `dpr.yaml` — Cortex Analyst YAML model with verified queries and custom instructions
-- `README.md` — design rationale (additive SUM metrics + ratio-of-sums), deploy steps
-
-**~19 metrics** (17 additive SUM + 2 ratio-of-sums) and **8 dimensions** off `dim_date`. See
+Each has a `<domain>.yaml` (Cortex Analyst model with verified queries + custom
+instructions) and a native `create_<domain>_semantic_view.sql` DDL twin
+(`create_dpr_semantic_view.sql` exists; retail/attendance/ecom twins generate
+from their YAML). Design rationale (additive SUM metrics + ratio-of-sums,
+one-model-per-domain, stub guardrails) is in
 [`semantic_models/README.md`](semantic_models/README.md).
 
-> **[PLANNED]** The marketing, donor-retention, and museum-operations semantic views, the
-> Cortex agent, and the verified-query library described in earlier revisions are not present
-> in this repo yet (the `analyses/verified_queries/` library was removed in 1.3.1 as it
-> referenced disabled models). They return when their upstream marts are enabled.
+Stub-fed surfaces (`fundraising_ecom`, today's-sales) instruct the agent to
+report empty results as "feed not yet connected" rather than "zero".
+
+> **[PLANNED]** The marketing, donor-retention, and museum-operations semantic
+> views, the Cortex agent, and the verified-query library described in earlier
+> revisions are not present in this repo yet. They return when their upstream
+> marts are enabled.
 
 ---
 

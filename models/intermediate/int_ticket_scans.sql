@@ -20,6 +20,7 @@
 
 select
     usage_id                                        as scan_id,
+    visual_id,                                      -- ticket link for market-segment join (Daily Scan)
     use_time::date                                  as scan_date,
     acp_id                                          as gate_id,
     facility_id,

@@ -11,6 +11,19 @@ Fact tables and bridge tables for the NS11MM data warehouse.
 | `fct_ticket_availability` | Ticket capacity and utilization by date/type (feeds ML forecasting) |
 | `fct_ticket_demand_forecast` | Ticket demand aggregated for forecasting with presale curves |
 
+### Report-estate facts (added in the report buildout, 1.6.0)
+
+Facts backing the migrated Pentaho report estate. Live facts read current
+seeds; stub facts are wired to placeholder seeds and populate when their source
+feed lands (no model rework required at that point).
+
+| Model | Status | Description |
+|-------|--------|-------------|
+| `fct_retail_performance` | **Live** | Retail sales/profit/units/donations, tidy grain: one row per day x facility x product category. Replaces legacy `fact_retail`. |
+| `fct_retail_daily` | **Live** | Retail facility-grain fact: transactions, visitor counts, and facility rollups. Grain for the retail ratios. Replaces legacy `fact_num_tickets` + facility rollup. |
+| `fct_daily_scan` | **Live*** | Gate passes scanned + tickets sold by market segment per day. Replaces legacy `fact_dailyscan_data`. (*Totals live; segment split pending channel-mapping validation.) |
+| `fct_today_sales_hourly` | **Stub** | Same-day hourly retail sales by facility. Needs the real-time CounterPoint feed (`fact_todays_retail_data`). |
+
 ## Disabled Models (`enabled=false`) — in `disabled/` subfolder
 
 | Model | Blocked By | Re-enable When |

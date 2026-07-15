@@ -1,0 +1,18 @@
+segment_key	segment_name	match_type	match_value	notes
+citypass	CityPASS	category	CityPASS	Reseller bundle
+c3	C3	category	C3	CityPASS C3 bundle
+explorer	Explorer Pass	category	Explorer Pass	Reseller
+gocity	GoCity	category	GoCity	Reseller
+newyork	New York Pass	category	New York Pass	Reseller
+sightseeing	Sightseeing Pass	category	Sightseeing Pass	Reseller
+resellers	Resellers	category	Resellers	Generic reseller
+tour_travel	Tour & Travel	category	Tour Operators	Tour operator
+tour_travel	Tour & Travel	category	Concierge	Concierge
+members	Members	category	Membership	Member admission
+members	Members	category	Institutional Advancement	IA member
+groups_schools	Groups & Schools	category	School Groups	School group
+self_organized_groups	Self-Organized Groups	category	Groups	Self-organized group
+complimentary	Complimentary	category	Complimentary / Free Admission Programs	Comp/free
+complimentary	Complimentary	category	Stakeholders	Stakeholder comp
+walkup	Walk-up	category	onSite	On-site sale
+advance	Advance/Offsite	category	offSite	Advance/offsite sale

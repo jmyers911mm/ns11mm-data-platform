@@ -1,18 +1,56 @@
-# DPR Snowflake Semantic Model
+# Snowflake Semantic Models
 
-Two equivalent semantic definitions of the Daily Performance Report for Cortex
-Analyst (natural-language querying) and native semantic SQL:
+Domain-grouped semantic models for Cortex Analyst (natural-language querying)
+and native semantic SQL. There is **one semantic model per business domain**,
+each spanning the facts for that domain so a user who sees something interesting
+in any report can chat about it -- including the drill-down dimensions
+(product category, market segment), not just daily totals.
+
+| Domain model | Covers reports | Facts spanned | Status |
+|---|---|---|---|
+| `dpr.yaml` | Daily Performance Report (New/MTD/YTD), Excel Data | `FCT_DAILY_PERFORMANCE` | Live |
+| `retail.yaml` | Retail Performance, Retail Carts, Monthly Retail KPI | `FCT_RETAIL_DAILY` + `FCT_RETAIL_PERFORMANCE` | Live |
+| `attendance.yaml` | Daily Scan, Attendance, Daily Attendance, Today's Sales | `FCT_DAILY_SCAN` + attendance + `FCT_TODAY_SALES_HOURLY` | Live / partial-stub |
+| `fundraising_ecom.yaml` | Website Commerce | `RPT_WEBSITE_COMMERCE` | Stub-fed |
+
+Each YAML has (or will have) a native `CREATE SEMANTIC VIEW` DDL twin for
+schema-level RBAC and `SEMANTIC_VIEW()` SELECT support:
 
 | File | What it is | When to use |
 |---|---|---|
-| `create_dpr_semantic_view.sql` | Native `CREATE SEMANTIC VIEW` DDL | **Recommended.** Schema-level object (GA March 2026): full RBAC, sharing, catalog, `SEMANTIC_VIEW()` SELECT support. |
-| `dpr.yaml` | Cortex Analyst YAML semantic model | REST API (`semantic_model_file` on a stage), `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML`, and human-readable iteration. |
+| `create_<domain>_semantic_view.sql` | Native `CREATE SEMANTIC VIEW` DDL | **Recommended.** Schema-level object: full RBAC, sharing, catalog, `SEMANTIC_VIEW()` SELECT support. `create_dpr_semantic_view.sql` exists today; the retail/attendance/ecom twins are generated from their YAML. |
+| `<domain>.yaml` | Cortex Analyst YAML semantic model | REST API (`semantic_model_file` on a stage), `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML`, and human-readable iteration. |
 
-Keep the two in sync; they describe the same model.
+Keep each YAML and its DDL twin in sync; they describe the same model.
 
-## What it models
+## Design: one model per domain, not per fact
 
-Both build a small star over the DPR marts:
+A semantic model per fact table would force users to know which "view" answers
+their question and would block cross-report questions within a domain. Instead
+each domain model spans its facts and tells the agent (via
+`module_custom_instructions`) to pick the grain that matches the question:
+
+- **retail** exposes `retail_daily` (facility grain, ratios) and
+  `retail_category` (category grain) so both "what was the average sale at the
+  store" and "which product category sold best" are answerable.
+- **attendance** exposes scanning (`daily_scan`), attendance, and same-day
+  hourly sales.
+- Facts are never join-fanned together in one query; the agent selects one
+  grain per question.
+
+## Guardrails on stub-fed surfaces
+
+`fundraising_ecom` and the `today_hourly` table in `attendance` read stub seeds
+until their feeds land. Their instructions tell the agent to report an empty
+result as **"the feed is not yet connected"**, never as "revenue was zero" --
+the one dangerous failure mode of exposing a stub to a chat agent. The
+`museum_attendance` metric is likewise flagged as a GA-ticket proxy until
+Sensource lands, and market-segment splits are flagged provisional (totals
+reliable) pending channel-mapping validation.
+
+## What it models (DPR example; the pattern is shared)
+
+Each model builds a small star over its domain's marts. DPR is the reference:
 
 ```
 FCT_DAILY_PERFORMANCE  (additive day-grain fact)  --dpr_to_date-->  DIM_DATE
@@ -102,6 +140,13 @@ Cortex Analyst to decline gracefully on:
 
 The two ratio metrics and `total_museum_attendance` should be reviewed in the
 ADR-005 metric workshop before this is published to business users.
+
+**Cross-domain scope (retail / attendance / ecom):** the same caveats carry to
+the new domain models -- budget/variance is stub-sourced (ADR-005), Sensource
+visitor and attendance counts are pending, ecommerce is pending the Classy/
+Shopify feed, and Daily Scan segment splits await channel-mapping validation.
+Each model's `module_custom_instructions` encodes these so the agent declines or
+qualifies gracefully rather than presenting provisional numbers as final.
 
 ## Notes on the native DDL grammar
 

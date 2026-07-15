@@ -4,6 +4,321 @@ All notable changes to the ns11mm-data-platform project will be documented in th
 
 This is the production repository (`ns11mm/ns11mm-data-platform`), successor to the POC (`jmyers911mm/ns11mm-dbt`). The POC changelog is preserved separately. Version numbering restarts at 1.0.0 for this repo.
 
+# CHANGELOG entry — insert as the new top entry, above 1.6.1
+
+## [1.6.2] — 2026-07-15 — Report-Estate Ingestion Batch 2: Sensource, Budgets, WiFi-Table Correction
+
+Loaded and wired the remaining five report-estate source tables. Eight of the
+nine report-estate stubs now carry real data (four in 1.6.1, four here); the
+retail and daily-scan budget feeds unblock every `_budget` / variance column
+across the estate (ADR-005). One upload was misnamed at source and is handled
+accordingly (see below). Follows the seed-swap pattern from 1.6.0 / 1.6.1.
+
+### Added — staging models (`models/raw/`)
+
+Built against the actual uploaded columns (reconciled against the workbook,
+several differed from the documented schema):
+
+- **`stg_sensource__visitors`** — Sensource entries/exits by facility. Real feed
+  adds `acp` and `passes_scanned` beyond the documented `num_entry/num_exit`.
+- **`stg_sensource__attendance`** — daily attendance. Real feed is
+  **pre-aggregated by named area** (`mem_attendance`, `mus_attendance`,
+  `memorial_only`, `mus_store`, `mus_store_vesey`), not by facility as the
+  transform docs implied — simpler, no facility mapping needed.
+- **`stg_budget__retail`** — retail budget/forecast by facility/day
+  (`fact_retail_forecasts`); adds `avg_don_mem_only_vis`. `key_facility` is a
+  numeric facility code (e.g. 1003).
+- **`stg_budget__daily_scan`** — daily-scan budget, wide by market segment
+  (`fact_dsr_forecasts`); adds `mobile` and `gocity` segments. Decimal forecast
+  values; literal `'NULL'` strings nullified via `try_to_decimal`.
+- **`stg_dpr__daily_metrics_wide`** — see correction below.
+
+### Added — RAW sources
+
+- Five table entries added to the `report_estate_seed` source group:
+  `seed_sensource_visitors`, `seed_sensource_attendance`, `seed_retail_budget`,
+  `seed_dsr_budget`, `seed_wifi_audience`.
+
+### Changed — stub → real source
+
+- **`int_retail__visitors`** — Sensource half now reads
+  `stg_sensource__visitors`; `visitor_count = sum(num_entry)`.
+- **`rpt_attendance`** — now reads `stg_sensource__attendance` directly (the
+  feed is already pre-aggregated by area), replacing the interim facility-based
+  mapping.
+- **`fct_retail_performance`** — budget seam now reads `stg_budget__retail`
+  (`revenue_budget` → net_sales seam, `profit_budget` → net_profit seam).
+- **`fct_daily_scan`** — budget now reads `stg_budget__daily_scan`, unpivoted
+  from the wide segment columns to `segment_key` to match the fact grain
+  (keys align with `seed_scan_market_segment`).
+
+### Correction — `seed_wifi_audience` is not a WiFi email list
+
+The uploaded `seed_wifi_audience` is **not** the Blue State email audience. It is
+a **wide daily DPR-metrics table** (56 columns: attendance, ticket/pass revenue,
+every tour line, retail gross profit, donations, operating expenses, civic
+programs) with a single `daily_wifi_visitors` column and **no email addresses or
+names**. Handled by:
+
+- **`stg_dpr__daily_metrics_wide`** (renamed from the planned
+  `stg_wifi__audience`) — conforms it faithfully and exposes it as an
+  independent daily-metrics **reconciliation source** for parity-checking the
+  built DPR marts.
+- **`rpt_wifi_email_export` remains stubbed.** The real governed PII source
+  (`stage_acceptance_uap_daily`: email / first / last, filtered to accepted-AUP
+  rows) has **not** been loaded. This is now the only report-estate report with
+  no real feed.
+
+### Still stubbed (no data yet)
+
+- `tmp_seed_wifi__audience` — real `stage_acceptance_uap_daily` audience feed
+  (email/name) still needed for `rpt_wifi_email_export`.
+
+### Deploy
+
+```
+dbt build --select source:report_estate_seed+ --target dev
+```
+
+### Known Issues / Verify after deploy
+
+- **Daily-scan budget segment keys** — the DSR wide→long unpivot maps columns to
+  `segment_key` values (`citypass`, `c3`, `newyork`, `walkup`, `gocity`, …);
+  confirm they match `seed_scan_market_segment.segment_key`
+  (`select segment_key, sum(passes_budget) from fct_daily_scan group by 1`; an
+  all-null budget column signals a key mismatch). Note `partners`, `mobile`, and
+  `total_tickets` from the source have no scan segment and are intentionally not
+  mapped.
+- **Retail budget facility codes** — `stg_budget__retail.key_facility` is numeric
+  (1003, …); confirm it matches `seed_facility_area` / `fct_retail_performance`
+  keys, not names.
+- **Sensource attendance area labels** — confirm `mus_store` vs
+  `mus_store_vesey` correspond to the intended report lines.
+- **`stg_dpr__daily_metrics_wide`** is a reconciliation source, not wired into
+  any report; use it to validate DPR marts, then decide whether to retain.
+
+## [1.6.1] — 2026-07-15 — Report-Estate Ingestion: Stub Seeds → Real Sources
+ 
+Loaded the first batch of report-estate source tables from stage into RAW,
+added their staging models, and repointed the consuming models off the interim
+stub seeds onto real data. Four of the nine report-estate stubs are now live;
+five remain stubbed pending their feeds (Sensource, WiFi, budget). Follows the
+seed-swap-with-no-report-rework pattern established in 1.6.0.
+ 
+### Added
+ 
+#### RAW sources (`models/raw/sources.yml`)
+ 
+- **`report_estate_seed`** source group — seven 911dw tables loaded from stage
+  into `RAW` (naming `SEED_FACT_*`, matching the existing seed convention):
+  `seed_fact_passes_by_hour`, `seed_fact_todays_retail_data`,
+  `seed_fact_todays_retail_product_data`, `seed_fact_website_recurring_data_db`,
+  `seed_fact_shopify_orders`, `seed_fact_shopify_discounts`,
+  `seed_fact_shopify_cost_values`. Freshness set to 2-day warn / 4-day error
+  (more time-sensitive than the 7-day Gateway/CounterPoint seeds).
+#### Staging models (`models/raw/`)
+ 
+Rename/recast only, faithful to source (ADR-001):
+ 
+- **`stg_gateway__passes_by_hour`** — hourly gate passes (`key_date/perhour/
+  passes` → `business_date/hour_of_day/passes`).
+- **`stg_counterpoint__todays_retail`** — same-day hourly CP retail (8 cols).
+- **`stg_counterpoint__todays_retail_product`** — same-day product detail.
+- **`stg_ecommerce__website_recurring`** — recurring online donations/memberships
+  (12 cols). `email` flagged as PII in-model; mark restricted in schema.yml if
+  surfaced downstream.
+- **`stg_shopify__orders`** — Shopify order lines (16 cols). `key_date` parsed
+  from `YYYYMMDD`; large id columns kept as varchar (no precision loss); literal
+  `'NULL'` strings in refund columns nullified via `try_to_decimal`.
+- **`stg_shopify__cost_values`** — order-level gross/net/profit (10 cols).
+- **`stg_shopify__discounts`** — discount codes/totals (5 cols); blank codes → null.
+#### Loader
+ 
+- **`load_raw_from_stage.sql`** runbook — `INFER_SCHEMA` → `CREATE TABLE USING
+  TEMPLATE` → `COPY INTO` per table (Parquet + CSV paths), transient RAW,
+  `_loaded_at` default, verification queries.
+### Changed — stub → real source
+ 
+Consuming models repointed off `tmp_seed_*` stubs onto the new staging models.
+The swaps were not pure `ref()` substitutions: the stub seeds used idealized
+column names, so the real staging columns required adapting the consumers'
+logic.
+ 
+- **`rpt_daily_attendance`** — `tmp_seed_gateway__passes_by_hour` →
+  `stg_gateway__passes_by_hour` (clean swap; same shape).
+- **`fct_today_sales_hourly`** — rebuilt on `stg_counterpoint__todays_retail`.
+  Real feed carries `store_id` (not `key_facility`), `doc_id`, and
+  `quantity_sold`; now maps store → facility via `seed_retail_store_facility`,
+  derives `transactions = count(distinct doc_id)`, `units = quantity_sold`, and
+  adds real `cost` / `profit`.
+- **`rpt_website_commerce`** — rebuilt on `stg_ecommerce__website_recurring`.
+  `revenue_type` derived from `order_type` / `title` (Donation vs Membership),
+  `revenue_year` / month from `created_at`, `amount` from `revenue`.
+- **`int_retail__visitors`** — Shopify CTE now reads `stg_shopify__orders`;
+  `ecom_orders = count(distinct order_id)` (real feed is one row per order line).
+### Still stubbed (no data yet)
+ 
+`tmp_seed_sensource__visitors`, `tmp_seed_sensource__attendance`,
+`tmp_seed_wifi__audience`, `tmp_seed_retail__budget`, `tmp_seed_dsr__budget` —
+consumed by `int_retail__visitors` (visitor half), `rpt_attendance`,
+`rpt_wifi_email_export`, `fct_retail_performance`, `fct_daily_scan`. Unchanged.
+ 
+### Deploy
+ 
+```
+dbt build --select source:report_estate_seed+ --target dev
+```
+ 
+Builds the new sources → 7 staging models → 4 updated consumers → their reports
+in dependency order.
+ 
+### Known Issues / Verify after deploy
+ 
+- **Today's Sales store mapping** — CP today-feed uses stores 1,8-14; confirm
+  `seed_retail_store_facility` covers all; unmapped stores fall to
+  `key_facility = -1` (`select key_facility, count(*) from fct_today_sales_hourly
+  group by 1`).
+- **Website Commerce revenue_type** — the Donation/Membership split is a
+  keyword match on `order_type`/`title`; validate against
+  `select distinct order_type, title from stg_ecommerce__website_recurring` and
+  adjust the CASE if the real values differ.
+- **Shopify data age** — sample data is 2016-2018; if that is the actual range,
+  ecom figures are historical, not current.
+- **`email` PII** in `stg_ecommerce__website_recurring` — classify in schema.yml
+  (restricted) before surfacing downstream.
+- **Naming** — confirm `fact_website_recurring_data_db` vs workbook `..._d8`.
+
+## [1.6.0] — 2026-07-15 — Active Pentaho Report Estate + Domain Semantic Layer
+ 
+Built out the remaining active Pentaho analytical reports on top of the DPR
+marts, established the reusable report-model pattern (intermediate → fact →
+report → semantic), and expanded the semantic layer from one DPR model to four
+domain-grouped models so every report is queryable through Cortex Analyst. The
+~90 SSRS reports are Galaxy operational/box-office admin reports and remain out
+of scope. Companion docs: `docs/architecture/REPORT_TABLE_COLUMN_CROSSWALK.md`,
+`docs/architecture/DPR_LINEAGE.md`.
+ 
+All 14 active Pentaho reports are now scaffolded: 4 DPR (existing) + 5 live on
+current seeds + 5 wired to stub seeds pending a source feed.
+ 
+### Added
+ 
+#### Report-estate facts (`models/marts/facts/`)
+ 
+- **`fct_retail_performance`** — tidy category-grain retail fact (one row per
+  day × facility × product category); additive sales/profit/units/donations.
+  Replaces legacy `fact_retail`.
+- **`fct_retail_daily`** — facility-grain retail fact: transaction counts,
+  visitor counts, and facility rollups; the grain the retail ratios operate on.
+  Replaces legacy `fact_num_tickets` plus the facility rollup of `fact_retail`.
+- **`fct_daily_scan`** — gate passes scanned + tickets sold by market segment
+  per day. Replaces legacy `fact_dailyscan_data`.
+- **`fct_today_sales_hourly`** — same-day hourly retail sales by facility
+  (STUB: real-time CounterPoint feed pending).
+#### Report models (`models/marts/reports/`)
+ 
+- **`rpt_retail_performance`** — Retail Performance Report: ratios
+  (conversion, rev-per-visitor, avg sale, margin, per-cap donations) as
+  ratio-of-sums at query grain, plus category drill-down. Template for the estate.
+- **`rpt_retail_carts_analysis`** — Retail Carts Analysis: memorial-carts lens
+  with the legacy adjusted-visitor denominator (mem visitors − 25% − mus visitors)
+  for capture rate and per-cap.
+- **`rpt_monthly_retail_kpi`** — Monthly Retail KPI: `fct_retail_daily` rolled to
+  fiscal month × area, ratios recomputed at the month grain.
+- **`rpt_memorial_museum_tracker_ytd`** — Memorial Museum Daily Tracker YTD:
+  fiscal-YTD variance tracker over `fct_daily_performance` (windowed cumulative
+  partitioned by fiscal year).
+- **`rpt_daily_scan`** — Daily Scan Report: market-mix shares and scan
+  utilization at query grain.
+- **`rpt_attendance`** — Attendance Report (STUB: Sensource area counts).
+- **`rpt_daily_attendance`** — Daily Attendance Report (STUB: hourly passes;
+  scan-based fallback).
+- **`rpt_website_commerce`** — Website Commerce Report (STUB: Classy/Shopify
+  recurring, ADR-008).
+- **`rpt_wifi_email_export`** — Blue State WiFi email export.
+  **RESTRICTED / PII**: tagged `pii`/`restricted`/`marketing_export` so the
+  `on-run-end` masking hook applies; PII columns marked
+  `classification: restricted_pii` / `contains_pii: true`. Least-privilege grant
+  only (marketing-export role); must NOT be granted to `POWERBI_ROLE` / `ML_ROLE`.
+  See `docs/architecture/DATA_CLASSIFICATION.md`.
+#### Intermediate models (`models/intermediate/`)
+ 
+- **`int_retail__performance`** — day × facility × category retail aggregation.
+- **`int_retail__customers`** — facility-grain transaction counts
+  (`count(distinct doc_id)`; non-additive across category, kept separate).
+- **`int_retail__visitors`** — Sensource visitor + Shopify ecom counts (STUB).
+- **`int_gateway__scan_lines`** — scan events joined to their ticket's market
+  segment via `usage.visual_id = jnltickets.visual_id`, then matrix/channel.
+#### Seeds
+ 
+- **`seed_facility_area`** (reference) — selling-area labels for facility keys
+  (1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007
+  Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships).
+- **`seed_scan_market_segment`** (reference) — market-segment map for the Daily
+  Scan Report (CityPASS, C3, Explorer, GoCity, School Groups, Members, Walk-up, …).
+- **Stub seeds** (`seeds/_tmp/`, schema `raw_seed`, tags `build_temp`/`stub`):
+  `tmp_seed_sensource__visitors`, `tmp_seed_sensource__attendance`,
+  `tmp_seed_shopify__orders`, `tmp_seed_ecom__recurring`,
+  `tmp_seed_gateway__passes_by_hour`, `tmp_seed_cp__today_sales`,
+  `tmp_seed_retail__budget`, `tmp_seed_dsr__budget`, `tmp_seed_wifi__audience`
+  (the last tagged `pii`/`restricted`).
+#### Semantic layer (`semantic_models/`)
+ 
+- **`retail.yaml`** → `MARTS.RETAIL` — spans `fct_retail_daily` (facility grain,
+  ratios) and `fct_retail_performance` (category grain) so both facility-level
+  and product-category questions are answerable. 15 metrics.
+- **`attendance.yaml`** → `MARTS.ATTENDANCE` — spans `fct_daily_scan`,
+  attendance measures, and `fct_today_sales_hourly`. Covers Daily Scan,
+  Attendance, Daily Attendance, Today's Sales.
+- **`fundraising_ecom.yaml`** → `MARTS.FUNDRAISING_ECOM` — Website Commerce
+  recurring revenue (STUB-fed).
+- Stub-fed surfaces carry `module_custom_instructions` guardrails: the agent
+  reports an empty result as "feed not yet connected", never "revenue was zero".
+  `museum_attendance` is flagged as a GA-ticket proxy; Daily Scan segment splits
+  are flagged provisional (totals reliable) pending channel-mapping validation.
+#### Documentation
+ 
+- **`docs/architecture/DPR_LINEAGE.md`** — table-relationship and
+  transformation reference for the DPR slice, with a Mermaid `graph LR` lineage
+  diagram and per-layer transformation notes.
+- **`docs/architecture/REPORT_TABLE_COLUMN_CROSSWALK.md`** — report → model →
+  base-table matrix, the old→new column crosswalk per base table, and per-report
+  measure mapping (legacy field → new mart column).
+- READMEs updated: root, `semantic_models/`, `models/marts/facts/`,
+  `models/marts/reports/`.
+### Changed
+ 
+- **`int_ticket_scans`** — exposes `visual_id` (passthrough) to enable the scan →
+  ticket market-segment join for Daily Scan. Grain and existing consumers
+  unchanged.
+- **Semantic layer scope** — expanded from a single DPR model to four
+  domain-grouped models (DPR / retail / attendance / fundraising_ecom). Design:
+  one model per business domain (not per fact), each spanning its facts, so
+  cross-report questions within a domain work; facts are never join-fanned in a
+  single query.
+### Known Issues / Follow-ups
+ 
+- **Daily Scan segment mapping is provisional.** `seed_scan_market_segment` maps
+  against `acs_dynamic_channel` (sales channel) as the closest structured proxy;
+  the legacy `t_fact_dailyscan_data` transform was undocumented in the source.
+  Passes/sold totals are correct; the per-segment split needs validation
+  (`select category, count(*), sum(scanned_qty) from int_gateway__scan_lines
+  group by 1`). If channels are generic, pivot the seed to `sales_program_id`.
+- **`cafe1_donations` not surfaced in `fct_daily_performance`.** It exists in
+  `int_dpr__retail` but was never added to the fact, so it is omitted from the
+  Memorial Museum Tracker YTD donation sum. Surface it to the fact to close the gap.
+- **Stub-fed reports await source feeds** (each a seed/staging swap, no report
+  rework): `sensordata` (Sensource — Attendance ×2, retail conversion ratios,
+  true DPR `mus_attendance`), hourly passes, real-time CP (Today's Sales),
+  Classy/Shopify recurring (Website Commerce), WiFi audience, budget/forecast.
+  Add a thin `stg_<source>__<entity>` between each new RAW table and the marts
+  when it lands.
+- **WiFi export access grant** is a governance-tier decision: confirm the
+  marketing-export role grant and that `POWERBI_ROLE`/`ML_ROLE` are excluded.
+- **Native semantic-view DDL twins** for retail/attendance/fundraising_ecom not
+  yet generated; regenerate alongside `create_dpr_semantic_view.sql` so the
+  native views match the YAMLs.
+
 ## [1.5.2] — 2026-07-13 — Developer Onboarding & Semantic View Pipeline
 
 ### Added

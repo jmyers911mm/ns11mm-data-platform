@@ -48,3 +48,65 @@ models:
       - name: ticket_revenue
         tests:
           - not_null
+  - name: fct_retail_performance
+    description: >
+      Tidy category-grain retail fact (one row per date x facility x category).
+      Additive sales/profit/units/donations; replaces legacy fact_retail.
+    columns:
+      - name: date_key
+        description: FK to dim_date.
+        data_tests: [not_null]
+      - name: key_facility
+        description: Selling-area facility key (see seed_facility_area).
+        data_tests: [not_null]
+      - name: category_code
+        description: CounterPoint product category (Donations folded to 'Donations').
+        data_tests: [not_null]
+      - name: net_sales
+        description: Sale minus return amount, non-donation lines.
+        data_tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility, category_code]
+  - name: fct_retail_daily
+    description: >
+      Facility-grain retail fact (one row per date x facility). Transaction and
+      visitor counts plus facility rollups; grain for the report ratios.
+    columns:
+      - name: date_key
+        data_tests: [not_null]
+      - name: key_facility
+        data_tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
+
+  - name: rpt_retail_performance
+    description: >
+      Retail Performance Report presentation view. Ratios computed at query
+      grain from fct_retail_daily; category detail from fct_retail_performance.
+
+  - name: fct_daily_performance
+    description: >
+      Day-grain DPR fact. One additive measure per column; ratios excluded
+      by design (computed in rpt_ layer). Replaces legacy fact_dpr_report_data.
+    columns:
+      - name: date_id
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('dim_date')
+              field: date_id
+      - name: tickets_sold
+        data_tests: [not_null]
+      - name: ticket_revenue
+        data_tests: [not_null]
+      - name: mem_attendance
+        description: >
+          Memorial attendance (valid Gateway scans at memorial facilities).
+          Scan component only; Sensource blend gated (see int_dpr__attendance).
+        data_tests: [not_null]
+      - name: mem_guided_tour_revenue
+        description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
+        data_tests: [not_null]
