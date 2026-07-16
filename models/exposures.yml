@@ -134,7 +134,7 @@ exposures:
       slug: pentaho-dpr-excel-data
       domain: "Finance"
       report_type: "Excel Report"
-      platform: Power BI
+      platform: Excel
       legacy_platform: Pentaho
       disposition: CONSOLIDATE
       status: draft
