@@ -1228,7 +1228,7 @@ GRANT ROLE LOADER_ROLE TO USER <pipeline_service_user>;
 - All business logic in dbt; Power BI is display-only
 
 ---
-
+<!--
 ## POC History (jmyers911mm/ns11mm-dbt)
 
 The following entries document the POC repo build history. Version numbering 
@@ -2009,3 +2009,4 @@ Major refactor introducing graph-based customer identity resolution, ticket-leve
 - `models/marts/schema.yml` — fixed `doubleversion: 2` merge conflict corruption
 - `models/marts/dim_product.sql` — fixed correlated aggregate subquery error (aliased `{{ this }} t`)
 - `models/marts/dim_ticket_type.sql` — fixed correlated aggregate subquery error (aliased `{{ this }} t`)
+-->

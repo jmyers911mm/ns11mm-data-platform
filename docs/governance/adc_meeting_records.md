@@ -30,6 +30,21 @@
 
 <!-- Date inferred: Mike marks his one-year anniversary and Jeremy is "a few weeks" in;
      the charter is dated May 2026. Confirm and correct the date below. -->
+
+## 2026-07-23 - DGAI Committee - Inaugural Session: Charter Review and Decisions
+
+- Location: Video call
+- Attendees: 
+- Summary: 
+
+### Agenda
+- 
+### Decisions
+- 
+
+### Action Items
+- [ ] 
+
 ## 2026-06-19 · AI Committee — Updated AI Policy and Draft AI & Data Charter
 
 - Location: Video call
@@ -60,17 +75,3 @@
 - [x] Review committee membership and prepare the rebrand to the AI & Data Committee (owner: Mike Cartier)
 - [ ] Explore a licensed or private tool over the fact-checked exhibition script for an internal fact-checking widget (owner: Jeremy Myers; context: Use case raised by the tour and education data owner)
 - [x] Continue the agentic AI proof-of-concept for conversational querying of Power BI data (owner: Jeremy Myers; context: Built on dummy data; inspired by Beth Hillman)
-
-## 2026-06-19 - DGAI Committee - Inaugural Session: Charter Review and Decisions
-
-- Location: Video call
-- Attendees: 
-- Summary: 
-
-### Agenda
-- 
-### Decisions
-- 
-
-### Action Items
-- [ ] 
