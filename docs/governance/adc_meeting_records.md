@@ -5,73 +5,58 @@
   HOW TO USE THIS FILE
   This markdown file is the single source of truth for the ADC Meeting
   Records page. Add one "## " section per meeting. The page reads it live
-  from GitHub, so committing here updates the page.
+  from GitHub, so committing here updates the page (newest sorts first).
 
   MEETING HEADER (one per meeting):
-    ## YYYY-MM-DD · Meeting Title
-    - Put the ISO date first, then " · ", then the title.
+    ## YYYY-MM-DD · Meeting Title      (ISO date first, then " · ", then title)
 
-  UNDER EACH MEETING, an optional metadata list (any order, any you have):
+  OPTIONAL metadata list under the header (any you have):
     - Location: <where / format>
     - Attendees: Name One, Name Two, Name Three     (comma-separated)
     - Summary: <one or two sentences>
+    - Notes: <anything else>
 
-  THEN these optional subsections (### headings), each a bullet list:
-
+  OPTIONAL subsections (### headings), each a bullet list:
     ### Agenda
     - Plain agenda items.
-
     ### Decisions
     - Decision text (owner: Name; context: optional rationale)
-      · The (owner: ...; context: ...) part is optional.
-
     ### Action Items
-    - [ ] Open task text (owner: Name; due: YYYY-MM-DD)
-    - [x] Completed task (owner: Name; due: YYYY-MM-DD)
-      · [x] = done, [ ] = open. Add "; status: inprogress" for in-progress.
-
-  Separate meetings with a blank line (a "---" divider line is optional and
-  ignored). Delete the two examples below and add your real meetings.
+    - [ ] Open task (owner: Name; due: YYYY-MM-DD)
+    - [x] Completed task (owner: Name)      ([x]=done, [ ]=open;
+          add "; status: inprogress" for in-progress)
 ════════════════════════════════════════════════════════════════════════════
 -->
 
-## 2026-05-14 · Inaugural Committee Meeting
+<!-- Date inferred: Mike marks his one-year anniversary and Jeremy is "a few weeks" in;
+     the charter is dated May 2026. Confirm and correct the date below. -->
+## 2026-05-06 · AI Committee — Updated AI Policy and Draft AI & Data Charter
 
-- Location: Executive Conference Room + Zoom
-- Attendees: Beth Hillman, Mike Cartier, Jeremy Myers, Noelle Lilien, David Sheehan, Ronni Cantor
-- Summary: First convening of the AI & Data Committee. Reviewed the draft AI & Data Governance Charter (v0.1) and agreed a review cadence ahead of ratification.
-
-### Agenda
-- Welcome and committee purpose
-- Review of the draft AI & Data Governance Charter (v0.1)
-- Walkthrough of the metric definition gate
-- Proposed quarterly meeting cadence
-
-### Decisions
-- Adopt the draft charter (v0.1) for committee review (owner: Jeremy Myers; context: Circulated for comment ahead of ratification)
-- Establish a quarterly meeting cadence (owner: Mike Cartier)
-
-### Action Items
-- [ ] Circulate charter v0.1 to all committee members (owner: Jeremy Myers; due: 2026-05-21)
-- [ ] Draft the four-tier AI risk framework section (owner: Jeremy Myers; due: 2026-06-15)
-- [x] Book the recurring meeting room (owner: Ronni Cantor; due: 2026-05-16)
-
----
-
-## 2026-02-11 · Committee Planning Session
-
-- Location: Microsoft Teams
-- Attendees: Mike Cartier, Jeremy Myers, Benjamin Milakofsky
-- Summary: Planning session to scope the committee's charter and confirm membership before the inaugural meeting.
+- Location: Video call
+- Attendees: Mike Cartier, Jeremy Myers, Noelle Lilien, David Sheehan
+- Summary: The committee reviewed the updated AI policy, which responsibly expands the approved AI toolset while keeping governance, approval gates, and mandatory training. Jeremy Myers, the new VP of AI, Data & Analytics, introduced an alpha draft of an AI & Data Charter (the "why" behind the policy's "how"), and Mike Cartier proposed rebranding the committee to the "AI & Data Committee" with broader data-stakeholder representation.
+- Notes: Additional committee members participated; the transcript labels several speakers generically (including the tour and education data owner and a security stakeholder). Confirm the full attendee list.
 
 ### Agenda
-- Proposed committee membership
-- Charter outline and ownership
-- Timeline to inaugural meeting
+- Strategic intent of the updated AI policy
+- Newly approved AI tools: ChatGPT, Claude, Microsoft Copilot, Google Gemini
+- Sensitive-data guidance and the prohibited-inputs table
+- Mobile and BYOD device governance (from the AI Academy)
+- Publishing the policy: SharePoint "AI Resource Hub" and UltiPro
+- Draft AI & Data Charter: scope and the seven governing principles
+- Proposed rebrand to the AI & Data Committee and membership review
 
 ### Decisions
-- Charter to be owned by the VP of AI & Analytics and sponsored by the CIO (owner: Mike Cartier)
+- Expand the approved AI toolset — ChatGPT, Claude (Anthropic business), Microsoft Copilot (free and M365), and Google Gemini (Pro); paid or licensed tiers require approval because of cost (owner: Mike Cartier; context: Responsibly opening the toolset while keeping approval gates and mandatory training)
+- Extend policy governance to any device, including mobile and BYOD, used for business with access to sensitive data (owner: Mike Cartier; context: Prompted by camera and vision features surfaced during the AI Academy)
+- Clarify sensitive data with an explicit table of prohibited GenAI inputs — PII, PHI, financial data, and confidential business information such as contracts, strategy documents, security plans, and internal meeting materials (owner: Mike Cartier)
+- Adopt a charter-and-policy split: the charter states the "why," the policy states the "how" (owner: Jeremy Myers)
+- Proposed: rebrand the committee to the "AI & Data Committee" and review membership for data-stakeholder representation across marketing, HR, Salesforce, and revenue data (owner: Mike Cartier; context: Proposed and socialized for input; not yet finalized)
 
 ### Action Items
-- [x] Draft the charter outline (owner: Jeremy Myers; due: 2026-03-01)
-- [x] Confirm committee membership with leadership (owner: Benjamin Milakofsky; due: 2026-02-25)
+- [ ] Circulate the updated AI policy for final committee feedback ahead of final approval (owner: Mike Cartier)
+- [ ] Publish the AI policy to the SharePoint "AI Resource Hub" and to the policy links in UltiPro (owner: Mike Cartier; context: Recruit design help to make it less text-heavy; hub name credited to Noelle Lilien)
+- [ ] Send the alpha draft AI & Data Charter to the committee for review (owner: Jeremy Myers)
+- [ ] Review committee membership and prepare the rebrand to the AI & Data Committee (owner: Mike Cartier)
+- [ ] Explore a licensed or private tool over the fact-checked exhibition script for an internal fact-checking widget (owner: Jeremy Myers; context: Use case raised by the tour and education data owner)
+- [ ] Continue the agentic AI proof-of-concept for conversational querying of Power BI data (owner: Jeremy Myers; context: Built on dummy data; inspired by Beth Hillman)
