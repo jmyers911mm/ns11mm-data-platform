@@ -30,7 +30,7 @@
 
 <!-- Date inferred: Mike marks his one-year anniversary and Jeremy is "a few weeks" in;
      the charter is dated May 2026. Confirm and correct the date below. -->
-## 2026-05-06 · AI Committee — Updated AI Policy and Draft AI & Data Charter
+## 2026-06-19 · AI Committee — Updated AI Policy and Draft AI & Data Charter
 
 - Location: Video call
 - Attendees: Mike Cartier, Jeremy Myers, Noelle Lilien, David Sheehan
@@ -54,9 +54,23 @@
 - Proposed: rebrand the committee to the "AI & Data Committee" and review membership for data-stakeholder representation across marketing, HR, Salesforce, and revenue data (owner: Mike Cartier; context: Proposed and socialized for input; not yet finalized)
 
 ### Action Items
-- [ ] Circulate the updated AI policy for final committee feedback ahead of final approval (owner: Mike Cartier)
-- [ ] Publish the AI policy to the SharePoint "AI Resource Hub" and to the policy links in UltiPro (owner: Mike Cartier; context: Recruit design help to make it less text-heavy; hub name credited to Noelle Lilien)
-- [ ] Send the alpha draft AI & Data Charter to the committee for review (owner: Jeremy Myers)
-- [ ] Review committee membership and prepare the rebrand to the AI & Data Committee (owner: Mike Cartier)
+- [x] Circulate the updated AI policy for final committee feedback ahead of final approval (owner: Mike Cartier)
+- [x] Publish the AI policy to the SharePoint "AI Resource Hub" and to the policy links in UltiPro (owner: Mike Cartier; context: Recruit design help to make it less text-heavy; hub name credited to Noelle Lilien)
+- [x] Send the alpha draft AI & Data Charter to the committee for review (owner: Jeremy Myers)
+- [x] Review committee membership and prepare the rebrand to the AI & Data Committee (owner: Mike Cartier)
 - [ ] Explore a licensed or private tool over the fact-checked exhibition script for an internal fact-checking widget (owner: Jeremy Myers; context: Use case raised by the tour and education data owner)
-- [ ] Continue the agentic AI proof-of-concept for conversational querying of Power BI data (owner: Jeremy Myers; context: Built on dummy data; inspired by Beth Hillman)
+- [x] Continue the agentic AI proof-of-concept for conversational querying of Power BI data (owner: Jeremy Myers; context: Built on dummy data; inspired by Beth Hillman)
+
+## 2026-06-19 - DGAI Committee - Inaugural Session: Charter Review and Decisions
+
+- Location: Video call
+- Attendees: 
+- Summary: 
+
+### Agenda
+- 
+### Decisions
+- 
+
+### Action Items
+- [ ] 
