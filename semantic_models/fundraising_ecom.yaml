@@ -65,6 +65,7 @@ tables:
           scope: Recurring online (website) commerce revenue recognized on order date.
           source_models: [MARTS.RPT_WEBSITE_COMMERCE]
           related_metrics: []
+          reports: [Website Commerce Report]
           caveats:
             - STUB — pending the Classy / Shopify recurring ecommerce pipeline (ADR-008).
           changelog:

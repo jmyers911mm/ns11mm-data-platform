@@ -1,54 +1,479 @@
 version: 2
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Pentaho migration reports, documented as dbt exposures.
+# Native dbt fields: name, label, type, maturity, description, depends_on, owner, tags.
+# Governance/registry fields live under meta: (valid dbt; read by the Hub Report Registry).
+# meta.metrics reference certified metrics by ID (MET-###) from the semantic_models/ YAMLs.
+# NOTE: each depends_on ref() must point to an ENABLED dbt model or `dbt parse` fails.
+#       Reports are pinned to their live base fact; the full target model is in meta.target_model.
+# ─────────────────────────────────────────────────────────────────────────────
+
 exposures:
-  # Sample exposure with every field the hub Report Registry page displays.
-  # Native dbt fields: name, label, type, maturity, url, description, depends_on, owner, tags.
-  # Everything under `meta:` is governance/display metadata read by the hub page.
-  # `meta:` is fully valid in dbt — no compatibility risk. The only dbt rule is that
-  # every ref() in depends_on must point to an ENABLED model, or `dbt parse` will fail.
-
-  - name: powerbi_daily_attendance_dashboard   # dbt identifier (unique)
-    label: Daily Attendance Dashboard          # display name (maps to Report Name)
-    type: dashboard                            # dbt enum: dashboard | notebook | analysis | ml | application
-    maturity: high                             # dbt enum: high | medium | low
-    url: https://app.powerbi.com/groups/REPLACE/reports/REPLACE
+  - name: pentaho_daily_performance_report
+    label: "Daily Performance Report (DPR)"
+    type: dashboard
+    maturity: low
     description: >
-      Daily paid and total attendance across museum and memorial, with commemoration-day
-      flagging. Used by Operations leadership for daily readiness and pacing to plan.
-    depends_on:                                # source models -> "Gold model sources" (native lineage)
-      - ref('fct_daily_performance')
-      - ref('dim_date')
+      Cross-domain executive daily performance: admissions revenue, donations, and attendance rolled to the business date. Co-owned by Finance and Revenue.
+    depends_on: [ref('fct_daily_performance')]
     owner:
-      name: Chris Wogas          # -> Business Owner
-      email: cwogas@911memorial.org
-    tags: [certified, revenue, daily]
+      name: "Mary Ng-Zuffante"
+      email: mngzuffante@911memorial.org
+    tags: [pentaho-migration, finance]
+    meta:
+      id: RPT-001
+      slug: pentaho-daily-performance-report
+      domain: "Finance"
+      report_type: "Dashboard"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance over fct_daily_operations + fct_revenue_bridge."
+      audience: ["CFO", "Finance & Planning", "Revenue SVP"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "rpt_daily_performance over fct_daily_operations + fct_revenue_bridge"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-002, MET-004, MET-047, MET-005, MET-006, MET-048]
+      packages: ["Daily Performance Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
 
-    meta:                                      # ---- read by the hub Report Registry ----
-      id: RPT-001                              # Report ID
-      slug: daily-attendance-dashboard         # Slug (else derived from name)
-      domain: Operations                       # Attendance | Fundraising | Membership | Marketing | Operations | Donor Relations
-      report_type: Dashboard                   # Dashboard | Paginated Report | Excel Report
-      platform: Power BI                       # Power BI | SSRS | Excel
-      status: live                             # draft | in-review | live | deprecated
-      scope: Rolling 90 days; excludes voided transactions; ET business date.
-      audience:                                # Audience (one per line)
-        - CIO
-        - Operations Leadership
-        - Visitor Experience
-      technical_owner: Jeremy Myers            # Technical Owner
-      approval_date: 2026-05-12                # Approval date
-      last_validated: 2026-07-10               # Last validated
-      refresh: Daily · 08:00 ET                # Refresh Schedule
-      metrics:                                 # Metrics Referenced (names from dpr.yaml, or MET- ids)
-        - total_tickets_sold
-        - total_museum_attendance
-        - total_memorial_attendance
-      packages:                                # Part of report packages
-        - Daily Operations Pack
-      caveats:                                 # Known caveats
-        - Sensource turnstile blend not yet included; scan component only.
-      version: "2.1"
-      changelog:                               # Version history
-        - {version: "2.1", date: 2026-07-10, note: Re-validated after DPR reconciliation.}
-        - {version: "2.0", date: 2026-05-12, note: Certified; approved by Revenue SVP.}
-        - {version: "1.0", date: 2026-04-30, note: Initial dashboard published.}
+  - name: pentaho_dpr_ytd
+    label: "Daily Performance Report — YTD"
+    type: dashboard
+    maturity: low
+    description: >
+      Year-to-date view of the Daily Performance Report; consolidates into rpt_daily_performance with a period parameter.
+    depends_on: [ref('fct_daily_performance')]
+    owner:
+      name: "Mary Ng-Zuffante"
+      email: mngzuffante@911memorial.org
+    tags: [pentaho-migration, finance]
+    meta:
+      id: RPT-002
+      slug: pentaho-dpr-ytd
+      domain: "Finance"
+      report_type: "Dashboard"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: CONSOLIDATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance (period=YTD param)."
+      audience: ["CFO", "Finance & Planning"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "rpt_daily_performance (period=YTD param)"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-004, MET-047, MET-005, MET-006]
+      packages: ["Daily Performance Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (CONSOLIDATE); submitted for review."}
+
+  - name: pentaho_dpr_mtd
+    label: "Daily Performance Report — MTD"
+    type: dashboard
+    maturity: low
+    description: >
+      Month-to-date view of the Daily Performance Report; consolidates into rpt_daily_performance with a period parameter.
+    depends_on: [ref('fct_daily_performance')]
+    owner:
+      name: "Mary Ng-Zuffante"
+      email: mngzuffante@911memorial.org
+    tags: [pentaho-migration, finance]
+    meta:
+      id: RPT-003
+      slug: pentaho-dpr-mtd
+      domain: "Finance"
+      report_type: "Dashboard"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: CONSOLIDATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance (period=MTD param)."
+      audience: ["CFO", "Finance & Planning"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "rpt_daily_performance (period=MTD param)"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-004, MET-047, MET-005]
+      packages: ["Daily Performance Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (CONSOLIDATE); submitted for review."}
+
+  - name: pentaho_dpr_excel_data
+    label: "DPR Excel Data"
+    type: application
+    maturity: low
+    description: >
+      Excel export feed of the Daily Performance Report; consolidates into the rpt_daily_performance export surface.
+    depends_on: [ref('fct_daily_performance')]
+    owner:
+      name: "Mary Ng-Zuffante"
+      email: mngzuffante@911memorial.org
+    tags: [pentaho-migration, finance]
+    meta:
+      id: RPT-004
+      slug: pentaho-dpr-excel-data
+      domain: "Finance"
+      report_type: "Excel Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: CONSOLIDATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: export feed off rpt_daily_performance."
+      audience: ["Finance & Planning"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "export feed off rpt_daily_performance"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-002, MET-004, MET-047]
+      packages: ["Daily Performance Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (CONSOLIDATE); submitted for review."}
+
+  - name: pentaho_memorial_museum_daily_tracker_ytd
+    label: "Memorial & Museum Daily Tracker — YTD"
+    type: dashboard
+    maturity: low
+    description: >
+      Year-to-date revenue and attendance tracker for the memorial and museum; consolidates into the DPR / revenue-bridge surface.
+    depends_on: [ref('fct_daily_performance')]
+    owner:
+      name: "Chris Wogas"
+      email: cwogas@911memorial.org
+    tags: [pentaho-migration, revenue]
+    meta:
+      id: RPT-005
+      slug: pentaho-memorial-museum-daily-tracker-ytd
+      domain: "Revenue"
+      report_type: "Dashboard"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: CONSOLIDATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance / rpt_revenue_bridge."
+      audience: ["Revenue SVP", "Operations Leadership"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "rpt_daily_performance / rpt_revenue_bridge"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-004, MET-005, MET-006, MET-047]
+      packages: ["Daily Performance Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (CONSOLIDATE); submitted for review."}
+
+  - name: pentaho_todays_sales_hourly
+    label: "Today’s Sales Report (Hourly)"
+    type: application
+    maturity: medium
+    description: >
+      Same-day sales and transactions by hour for real-time operations. STUB: real-time CounterPoint feed pending.
+    depends_on: [ref('fct_today_sales_hourly')]
+    owner:
+      name: "Gennady Zaritsky"
+      email: gzaritsky@911memorial.org
+    tags: [pentaho-migration, retail]
+    meta:
+      id: RPT-006
+      slug: pentaho-todays-sales-hourly
+      domain: "Retail"
+      report_type: "Paginated Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: in-review
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_today_sales_hourly + rpt_retail_performance."
+      audience: ["Retail VP", "Operations Leadership"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Intraday · hourly"
+      target_model: "fct_today_sales_hourly + rpt_retail_performance"
+      source_models: [MARTS.FCT_TODAY_SALES_HOURLY]
+      metrics: [MET-055, MET-056]
+      packages: ["Retail Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
+
+  - name: pentaho_retail_performance_report
+    label: "Retail Performance Report"
+    type: dashboard
+    maturity: medium
+    description: >
+      Facility/day retail performance: net sales, profit, transactions, basket value and margin from CounterPoint POS.
+    depends_on: [ref('fct_retail_daily')]
+    owner:
+      name: "Gennady Zaritsky"
+      email: gzaritsky@911memorial.org
+    tags: [pentaho-migration, retail]
+    meta:
+      id: RPT-007
+      slug: pentaho-retail-performance-report
+      domain: "Retail"
+      report_type: "Dashboard"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: in-review
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_retail_performance + fct_monthly_retail."
+      audience: ["Retail VP", "Finance & Planning"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "rpt_retail_performance + fct_monthly_retail"
+      source_models: [MARTS.FCT_RETAIL_DAILY]
+      metrics: [MET-058, MET-059, MET-062, MET-066, MET-065]
+      packages: ["Retail Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
+
+  - name: pentaho_retail_carts_analysis
+    label: "Retail Carts Analysis Report"
+    type: application
+    maturity: low
+    description: >
+      Retail carts (mobile POS) sales and conversion analysis across the plaza carts.
+    depends_on: [ref('fct_retail_daily')]
+    owner:
+      name: "Gennady Zaritsky"
+      email: gzaritsky@911memorial.org
+    tags: [pentaho-migration, retail]
+    meta:
+      id: RPT-008
+      slug: pentaho-retail-carts-analysis
+      domain: "Retail"
+      report_type: "Paginated Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_retail_line_items (cart / abandon slice)."
+      audience: ["Retail VP"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "fct_retail_line_items (cart / abandon slice)"
+      source_models: [MARTS.FCT_RETAIL_DAILY]
+      metrics: [MET-062, MET-058, MET-066, MET-067]
+      packages: ["Retail Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
+
+  - name: pentaho_monthly_retail_kpi
+    label: "Monthly Retail KPI"
+    type: dashboard
+    maturity: medium
+    description: >
+      Monthly retail KPI roll-up with product-category drill-down (t-shirts vs food vs MAG).
+    depends_on: [ref('fct_retail_performance')]
+    owner:
+      name: "Gennady Zaritsky"
+      email: gzaritsky@911memorial.org
+    tags: [pentaho-migration, retail]
+    meta:
+      id: RPT-009
+      slug: pentaho-monthly-retail-kpi
+      domain: "Retail"
+      report_type: "Dashboard"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: in-review
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_monthly_retail + rpt_retail_performance."
+      audience: ["Retail VP", "Finance & Planning"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Monthly · 1st business day"
+      target_model: "fct_monthly_retail + rpt_retail_performance"
+      source_models: [MARTS.FCT_RETAIL_PERFORMANCE]
+      metrics: [MET-058, MET-059, MET-069, MET-070, MET-065]
+      packages: ["Retail Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
+
+  - name: pentaho_daily_scan
+    label: "Daily Scan"
+    type: application
+    maturity: medium
+    description: >
+      Passes scanned and tickets sold by market segment (CityPASS, C3, School Groups, Walk-up), with redemption rate.
+    depends_on: [ref('fct_daily_scan')]
+    owner:
+      name: "Chris Wogas"
+      email: cwogas@911memorial.org
+    tags: [pentaho-migration, attendance-ticketing]
+    meta:
+      id: RPT-010
+      slug: pentaho-daily-scan
+      domain: "Attendance & Ticketing"
+      report_type: "Paginated Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: in-review
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_daily_scan."
+      audience: ["Revenue SVP", "Visitor Experience"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "fct_daily_scan"
+      source_models: [MARTS.FCT_DAILY_SCAN]
+      metrics: [MET-050, MET-051, MET-052]
+      packages: ["Attendance & Scanning Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
+
+  - name: pentaho_attendance
+    label: "Attendance"
+    type: application
+    maturity: medium
+    description: >
+      Memorial and museum attendance (scanned component). True Sensource-blended attendance not yet staged.
+    depends_on: [ref('fct_daily_performance')]
+    owner:
+      name: "Chris Wogas"
+      email: cwogas@911memorial.org
+    tags: [pentaho-migration, attendance-ticketing]
+    meta:
+      id: RPT-011
+      slug: pentaho-attendance
+      domain: "Attendance & Ticketing"
+      report_type: "Paginated Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: in-review
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_daily_performance (attendance measures)."
+      audience: ["Revenue SVP", "Operations Leadership"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "fct_daily_performance (attendance measures)"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-053, MET-054]
+      packages: ["Attendance & Scanning Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}
+
+  - name: pentaho_daily_attendance
+    label: "Daily Attendance"
+    type: application
+    maturity: low
+    description: >
+      Daily attendance summary combining scanned entries and memorial/museum attendance.
+    depends_on: [ref('fct_daily_performance')]
+    owner:
+      name: "Chris Wogas"
+      email: cwogas@911memorial.org
+    tags: [pentaho-migration, attendance-ticketing]
+    meta:
+      id: RPT-012
+      slug: pentaho-daily-attendance
+      domain: "Attendance & Ticketing"
+      report_type: "Paginated Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: CONSOLIDATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_daily_performance + fct_daily_scan."
+      audience: ["Revenue SVP"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "fct_daily_performance + fct_daily_scan"
+      source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+      metrics: [MET-053, MET-054, MET-050]
+      packages: ["Attendance & Scanning Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (CONSOLIDATE); submitted for review."}
+
+  - name: pentaho_website_commerce_report
+    label: "Website Commerce Report"
+    type: application
+    maturity: low
+    description: >
+      Recurring online commerce revenue (donations + memberships). STUB: Classy / Shopify recurring feed pending (ADR-008).
+    depends_on: [ref('rpt_website_commerce')]
+    owner:
+      name: "Jan-Michael Llanes"
+      email: jllanes@911memorial.org
+    tags: [pentaho-migration, fundraising]
+    meta:
+      id: RPT-013
+      slug: pentaho-website-commerce-report
+      domain: "Fundraising"
+      report_type: "Paginated Report"
+      platform: Power BI
+      legacy_platform: Pentaho
+      disposition: MIGRATE
+      status: draft
+      scope: "Migrated from the legacy Pentaho estate. Target model: fct_website_funnel / rpt_website_commerce."
+      audience: ["Corporate Giving VP", "Digital VP"]
+      technical_owner: Jeremy Myers
+      approval_date: ""
+      last_validated: ""
+      refresh: "Daily · 08:00 ET"
+      target_model: "fct_website_funnel / rpt_website_commerce"
+      source_models: [MARTS.RPT_WEBSITE_COMMERCE]
+      metrics: [MET-057]
+      packages: ["Digital & Fundraising Pack"]
+      caveats:
+        - Legacy Pentaho definition; validate against source before certification.
+      version: "0.1"
+      changelog:
+        - {version: "0.1", date: 2026-07-16, note: "Documented from Pentaho crosswalk (MIGRATE); submitted for review."}

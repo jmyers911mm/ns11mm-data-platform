@@ -1,5 +1,4 @@
 -- DPR semantic model YAML for Cortex Analyst REST API and semantic view generation
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Sync note: this model now exposes every additive measure in
 -- FCT_DAILY_PERFORMANCE as a standalone metric (revenue, counts, attendance,
@@ -68,6 +67,7 @@ tables:
           scope: General-admission entries only; excludes complimentary and group holds.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
           related_metrics: [total_ticket_revenue, total_pass_revenue, total_admission_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -93,6 +93,7 @@ tables:
           scope: General-admission tickets only; excludes CityPASS / C3 pass revenue.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
           related_metrics: [total_admission_revenue, avg_ticket_price]
+          reports: [Daily Performance Report (DPR), DPR Excel Data]
           caveats:
             - Recognize-date basis-182; null rme.start_at is coalesced (see DQI-001).
           changelog:
@@ -119,6 +120,7 @@ tables:
           scope: General-admission entries only; excludes complimentary and group holds.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_tickets_sold, total_ticket_revenue, total_admission_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -143,6 +145,7 @@ tables:
           scope: General-admission scope on the business date; see description for component definition.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_tickets_sold, total_ticket_revenue, total_pass_revenue]
+          reports: [Daily Performance Report (DPR), Daily Performance Report — YTD, Daily Performance Report — MTD, DPR Excel Data, Memorial & Museum Daily Tracker — YTD]
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -167,6 +170,7 @@ tables:
           scope: Scanned Gateway component only; full Sensource turnstile blend not yet staged.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_memorial_attendance]
+          reports: [Daily Performance Report (DPR), Daily Performance Report — YTD, Daily Performance Report — MTD, Memorial & Museum Daily Tracker — YTD]
           caveats:
             - Scan component only; full Sensource turnstile blend not yet staged.
           changelog:
@@ -194,6 +198,7 @@ tables:
           scope: Scanned Gateway component only; full Sensource turnstile blend not yet staged.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_museum_attendance]
+          reports: [Daily Performance Report (DPR), Daily Performance Report — YTD, Memorial & Museum Daily Tracker — YTD]
           caveats:
             - Scan component only; full Sensource turnstile blend not yet staged.
           changelog:
@@ -222,6 +227,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mem_guided_tour_revenue, total_mem_mus_tour_revenue, total_revealed_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -246,6 +252,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_mus_tour_revenue, total_revealed_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -270,6 +277,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_revealed_tour_revenue]
+          reports: []
           caveats:
             - MTG matrix cohort; corrected from dead MTG filter to the product-178 PLU list during reconciliation.
           changelog:
@@ -294,6 +302,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -318,6 +327,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -342,6 +352,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -366,6 +377,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -390,6 +402,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Roll-up of component lines; validate against the sum of its parts.
           changelog:
@@ -414,6 +427,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -438,6 +452,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -462,6 +477,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -486,6 +502,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Roll-up of component lines; validate against the sum of its parts.
           changelog:
@@ -514,6 +531,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -538,6 +556,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -562,6 +581,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -586,6 +606,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -610,6 +631,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -634,6 +656,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -658,6 +681,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -682,6 +706,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -710,6 +735,7 @@ tables:
           scope: This ancillary revenue line only; recognized on the business date.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mem_audio_guide_revenue, total_audio_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -734,6 +760,7 @@ tables:
           scope: This ancillary revenue line only; recognized on the business date.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_service_fees, total_audio_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -758,6 +785,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -782,6 +810,7 @@ tables:
           scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          reports: []
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -806,6 +835,7 @@ tables:
           scope: This ancillary revenue line only; recognized on the business date.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_service_fees, total_mem_audio_guide_revenue]
+          reports: []
           caveats:
             - Roll-up of component lines; validate against the sum of its parts.
           changelog:
@@ -834,6 +864,7 @@ tables:
           scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_retail_carts_gross_profit, total_cafe_profit, total_retail_gross_profit]
+          reports: []
           caveats:
             - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
           changelog:
@@ -858,6 +889,7 @@ tables:
           scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_store_gross_profit, total_cafe_profit, total_retail_gross_profit]
+          reports: []
           caveats:
             - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
           changelog:
@@ -882,6 +914,7 @@ tables:
           scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_store_gross_profit, total_retail_carts_gross_profit, total_retail_gross_profit]
+          reports: []
           caveats:
             - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
           changelog:
@@ -906,6 +939,7 @@ tables:
           scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_store_gross_profit, total_retail_carts_gross_profit, total_cafe_profit]
+          reports: []
           caveats:
             - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
           changelog:
@@ -934,6 +968,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_box_office_mem_donations, total_box_office_mus_exit_donations, total_coatcheck_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -958,6 +993,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mus_exit_donations, total_coatcheck_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -982,6 +1018,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_coatcheck_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1006,6 +1043,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1030,6 +1068,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1054,6 +1093,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1078,6 +1118,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1102,6 +1143,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1126,6 +1168,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1150,6 +1193,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1174,6 +1218,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: []
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1204,6 +1249,7 @@ tables:
           scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          reports: [Daily Performance Report (DPR), Daily Performance Report — YTD, Daily Performance Report — MTD, DPR Excel Data, Memorial & Museum Daily Tracker — YTD]
           caveats:
             - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
           changelog:
@@ -1235,6 +1281,7 @@ tables:
           scope: Ratio-of-sums (admission revenue / tickets sold), recomputed at query grain; non-additive.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
           related_metrics: [total_tickets_sold, total_ticket_revenue, total_pass_revenue]
+          reports: [Daily Performance Report (DPR)]
           caveats:
             - Definition under review; validate against source before certified use.
           changelog:
@@ -1262,6 +1309,7 @@ tables:
           scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [total_mus_store_gross_profit, total_retail_carts_gross_profit, total_cafe_profit]
+          reports: []
           caveats:
             - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
           changelog:

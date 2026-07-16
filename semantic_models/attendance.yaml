@@ -52,6 +52,7 @@ tables:
           scope: Valid Gateway passes scanned at entry; excludes staff and re-entry scans.
           source_models: [MARTS.FCT_DAILY_SCAN]
           related_metrics: [total_tickets_sold, scan_utilization]
+          reports: [Daily Scan, Daily Attendance]
           caveats:
             - Scan component only; full Sensource turnstile blend not yet staged.
           changelog:
@@ -75,6 +76,7 @@ tables:
           scope: General-admission tickets sold, from the scan-side daily fact.
           source_models: [MARTS.FCT_DAILY_SCAN]
           related_metrics: [total_passes_scanned, scan_utilization]
+          reports: [Daily Scan]
           caveats:
             - Scan-side count; reconcile against DPR ticket metrics (MET-001 / MET-002).
           changelog:
@@ -100,6 +102,7 @@ tables:
           scope: Ratio-of-sums (passes scanned / tickets sold); redemption rate recomputed at query grain; non-additive.
           source_models: [MARTS.FCT_DAILY_SCAN]
           related_metrics: [total_passes_scanned, total_tickets_sold]
+          reports: [Daily Scan]
           caveats:
             - Non-additive; do not sum across periods.
           changelog:
@@ -136,6 +139,7 @@ tables:
           scope: Memorial attendance from valid Gateway scans at memorial-classified facilities.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [museum_attendance]
+          reports: [Attendance, Daily Attendance]
           caveats:
             - Scan component only; full Sensource turnstile blend not yet staged.
           changelog:
@@ -161,6 +165,7 @@ tables:
           scope: GA-ticket proxy for museum attendance (scanned component).
           source_models: [MARTS.FCT_DAILY_PERFORMANCE]
           related_metrics: [memorial_attendance]
+          reports: [Attendance, Daily Attendance]
           caveats:
             - Proxy from GA scans; true Sensource-blended attendance not yet staged.
           changelog:
@@ -203,6 +208,7 @@ tables:
           scope: Same-day sales aggregated by hour for the real-time operations view.
           source_models: [MARTS.FCT_TODAY_SALES_HOURLY]
           related_metrics: [hourly_transactions]
+          reports: [Today’s Sales Report (Hourly)]
           caveats:
             - STUB — real-time CounterPoint feed pending; intraday, resets daily.
           changelog:
@@ -227,6 +233,7 @@ tables:
           scope: Same-day transaction count aggregated by hour.
           source_models: [MARTS.FCT_TODAY_SALES_HOURLY]
           related_metrics: [hourly_sales]
+          reports: [Today’s Sales Report (Hourly)]
           caveats:
             - STUB — real-time CounterPoint feed pending; intraday, resets daily.
           changelog:
