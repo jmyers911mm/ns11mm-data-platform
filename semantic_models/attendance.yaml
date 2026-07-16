@@ -36,14 +36,74 @@ tables:
       - name: total_passes_scanned
         synonyms: ["scans", "passes scanned", "admissions scanned", "entries"]
         expr: SUM(PASSES_SCANNED)
+        meta:
+          display_name: Total Passes Scanned
+          id: MET-050
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Valid Gateway passes scanned at entry; excludes staff and re-entry scans.
+          source_models: [MARTS.FCT_DAILY_SCAN]
+          related_metrics: [total_tickets_sold, scan_utilization]
+          caveats:
+            - Scan component only; full Sensource turnstile blend not yet staged.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_tickets_sold
         synonyms: ["tickets sold", "sold"]
         expr: SUM(TICKETS_SOLD)
+        meta:
+          display_name: Total Tickets Sold
+          id: MET-051
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: General-admission tickets sold, from the scan-side daily fact.
+          source_models: [MARTS.FCT_DAILY_SCAN]
+          related_metrics: [total_passes_scanned, scan_utilization]
+          caveats:
+            - Scan-side count; reconcile against DPR ticket metrics (MET-001 / MET-002).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: scan_utilization
         synonyms: ["utilization", "scan rate", "redemption rate"]
         description: Passes scanned divided by tickets sold, at query grain.
         expr: SUM(PASSES_SCANNED) / NULLIF(SUM(TICKETS_SOLD), 0)
 
+        meta:
+          display_name: Scan Utilization
+          id: MET-052
+          type: Measure — Ratio
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Ratio-of-sums (passes scanned / tickets sold); redemption rate recomputed at query grain; non-additive.
+          source_models: [MARTS.FCT_DAILY_SCAN]
+          related_metrics: [total_passes_scanned, total_tickets_sold]
+          caveats:
+            - Non-additive; do not sum across periods.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
   - name: attendance
     description: Daily memorial and museum attendance (from the DPR fact).
     base_table:
@@ -60,11 +120,51 @@ tables:
       - name: memorial_attendance
         synonyms: ["memorial attendance", "plaza attendance", "memorial visitors"]
         expr: SUM(MEM_ATTENDANCE)
+        meta:
+          display_name: Memorial Attendance
+          id: MET-053
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Memorial attendance from valid Gateway scans at memorial-classified facilities.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [museum_attendance]
+          caveats:
+            - Scan component only; full Sensource turnstile blend not yet staged.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: museum_attendance
         synonyms: ["museum attendance", "museum visitors"]
         description: GA-ticket proxy for museum attendance (true Sensource count pending).
         expr: SUM(MUS_ATTENDANCE)
 
+        meta:
+          display_name: Museum Attendance
+          id: MET-054
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: GA-ticket proxy for museum attendance (scanned component).
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [memorial_attendance]
+          caveats:
+            - Proxy from GA scans; true Sensource-blended attendance not yet staged.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
   - name: today_hourly
     description: "Same-day hourly retail sales by facility. STUB: real-time CounterPoint feed pending."
     base_table:
@@ -87,10 +187,50 @@ tables:
         synonyms: ["sales by hour", "today's sales"]
         description: Same-day sales (STUB - real-time CP feed pending; zero until wired).
         expr: SUM(SALES)
+        meta:
+          display_name: Hourly Sales
+          id: MET-055
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Hourly
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Same-day sales aggregated by hour for the real-time operations view.
+          source_models: [MARTS.FCT_TODAY_SALES_HOURLY]
+          related_metrics: [hourly_transactions]
+          caveats:
+            - STUB — real-time CounterPoint feed pending; intraday, resets daily.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: hourly_transactions
         synonyms: ["transactions by hour"]
         expr: SUM(TRANSACTIONS)
 
+        meta:
+          display_name: Hourly Transactions
+          id: MET-056
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Hourly
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Same-day transaction count aggregated by hour.
+          source_models: [MARTS.FCT_TODAY_SALES_HOURLY]
+          related_metrics: [hourly_sales]
+          caveats:
+            - STUB — real-time CounterPoint feed pending; intraday, resets daily.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
   - name: date
     description: Calendar date dimension with fiscal calendar (FY starts October).
     base_table:
@@ -161,7 +301,7 @@ module_custom_instructions:
     attendance for memorial/museum attendance totals, today_hourly for same-day
     hourly sales. Do not join fact tables directly; choose one grain per query.
     Round counts to whole numbers, currency to 2 decimals.
-  question_categorization: |
+  question_categorization: |-
     Museum attendance is currently a GA-ticket proxy, not the Sensource turnstile
     count -- note that if precision matters. Market-segment splits depend on a
     channel mapping still being validated, so segment-level numbers are

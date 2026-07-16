@@ -52,6 +52,26 @@ tables:
         synonyms: ["tickets sold", "admissions sold", "ticket count"]
         description: General-admission tickets sold.
         expr: SUM(TICKETS_SOLD)
+        meta:
+          display_name: Total Tickets Sold
+          id: MET-001
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: General-admission entries only; excludes complimentary and group holds.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
+          related_metrics: [total_ticket_revenue, total_pass_revenue, total_admission_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_ticket_revenue
         synonyms: ["ticket revenue", "admission revenue"]
         description: General-admission ticket revenue recognized on the business date.
@@ -62,13 +82,13 @@ tables:
           id: MET-002
           type: Measure — Sum
           domain: Revenue
-          status: approved            # approved | in-review | draft
+          status: in-review           # approved | in-review | draft
           grain: Daily
           sla_tier: Tier 1
           version: "3.0"
           business_owner: Chris Wogas
           technical_owner: Jeremy Myers
-          approval_date: 2026-07-14
+          approval_date: ''
           time_dimension: report_date
           scope: General-admission tickets only; excludes CityPASS / C3 pass revenue.
           source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
@@ -83,14 +103,74 @@ tables:
         synonyms: ["pass revenue", "CityPASS revenue", "C3 revenue"]
         description: CityPASS / C3 pass revenue.
         expr: SUM(PASS_REVENUE)
+        meta:
+          display_name: Total Pass Revenue
+          id: MET-003
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: General-admission entries only; excludes complimentary and group holds.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_tickets_sold, total_ticket_revenue, total_admission_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_admission_revenue
         synonyms: ["total admission revenue"]
         description: Ticket revenue plus pass revenue.
         expr: SUM(TOTAL_ADMISSION_REVENUE)
+        meta:
+          display_name: Total Admission Revenue
+          id: MET-004
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: General-admission scope on the business date; see description for component definition.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_tickets_sold, total_ticket_revenue, total_pass_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_museum_attendance
         synonyms: ["museum attendance", "museum visitors"]
         description: Museum attendance (scanned general-admission component; see notes for Sensource blend).
         expr: SUM(MUS_ATTENDANCE)
+        meta:
+          display_name: Total Museum Attendance
+          id: MET-005
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Scanned Gateway component only; full Sensource turnstile blend not yet staged.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_memorial_attendance]
+          caveats:
+            - Scan component only; full Sensource turnstile blend not yet staged.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_memorial_attendance
         synonyms: ["memorial attendance", "plaza attendance", "memorial visitors"]
         description: >
@@ -98,6 +178,26 @@ tables:
           facilities). Scan component only; full Sensource turnstile blend not
           yet staged.
         expr: SUM(MEM_ATTENDANCE)
+        meta:
+          display_name: Total Memorial Attendance
+          id: MET-006
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Scanned Gateway component only; full Sensource turnstile blend not yet staged.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_museum_attendance]
+          caveats:
+            - Scan component only; full Sensource turnstile blend not yet staged.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 
       # ======================================================================
       # TOUR REVENUE (additive)
@@ -106,50 +206,290 @@ tables:
         synonyms: ["museum guided tour revenue", "guided tour revenue"]
         description: Museum guided tour revenue (TOU matrix cohort).
         expr: SUM(MUS_GUIDED_TOUR_REVENUE)
+        meta:
+          display_name: Total Museum Guided Tour Revenue
+          id: MET-007
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mem_guided_tour_revenue, total_mem_mus_tour_revenue, total_revealed_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mem_guided_tour_revenue
         synonyms: ["memorial guided tour revenue"]
         description: Memorial guided tour revenue (MGT matrix cohort).
         expr: SUM(MEM_GUIDED_TOUR_REVENUE)
+        meta:
+          display_name: Total Memorial Guided Tour Revenue
+          id: MET-008
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_mus_tour_revenue, total_revealed_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mem_mus_tour_revenue
         synonyms: ["memorial and museum tour revenue", "combined tour revenue"]
         description: Memorial + Museum combined tour revenue (MTG matrix cohort).
         expr: SUM(MEM_MUS_TOUR_REVENUE)
+        meta:
+          display_name: Total Memorial + Museum Tour Revenue
+          id: MET-009
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_revealed_tour_revenue]
+          caveats:
+            - MTG matrix cohort; corrected from dead MTG filter to the product-178 PLU list during reconciliation.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_revealed_tour_revenue
         synonyms: ["revealed tour revenue"]
         description: Revealed tour revenue.
         expr: SUM(REVEALED_TOUR_REVENUE)
+        meta:
+          display_name: Total Revealed Tour Revenue
+          id: MET-010
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_ask_educator_revenue
         synonyms: ["ask an educator revenue", "ask educator revenue"]
         description: Ask An Educator program revenue.
         expr: SUM(ASK_EDUCATOR_REVENUE)
+        meta:
+          display_name: Total Ask-an-Educator Revenue
+          id: MET-011
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mem_field_trip_revenue
         synonyms: ["memorial field trip revenue"]
         description: Memorial field trip revenue.
         expr: SUM(MEM_FIELD_TRIP_REVENUE)
+        meta:
+          display_name: Total Memorial Field Trip Revenue
+          id: MET-012
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mus_field_trip_revenue
         synonyms: ["museum field trip revenue"]
         description: Museum field trip revenue.
         expr: SUM(MUS_FIELD_TRIP_REVENUE)
+        meta:
+          display_name: Total Museum Field Trip Revenue
+          id: MET-013
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_field_trip_revenue
         synonyms: ["field trip revenue", "school trip revenue"]
         description: Memorial + Museum field trip revenue.
         expr: SUM(MEM_FIELD_TRIP_REVENUE) + SUM(MUS_FIELD_TRIP_REVENUE)
+        meta:
+          display_name: Total Field Trip Revenue
+          id: MET-014
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Roll-up of component lines; validate against the sum of its parts.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_mem_tour_revenue
         synonyms: ["virtual memorial tour revenue"]
         description: Virtual Memorial tour revenue.
         expr: SUM(VIRTUAL_MEM_TOUR_REVENUE)
+        meta:
+          display_name: Total Virtual Memorial Tour Revenue
+          id: MET-015
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_mus_tour_revenue
         synonyms: ["virtual museum tour revenue"]
         description: Virtual Museum tour revenue.
         expr: SUM(VIRTUAL_MUS_TOUR_REVENUE)
+        meta:
+          display_name: Total Virtual Museum Tour Revenue
+          id: MET-016
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_yf_mem_tour_revenue
         synonyms: ["virtual youth and family tour revenue", "youth family virtual tour revenue"]
         description: Virtual Youth & Family Memorial tour revenue.
         expr: SUM(VIRTUAL_YF_MEM_TOUR_REVENUE)
+        meta:
+          display_name: Total Virtual Young Friends Memorial Tour Revenue
+          id: MET-017
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_tour_revenue
         synonyms: ["virtual tour revenue", "online tour revenue"]
         description: All virtual tour revenue (memorial, museum, youth & family).
         expr: SUM(VIRTUAL_MEM_TOUR_REVENUE) + SUM(VIRTUAL_MUS_TOUR_REVENUE) + SUM(VIRTUAL_YF_MEM_TOUR_REVENUE)
+        meta:
+          display_name: Total Virtual Tour Revenue
+          id: MET-018
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Roll-up of component lines; validate against the sum of its parts.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 
       # ======================================================================
       # TOUR & ATTENDANCE COUNTS (additive)
@@ -158,34 +498,194 @@ tables:
         synonyms: ["museum guided tour count", "number of museum guided tours"]
         description: Museum guided tour ticket count.
         expr: SUM(MUS_GUIDED_TOURS)
+        meta:
+          display_name: Total Museum Guided Tours
+          id: MET-019
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_memorial_guided_tours
         synonyms: ["memorial guided tour count", "number of memorial guided tours"]
         description: Memorial guided tour ticket count.
         expr: SUM(MEM_GUIDED_TOURS)
+        meta:
+          display_name: Total Memorial Guided Tours
+          id: MET-020
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mem_mus_tours
         synonyms: ["combined tour count", "memorial and museum tour count"]
         description: Memorial + Museum combined tour ticket count.
         expr: SUM(MEM_MUS_TOURS)
+        meta:
+          display_name: Total Memorial + Museum Tours
+          id: MET-021
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_memorial_field_trips
         synonyms: ["memorial field trip count"]
         description: Memorial field trip ticket count.
         expr: SUM(MEM_FIELD_TRIPS)
+        meta:
+          display_name: Total Memorial Field Trips
+          id: MET-022
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_museum_field_trips
         synonyms: ["museum field trip count"]
         description: Museum field trip ticket count.
         expr: SUM(MUS_FIELD_TRIPS)
+        meta:
+          display_name: Total Museum Field Trips
+          id: MET-023
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_mem_tours
         synonyms: ["virtual memorial tour count"]
         description: Virtual Memorial tour count.
         expr: SUM(VIRTUAL_MEM_TOURS)
+        meta:
+          display_name: Total Virtual Memorial Tours
+          id: MET-024
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_mus_tours
         synonyms: ["virtual museum tour count"]
         description: Virtual Museum tour count.
         expr: SUM(VIRTUAL_MUS_TOURS)
+        meta:
+          display_name: Total Virtual Museum Tours
+          id: MET-025
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_virtual_yf_mem_tours
         synonyms: ["virtual youth and family tour count"]
         description: Virtual Youth & Family Memorial tour count.
         expr: SUM(VIRTUAL_YF_MEM_TOURS)
+        meta:
+          display_name: Total Virtual Young Friends Memorial Tours
+          id: MET-026
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 
       # ======================================================================
       # FEES & AUDIO (additive)
@@ -194,22 +694,122 @@ tables:
         synonyms: ["service fees", "fees"]
         description: Museum + Memorial service fees.
         expr: SUM(SERVICE_FEES)
+        meta:
+          display_name: Total Service Fees
+          id: MET-027
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This ancillary revenue line only; recognized on the business date.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mem_audio_guide_revenue, total_audio_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mem_audio_guide_revenue
         synonyms: ["memorial audio guide revenue"]
         description: Memorial audio guide revenue (Galaxy MAG component).
         expr: SUM(MEM_AUDIO_GUIDE_REVENUE)
+        meta:
+          display_name: Total Memorial Audio Guide Revenue
+          id: MET-028
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This ancillary revenue line only; recognized on the business date.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_service_fees, total_audio_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_audio_tour_headset
         synonyms: ["museum audio revenue", "headset revenue", "audio tour and headset"]
         description: Museum audio/headset revenue (Galaxy guide + CounterPoint MUS AG).
         expr: SUM(AUDIO_TOUR_HEADSET)
+        meta:
+          display_name: Total Audio Tour Headset Revenue
+          id: MET-029
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_audio_tour_headset_units
         synonyms: ["audio units sold", "headset units", "audio guide units"]
         description: Museum audio/headset units sold.
         expr: SUM(AUDIO_TOUR_HEADSET_UNITS)
+        meta:
+          display_name: Total Audio Tour Headset Units
+          id: MET-030
+          type: Measure — Sum
+          domain: Attendance & Ticketing
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gateway matrix cohort for this experience type; excludes cancelled/refunded bookings.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_guided_tour_revenue, total_mem_guided_tour_revenue, total_mem_mus_tour_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_audio_revenue
         synonyms: ["audio guide revenue", "all audio revenue"]
         description: Museum audio/headset plus memorial audio guide revenue.
         expr: SUM(AUDIO_TOUR_HEADSET) + SUM(MEM_AUDIO_GUIDE_REVENUE)
+        meta:
+          display_name: Total Audio Revenue
+          id: MET-031
+          type: Measure — Sum
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This ancillary revenue line only; recognized on the business date.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_service_fees, total_mem_audio_guide_revenue]
+          caveats:
+            - Roll-up of component lines; validate against the sum of its parts.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 
       # ======================================================================
       # RETAIL PROFIT (additive)
@@ -218,18 +818,98 @@ tables:
         synonyms: ["museum store profit", "store gross profit"]
         description: Museum Store gross profit (sales minus cost).
         expr: SUM(MUS_STORE_GROSS_PROFIT)
+        meta:
+          display_name: Total Museum Store Gross Profit
+          id: MET-032
+          type: Measure — Sum
+          domain: Retail
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Gennady Zaritsky
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_retail_carts_gross_profit, total_cafe_profit, total_retail_gross_profit]
+          caveats:
+            - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_retail_carts_gross_profit
         synonyms: ["memorial cart profit", "cart gross profit"]
         description: Memorial Carts gross profit.
         expr: SUM(RETAIL_CARTS_GROSS_PROFIT)
+        meta:
+          display_name: Total Retail Carts Gross Profit
+          id: MET-033
+          type: Measure — Sum
+          domain: Retail
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Gennady Zaritsky
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_store_gross_profit, total_cafe_profit, total_retail_gross_profit]
+          caveats:
+            - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_cafe_profit
         synonyms: ["cafe profit"]
         description: Cafe gross profit.
         expr: SUM(CAFE1_ALL_PROFIT)
+        meta:
+          display_name: Total Cafe Profit
+          id: MET-034
+          type: Measure — Sum
+          domain: Retail
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Gennady Zaritsky
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_store_gross_profit, total_retail_carts_gross_profit, total_retail_gross_profit]
+          caveats:
+            - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_retail_gross_profit
         synonyms: ["total retail profit", "retail gross profit"]
         description: Museum Store + Memorial Carts + Cafe gross profit.
         expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT)
+        meta:
+          display_name: Total Retail Gross Profit
+          id: MET-035
+          type: Measure — Sum
+          domain: Retail
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Gennady Zaritsky
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_store_gross_profit, total_retail_carts_gross_profit, total_cafe_profit]
+          caveats:
+            - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 
       # ======================================================================
       # DONATIONS (additive) -- individual lines + roll-up
@@ -238,46 +918,266 @@ tables:
         synonyms: ["ticketing donations"]
         description: Gateway ticketing donations (excludes box/exit categories).
         expr: SUM(TICKETING_DONATIONS)
+        meta:
+          display_name: Total Ticketing Donations
+          id: MET-036
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_box_office_mem_donations, total_box_office_mus_exit_donations, total_coatcheck_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_box_office_mem_donations
         synonyms: ["box office memorial donations", "plaza box donations"]
         description: Box office memorial (plaza) box donations.
         expr: SUM(BOX_OFFICE_MEM_DON)
+        meta:
+          display_name: Total Box Office Memorial Donations
+          id: MET-037
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mus_exit_donations, total_coatcheck_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_box_office_mus_exit_donations
         synonyms: ["box office museum exit donations", "museum exit box donations"]
         description: Box office museum exit box donations.
         expr: SUM(BOX_OFFICE_MUS_EXIT_DON)
+        meta:
+          display_name: Total Box Office Museum Exit Donations
+          id: MET-038
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_coatcheck_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_coatcheck_donations
         synonyms: ["coat check donations"]
         description: Coat check donations.
         expr: SUM(COATCHECK_DON)
+        meta:
+          display_name: Total Coat Check Donations
+          id: MET-039
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mask_donations
         synonyms: ["mask donations"]
         description: Mask donations.
         expr: SUM(MASK_DONATIONS)
+        meta:
+          display_name: Total Mask Donations
+          id: MET-040
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_donation_box
         synonyms: ["donation box"]
         description: General donation box collections.
         expr: SUM(DONATION_BOX)
+        meta:
+          display_name: Total Donation Box
+          id: MET-041
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mus_store_donations
         synonyms: ["museum store donations"]
         description: Museum Store donations.
         expr: SUM(MUS_STORE_DONATIONS)
+        meta:
+          display_name: Total Museum Store Donations
+          id: MET-042
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_mus_exit_donations
         synonyms: ["museum exit donations"]
         description: Museum exit donations (CounterPoint).
         expr: SUM(MUS_EXIT_DONATIONS)
+        meta:
+          display_name: Total Museum Exit Donations
+          id: MET-043
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_cart_donation_ask
         synonyms: ["cart donation ask", "memorial cart donations"]
         description: Memorial cart donation-ask collections.
         expr: SUM(CART_DONATION_ASK)
+        meta:
+          display_name: Total Cart Donation Ask
+          id: MET-044
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_ecom_donation_ask
         synonyms: ["ecommerce donation ask", "online donation ask"]
         description: Ecommerce donation-ask collections (CounterPoint ecom store).
         expr: SUM(ECOM_DONATION_ASK)
+        meta:
+          display_name: Total E-Commerce Donation Ask
+          id: MET-045
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_cafe_donations
         synonyms: ["cafe donations"]
         description: Cafe donations.
         expr: SUM(CAFE1_DONATIONS)
+        meta:
+          display_name: Total Cafe Donations
+          id: MET-046
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: total_donations
         synonyms: ["total donations", "all donations", "donation revenue"]
         description: Sum of every DPR donation line.
@@ -288,6 +1188,26 @@ tables:
           SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) +
           SUM(CART_DONATION_ASK) + SUM(ECOM_DONATION_ASK) +
           SUM(CAFE1_DONATIONS)
+        meta:
+          display_name: Total Donations
+          id: MET-047
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: This donation channel only; recognized on the business date. Individual-donor detail is out of scope.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_ticketing_donations, total_box_office_mem_donations, total_box_office_mus_exit_donations]
+          caveats:
+            - Donation sources re-pointed Gateway -> CounterPoint during DPR reconciliation; verify channel mapping.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 
       # ======================================================================
       # NON-ADDITIVE RATIOS (ratio-of-sums; recomputed at query grain)
@@ -299,6 +1219,26 @@ tables:
           Non-additive: total admission revenue divided by tickets sold,
           recomputed at the query grain (never averaged across days).
         expr: total_admission_revenue / NULLIF(total_tickets_sold, 0)
+        meta:
+          display_name: Average Ticket Price
+          id: MET-048
+          type: Measure — Ratio
+          domain: Revenue
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 1
+          version: '1.0'
+          business_owner: Chris Wogas
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Ratio-of-sums (admission revenue / tickets sold), recomputed at query grain; non-additive.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE, INTERMEDIATE.INT_REVENUE__TICKETS]
+          related_metrics: [total_tickets_sold, total_ticket_revenue, total_pass_revenue]
+          caveats:
+            - Definition under review; validate against source before certified use.
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
       - name: mus_store_rev_per_visitor
         synonyms: ["museum store revenue per visitor", "store per cap", "per capita store profit"]
         description: >
@@ -306,6 +1246,26 @@ tables:
           recomputed at the query grain.
         expr: SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)
 
+        meta:
+          display_name: Museum Store Revenue per Visitor
+          id: MET-049
+          type: Measure — Ratio
+          domain: Retail
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Gennady Zaritsky
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Gross profit for this retail channel from CounterPoint POS; excludes returns/voids.
+          source_models: [MARTS.FCT_DAILY_PERFORMANCE]
+          related_metrics: [total_mus_store_gross_profit, total_retail_carts_gross_profit, total_cafe_profit]
+          caveats:
+            - trim(plu) applied at source; CounterPoint retail schema pending Kenny Yeung confirmation (ADR-008).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
   - name: date
     description: Calendar date dimension with fiscal calendar (FY starts October) and the September 11 commemoration flag.
     synonyms:
@@ -504,7 +1464,7 @@ module_custom_instructions:
     since that window is a known structural exception. If a question mentions
     "fiscal" year/month/quarter, use the fiscal_year / fiscal_month dimensions
     (fiscal year starts in October); otherwise use the calendar dimensions.
-  question_categorization: |
+  question_categorization: |-
     If a question asks for budget, forecast, or variance figures, treat it as
     out of scope: explain that budget/variance is not yet in this model (pending
     budget-source staging) and offer the actuals instead.

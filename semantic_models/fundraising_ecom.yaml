@@ -49,6 +49,26 @@ tables:
         description: Recurring online revenue (STUB - pending the ecom feed; zero until wired).
         expr: SUM(AMOUNT)
 
+        meta:
+          display_name: Total Recurring Online Revenue
+          id: MET-057
+          type: Measure — Sum
+          domain: Fundraising
+          status: in-review
+          grain: Daily
+          sla_tier: Tier 2
+          version: '1.0'
+          business_owner: Jan-Michael Llanes
+          technical_owner: Jeremy Myers
+          approval_date: ''
+          time_dimension: report_date
+          scope: Recurring online (website) commerce revenue recognized on order date.
+          source_models: [MARTS.RPT_WEBSITE_COMMERCE]
+          related_metrics: []
+          caveats:
+            - STUB — pending the Classy / Shopify recurring ecommerce pipeline (ADR-008).
+          changelog:
+            - {version: '1.0', date: '2026-07-16', note: Metadata authored from platform knowledge; submitted for review.}
 verified_queries:
   - name: recurring_by_type_year
     question: What was recurring online donation revenue by year?
@@ -67,7 +87,7 @@ module_custom_instructions:
   sql_generation: |
     Round currency to 2 decimals. This domain is stub-fed: the ecommerce
     pipeline (Classy / Shopify recurring) is not yet ingested.
-  question_categorization: |
+  question_categorization: |-
     IMPORTANT: if a query returns empty or zero, do NOT report it as "no
     revenue" or "zero donations". Explain that the Website Commerce / ecommerce
     feed is not yet connected, so figures are pending rather than actually zero.
