@@ -16,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 
 from shared.keyvault import secret
 from shared.snowflake_client import land_to_bronze, log_run
+from shared.refresh_log import RefreshLogger
 
 SOURCE_SYSTEM = "COUNTERPOINT"
 
@@ -64,14 +65,18 @@ def run(incremental=True):
     if incremental:
         modified_since = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     extracted_at = datetime.now(timezone.utc).isoformat()
+    refresh_log = RefreshLogger(SOURCE_SYSTEM, mode)
     conn = authenticate()
     for obj_name, records in extract(conn, modified_since).items():
         try:
             count = land_to_bronze(records, SOURCE_SYSTEM, obj_name, extracted_at)
             log_run(SOURCE_SYSTEM, obj_name, "success", count)
+            refresh_log.add(obj_name, "success", count)
         except Exception as e:
             print(f"    ERROR on {obj_name}: {e}")
             log_run(SOURCE_SYSTEM, obj_name, "failed", 0, str(e))
+            refresh_log.add(obj_name, "failed", 0, str(e))
+    refresh_log.write()
     print(f"\nComplete: {datetime.now(timezone.utc).isoformat()}")
 
 
