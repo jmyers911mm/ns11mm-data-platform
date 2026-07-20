@@ -1,4 +1,4 @@
-ewname: FUNDRAISING_ECOM
+name: FUNDRAISING_ECOM
 description: Fundraising and ecommerce analytics model. Covers campaigns, customers, funds, and payment methods for donation and ecommerce transaction analysis. NOTE - dimension tables are currently stubs awaiting RAW data connections; this semantic view will become fully functional once source systems are connected.
 tables:
   - name: DIM_CAMPAIGN
