@@ -4,6 +4,41 @@ All notable changes to the ns11mm-data-platform project will be documented in th
 
 This is the production repository (`ns11mm/ns11mm-data-platform`).
 
+## [3.0.0] — 2026-07-20 — Cortex Analyst Semantic Views
+
+Deploys **three new Cortex Analyst semantic views** to `NS11MM_DW_DEV_JMYERS.MARTS`
+and downloads the existing DPR view into the workspace for version control.
+Major version: these semantic views are the Cortex Analyst contract consumed by
+the `JMYERS_TEST` agent and future Snowflake Intelligence surfaces.
+
+### Added — semantic view YAML specs (`cortex_project/`)
+
+- **`ATTENDANCE.sv.yaml`** — Attendance analytics model covering daily scan counts
+  by market segment, ticket demand forecasting with presale lead-time analysis,
+  and real-time ticket capacity/utilization. Tables: `FCT_DAILY_SCAN`,
+  `FCT_TICKET_DEMAND_FORECAST`, `FCT_TICKET_AVAILABILITY`, `DIM_DATE`,
+  `SEED_SCAN_MARKET_SEGMENT`. Includes relationships and SUM metrics.
+
+- **`RETAIL.sv.yaml`** — Retail analytics model covering category-grain sales
+  performance (net sales, profit, units, donations) and facility-grain daily
+  aggregates (transactions, visitors, ecommerce orders). Tables:
+  `FCT_RETAIL_PERFORMANCE`, `FCT_RETAIL_DAILY`, `DIM_DATE`, `SEED_FACILITY_AREA`.
+  Includes gross margin % and revenue-per-visitor ratio metrics.
+
+- **`FUNDRAISING_ECOM.sv.yaml`** — Fundraising & ecommerce scaffold. Dimension
+  stubs (`DIM_CAMPAIGN`, `DIM_CUSTOMER`, `DIM_FUND`, `DIM_PAYMENT_METHOD`) plus
+  `DIM_DATE`. Ready to expand once Salesforce/Blackbaud RAW connections are live.
+
+- **`DPR.sv.yaml`** — Downloaded from deployed `NS11MM_DW_DEV_JMYERS.MARTS.DPR`
+  semantic view for workspace version control. 48 metrics, custom instructions,
+  and fiscal calendar dimensions.
+
+- **`JMYERS_TEST.agent.yaml`** — Cortex Agent spec with `dpr_analyst` tool
+  pointing to the DPR semantic view on `COMPUTE_WH`.
+
+- **`cortex-project.yaml`** — Project manifest tracking all semantic view and
+  agent artifacts with their Snowflake deployment targets.
+
 ## [2.0.0] — 2026-07-16 — Semantic & Governance Layer: Metric Metadata, Report Exposures, Charter
 
 With the report-estate marts now fed with real data (1.6.x), this release

@@ -1,0 +1,482 @@
+name: DPR
+description: "Daily Performance Report semantic model over the DPR marts. Additive KPIs are SUM metrics so Cortex Analyst can roll up to any period; the two ratios are ratio-of-sums metrics (non-additive, recomputed at the query grain). Built on FCT_DAILY_PERFORMANCE (additive day-grain fact) joined to DIM_DATE. Budget/variance, full Sensource attendance blend, ecommerce gross profit, and membership are out of current scope (see custom instructions)."
+tables:
+  - name: DP
+    synonyms:
+      - daily performance
+      - DPR fact
+      - daily numbers
+    description: One row per calendar day of DPR additive measures.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_DAILY_PERFORMANCE
+    primary_key:
+      columns:
+        - DATE_ID
+    dimensions:
+      - name: IS_COMMEMORATION_DAY
+        synonyms:
+          - commemoration
+          - anniversary window
+          - 9/11 period
+        description: "TRUE for September 11, the commemoration day treated as a known structural exception."
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+    metrics:
+      - name: AVG_TICKET_PRICE
+        synonyms:
+          - average ticket price
+          - avg admission price
+        description: "Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days)."
+        expr: "TOTAL_ADMISSION_REVENUE / NULLIF(SUM(TICKETS_SOLD), 0)"
+        access_modifier: public_access
+      - name: MUS_STORE_REV_PER_VISITOR
+        synonyms:
+          - museum store revenue per visitor
+          - store per cap
+          - per capita store profit
+        description: "Non-additive: Museum Store gross profit per museum visitor, recomputed at the query grain."
+        expr: "SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)"
+        access_modifier: public_access
+      - name: TOTAL_ADMISSION_REVENUE
+        synonyms:
+          - total admission revenue
+        description: Ticket revenue plus pass revenue.
+        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_ASK_EDUCATOR_REVENUE
+        synonyms:
+          - ask an educator revenue
+          - ask educator revenue
+        description: Ask An Educator program revenue.
+        expr: SUM(ASK_EDUCATOR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_AUDIO_REVENUE
+        synonyms:
+          - audio guide revenue
+          - all audio revenue
+        description: Museum audio/headset plus memorial audio guide revenue.
+        expr: SUM(AUDIO_TOUR_HEADSET) + SUM(MEM_AUDIO_GUIDE_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_AUDIO_TOUR_HEADSET
+        synonyms:
+          - museum audio revenue
+          - headset revenue
+          - audio tour and headset
+        description: Museum audio/headset revenue (Galaxy guide + CounterPoint MUS AG).
+        expr: SUM(AUDIO_TOUR_HEADSET)
+        access_modifier: public_access
+      - name: TOTAL_AUDIO_TOUR_HEADSET_UNITS
+        synonyms:
+          - audio units sold
+          - headset units
+          - audio guide units
+        description: Museum audio/headset units sold.
+        expr: SUM(AUDIO_TOUR_HEADSET_UNITS)
+        access_modifier: public_access
+      - name: TOTAL_BOX_OFFICE_MEM_DONATIONS
+        synonyms:
+          - box office memorial donations
+          - plaza box donations
+        description: Box office memorial (plaza) box donations.
+        expr: SUM(BOX_OFFICE_MEM_DON)
+        access_modifier: public_access
+      - name: TOTAL_BOX_OFFICE_MUS_EXIT_DONATIONS
+        synonyms:
+          - box office museum exit donations
+          - museum exit box donations
+        description: Box office museum exit box donations.
+        expr: SUM(BOX_OFFICE_MUS_EXIT_DON)
+        access_modifier: public_access
+      - name: TOTAL_CAFE_DONATIONS
+        synonyms:
+          - cafe donations
+        description: Cafe donations.
+        expr: SUM(CAFE1_DONATIONS)
+        access_modifier: public_access
+      - name: TOTAL_CAFE_PROFIT
+        synonyms:
+          - cafe profit
+        description: Cafe gross profit.
+        expr: SUM(CAFE1_ALL_PROFIT)
+        access_modifier: public_access
+      - name: TOTAL_CART_DONATION_ASK
+        synonyms:
+          - cart donation ask
+          - memorial cart donations
+        description: Memorial cart donation-ask collections.
+        expr: SUM(CART_DONATION_ASK)
+        access_modifier: public_access
+      - name: TOTAL_COATCHECK_DONATIONS
+        synonyms:
+          - coat check donations
+        description: Coat check donations.
+        expr: SUM(COATCHECK_DON)
+        access_modifier: public_access
+      - name: TOTAL_DONATIONS
+        synonyms:
+          - total donations
+          - all donations
+          - donation revenue
+        description: Sum of every DPR donation line.
+        expr: SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MEM_DON) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MASK_DONATIONS) + SUM(DONATION_BOX) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CART_DONATION_ASK) + SUM(ECOM_DONATION_ASK) + SUM(CAFE1_DONATIONS)
+        access_modifier: public_access
+      - name: TOTAL_DONATION_BOX
+        synonyms:
+          - donation box
+        description: General donation box collections.
+        expr: SUM(DONATION_BOX)
+        access_modifier: public_access
+      - name: TOTAL_ECOM_DONATION_ASK
+        synonyms:
+          - ecommerce donation ask
+          - online donation ask
+        description: Ecommerce donation-ask collections (CounterPoint ecom store).
+        expr: SUM(ECOM_DONATION_ASK)
+        access_modifier: public_access
+      - name: TOTAL_FIELD_TRIP_REVENUE
+        synonyms:
+          - field trip revenue
+          - school trip revenue
+        description: Memorial + Museum field trip revenue.
+        expr: SUM(MEM_FIELD_TRIP_REVENUE) + SUM(MUS_FIELD_TRIP_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MASK_DONATIONS
+        synonyms:
+          - mask donations
+        description: Mask donations.
+        expr: SUM(MASK_DONATIONS)
+        access_modifier: public_access
+      - name: TOTAL_MEMORIAL_ATTENDANCE
+        synonyms:
+          - memorial attendance
+          - plaza attendance
+          - memorial visitors
+        description: Memorial attendance (valid Gateway scans at memorial-classified facilities). Scan component only; full Sensource turnstile blend not yet staged.
+        expr: SUM(MEM_ATTENDANCE)
+        access_modifier: public_access
+      - name: TOTAL_MEMORIAL_FIELD_TRIPS
+        synonyms:
+          - memorial field trip count
+        description: Memorial field trip ticket count.
+        expr: SUM(MEM_FIELD_TRIPS)
+        access_modifier: public_access
+      - name: TOTAL_MEMORIAL_GUIDED_TOURS
+        synonyms:
+          - memorial guided tour count
+          - number of memorial guided tours
+        description: Memorial guided tour ticket count.
+        expr: SUM(MEM_GUIDED_TOURS)
+        access_modifier: public_access
+      - name: TOTAL_MEM_AUDIO_GUIDE_REVENUE
+        synonyms:
+          - memorial audio guide revenue
+        description: Memorial audio guide revenue (Galaxy MAG component).
+        expr: SUM(MEM_AUDIO_GUIDE_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MEM_FIELD_TRIP_REVENUE
+        synonyms:
+          - memorial field trip revenue
+        description: Memorial field trip revenue.
+        expr: SUM(MEM_FIELD_TRIP_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MEM_GUIDED_TOUR_REVENUE
+        synonyms:
+          - memorial guided tour revenue
+        description: Memorial guided tour revenue (MGT matrix cohort).
+        expr: SUM(MEM_GUIDED_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MEM_MUS_TOURS
+        synonyms:
+          - combined tour count
+          - memorial and museum tour count
+        description: Memorial + Museum combined tour ticket count.
+        expr: SUM(MEM_MUS_TOURS)
+        access_modifier: public_access
+      - name: TOTAL_MEM_MUS_TOUR_REVENUE
+        synonyms:
+          - memorial and museum tour revenue
+          - combined tour revenue
+        description: Memorial + Museum combined tour revenue (MTG matrix cohort).
+        expr: SUM(MEM_MUS_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MUSEUM_ATTENDANCE
+        synonyms:
+          - museum attendance
+          - museum visitors
+        description: Museum attendance (scanned general-admission component; see notes for Sensource blend).
+        expr: SUM(MUS_ATTENDANCE)
+        access_modifier: public_access
+      - name: TOTAL_MUSEUM_FIELD_TRIPS
+        synonyms:
+          - museum field trip count
+        description: Museum field trip ticket count.
+        expr: SUM(MUS_FIELD_TRIPS)
+        access_modifier: public_access
+      - name: TOTAL_MUSEUM_GUIDED_TOURS
+        synonyms:
+          - museum guided tour count
+          - number of museum guided tours
+        description: Museum guided tour ticket count.
+        expr: SUM(MUS_GUIDED_TOURS)
+        access_modifier: public_access
+      - name: TOTAL_MUS_EXIT_DONATIONS
+        synonyms:
+          - museum exit donations
+        description: Museum exit donations (CounterPoint).
+        expr: SUM(MUS_EXIT_DONATIONS)
+        access_modifier: public_access
+      - name: TOTAL_MUS_FIELD_TRIP_REVENUE
+        synonyms:
+          - museum field trip revenue
+        description: Museum field trip revenue.
+        expr: SUM(MUS_FIELD_TRIP_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MUS_GUIDED_TOUR_REVENUE
+        synonyms:
+          - museum guided tour revenue
+          - guided tour revenue
+        description: Museum guided tour revenue (TOU matrix cohort).
+        expr: SUM(MUS_GUIDED_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_MUS_STORE_DONATIONS
+        synonyms:
+          - museum store donations
+        description: Museum Store donations.
+        expr: SUM(MUS_STORE_DONATIONS)
+        access_modifier: public_access
+      - name: TOTAL_MUS_STORE_GROSS_PROFIT
+        synonyms:
+          - museum store profit
+          - store gross profit
+        description: Museum Store gross profit (sales minus cost).
+        expr: SUM(MUS_STORE_GROSS_PROFIT)
+        access_modifier: public_access
+      - name: TOTAL_PASS_REVENUE
+        synonyms:
+          - pass revenue
+          - CityPASS revenue
+          - C3 revenue
+        description: CityPASS / C3 pass revenue.
+        expr: SUM(PASS_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_RETAIL_CARTS_GROSS_PROFIT
+        synonyms:
+          - memorial cart profit
+          - cart gross profit
+        description: Memorial Carts gross profit.
+        expr: SUM(RETAIL_CARTS_GROSS_PROFIT)
+        access_modifier: public_access
+      - name: TOTAL_RETAIL_GROSS_PROFIT
+        synonyms:
+          - total retail profit
+          - retail gross profit
+        description: Museum Store + Memorial Carts + Cafe gross profit.
+        expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT)
+        access_modifier: public_access
+      - name: TOTAL_REVEALED_TOUR_REVENUE
+        synonyms:
+          - revealed tour revenue
+        description: Revealed tour revenue.
+        expr: SUM(REVEALED_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_SERVICE_FEES
+        synonyms:
+          - service fees
+          - fees
+        description: Museum + Memorial service fees.
+        expr: SUM(SERVICE_FEES)
+        access_modifier: public_access
+      - name: TOTAL_TICKETING_DONATIONS
+        synonyms:
+          - ticketing donations
+        description: Gateway ticketing donations (excludes box/exit categories).
+        expr: SUM(TICKETING_DONATIONS)
+        access_modifier: public_access
+      - name: TOTAL_TICKETS_SOLD
+        synonyms:
+          - tickets sold
+          - admissions sold
+          - ticket count
+        description: General-admission tickets sold.
+        expr: SUM(TICKETS_SOLD)
+        access_modifier: public_access
+      - name: TOTAL_TICKET_REVENUE
+        synonyms:
+          - ticket revenue
+          - admission revenue
+        description: General-admission ticket revenue.
+        expr: SUM(TICKET_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_MEM_TOURS
+        synonyms:
+          - virtual memorial tour count
+        description: Virtual Memorial tour count.
+        expr: SUM(VIRTUAL_MEM_TOURS)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_MEM_TOUR_REVENUE
+        synonyms:
+          - virtual memorial tour revenue
+        description: Virtual Memorial tour revenue.
+        expr: SUM(VIRTUAL_MEM_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_MUS_TOURS
+        synonyms:
+          - virtual museum tour count
+        description: Virtual Museum tour count.
+        expr: SUM(VIRTUAL_MUS_TOURS)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_MUS_TOUR_REVENUE
+        synonyms:
+          - virtual museum tour revenue
+        description: Virtual Museum tour revenue.
+        expr: SUM(VIRTUAL_MUS_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_TOUR_REVENUE
+        synonyms:
+          - virtual tour revenue
+          - online tour revenue
+        description: "All virtual tour revenue (memorial, museum, youth & family)."
+        expr: SUM(VIRTUAL_MEM_TOUR_REVENUE) + SUM(VIRTUAL_MUS_TOUR_REVENUE) + SUM(VIRTUAL_YF_MEM_TOUR_REVENUE)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_YF_MEM_TOURS
+        synonyms:
+          - virtual youth and family tour count
+        description: Virtual Youth & Family Memorial tour count.
+        expr: SUM(VIRTUAL_YF_MEM_TOURS)
+        access_modifier: public_access
+      - name: TOTAL_VIRTUAL_YF_MEM_TOUR_REVENUE
+        synonyms:
+          - virtual youth and family tour revenue
+          - youth family virtual tour revenue
+        description: Virtual Youth & Family Memorial tour revenue.
+        expr: SUM(VIRTUAL_YF_MEM_TOUR_REVENUE)
+        access_modifier: public_access
+  - name: DT
+    synonyms:
+      - calendar
+      - date dimension
+    description: Calendar date dimension with fiscal calendar (FY starts October) and the September 11 commemoration flag.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_DATE
+    primary_key:
+      columns:
+        - DATE_ID
+    dimensions:
+      - name: CALENDAR_MONTH
+        synonyms:
+          - month number
+          - calendar month
+        description: Calendar month number (1-12).
+        expr: MONTH_OF_YEAR
+        data_type: "NUMBER(2,0)"
+      - name: CALENDAR_QUARTER
+        synonyms:
+          - quarter
+          - qtr
+          - calendar quarter
+        description: Calendar quarter (1-4).
+        expr: QUARTER_OF_YEAR
+        data_type: "NUMBER(2,0)"
+      - name: CALENDAR_YEAR
+        synonyms:
+          - year
+          - calendar year
+        description: Calendar year (January-December). For the October-based fiscal year use fiscal_year.
+        expr: YEAR_NUMBER
+        data_type: "NUMBER(4,0)"
+      - name: DAY_NAME
+        synonyms:
+          - weekday
+          - day of week
+        description: Abbreviated day-of-week name.
+        expr: DAY_OF_WEEK_NAME
+        data_type: VARCHAR(3)
+      - name: DAY_OF_MONTH
+        synonyms:
+          - day of month
+          - date of month
+        description: Day of the month (1-31).
+        expr: DAY_OF_MONTH
+        data_type: "NUMBER(2,0)"
+      - name: DAY_OF_YEAR
+        synonyms:
+          - day of year
+          - ordinal day
+        description: Day of the year (1-366).
+        expr: DAY_OF_YEAR
+        data_type: "NUMBER(4,0)"
+      - name: FISCAL_MONTH
+        synonyms:
+          - fiscal month
+          - fiscal period
+        description: Fiscal month number (October = 1 ... September = 12).
+        expr: FISCAL_MONTH
+        data_type: "NUMBER(3,0)"
+      - name: FISCAL_YEAR
+        synonyms:
+          - fiscal year
+          - FY
+        description: Fiscal year (starts in October; Oct-Dec roll into the next FY number).
+        expr: FISCAL_YEAR
+        data_type: "NUMBER(5,0)"
+      - name: IS_FIRST_OF_MONTH
+        synonyms:
+          - first of month
+        description: TRUE on the first calendar day of the month.
+        expr: IS_FIRST_OF_MONTH
+        data_type: BOOLEAN
+      - name: IS_LAST_OF_MONTH
+        synonyms:
+          - last of month
+          - month end
+        description: TRUE on the last calendar day of the month.
+        expr: IS_LAST_OF_MONTH
+        data_type: BOOLEAN
+      - name: IS_WEEKDAY
+        synonyms:
+          - weekday flag
+        description: TRUE Monday through Friday.
+        expr: IS_WEEKDAY
+        data_type: BOOLEAN
+      - name: IS_WEEKEND
+        synonyms:
+          - weekend flag
+          - weekend
+        description: TRUE on Saturday and Sunday.
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: MONTH_NAME
+        synonyms:
+          - month
+        description: Abbreviated month name.
+        expr: MONTH_NAME
+        data_type: VARCHAR(3)
+      - name: REPORT_DATE
+        synonyms:
+          - date
+          - day
+          - business date
+        description: Calendar date the numbers are recognized on.
+        expr: DATE_DAY
+        data_type: DATE
+      - name: WEEK_OF_YEAR
+        synonyms:
+          - week
+          - week number
+        description: Week of the year.
+        expr: WEEK_OF_YEAR
+        data_type: "NUMBER(2,0)"
+relationships:
+  - name: DPR_TO_DATE
+    left_table: DP
+    right_table: DT
+    relationship_columns:
+      - left_column: DATE_ID
+        right_column: DATE_ID
+module_custom_instructions:
+  sql_generation: "Round all currency metrics to 2 decimal points and attendance, ticket, tour, and audio-unit counts to whole numbers. When a question does not specify a period, default to the most recent complete day available. When comparing two periods, note if either overlaps the September 6-16 commemoration window, since that window is a known structural exception. If a question mentions \"fiscal\" year/month/quarter, use the fiscal_year / fiscal_month dimensions (fiscal year starts in October); otherwise use the calendar dimensions."
+  question_categorization: "If a question asks for budget, forecast, or variance figures, treat it as out of scope: explain that budget/variance is not yet in this model (pending budget-source staging) and offer the actuals instead. Memorial attendance is available as the scan-based component (total_memorial_attendance); if a question needs the full Sensource turnstile-blended attendance, note that blend is not yet staged. If a question asks for membership revenue or ecommerce gross profit, note those sources are out of current scope. If a revenue question is ambiguous about which revenue stream, ask the user to specify (tickets, tours, retail, donations, fees, or audio)."

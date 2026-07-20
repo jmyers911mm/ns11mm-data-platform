@@ -1,0 +1,109 @@
+ewname: FUNDRAISING_ECOM
+description: Fundraising and ecommerce analytics model. Covers campaigns, customers, funds, and payment methods for donation and ecommerce transaction analysis. NOTE - dimension tables are currently stubs awaiting RAW data connections; this semantic view will become fully functional once source systems are connected.
+tables:
+  - name: DIM_CAMPAIGN
+    description: Campaign dimension from Salesforce. Currently awaiting RAW connection.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_CAMPAIGN
+    primary_key:
+      columns:
+        - ID
+    dimensions:
+      - name: ID
+        expr: ID
+        data_type: VARCHAR
+      - name: STATUS
+        expr: STATUS
+        data_type: VARCHAR
+  - name: DIM_CUSTOMER
+    description: Unified customer dimension using connected-component identity resolution. Currently awaiting RAW data connection.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_CUSTOMER
+    primary_key:
+      columns:
+        - ID
+    dimensions:
+      - name: ID
+        expr: ID
+        data_type: VARCHAR
+      - name: STATUS
+        expr: STATUS
+        data_type: VARCHAR
+  - name: DIM_FUND
+    description: Blackbaud GL fund dimension. Currently awaiting Blackbaud RAW connection.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_FUND
+    primary_key:
+      columns:
+        - FUND_ID
+    dimensions:
+      - name: FUND_ID
+        expr: FUND_ID
+        data_type: VARCHAR
+      - name: STATUS
+        expr: STATUS
+        data_type: VARCHAR
+  - name: DIM_PAYMENT_METHOD
+    description: Payment method reference dimension.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_PAYMENT_METHOD
+    primary_key:
+      columns:
+        - ID
+    dimensions:
+      - name: ID
+        expr: ID
+        data_type: VARCHAR
+      - name: STATUS
+        expr: STATUS
+        data_type: VARCHAR
+  - name: DIM_DATE
+    description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_DATE
+    primary_key:
+      columns:
+        - DATE_ID
+    dimensions:
+      - name: DAY_OF_WEEK_NAME
+        expr: DAY_OF_WEEK_NAME
+        data_type: VARCHAR
+      - name: MONTH_NAME
+        expr: MONTH_NAME
+        data_type: VARCHAR
+      - name: QUARTER_OF_YEAR
+        expr: QUARTER_OF_YEAR
+        data_type: NUMBER
+      - name: YEAR_NUMBER
+        expr: YEAR_NUMBER
+        data_type: NUMBER
+      - name: FISCAL_YEAR
+        expr: FISCAL_YEAR
+        data_type: NUMBER
+      - name: FISCAL_MONTH
+        expr: FISCAL_MONTH
+        data_type: NUMBER
+      - name: IS_WEEKEND
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: IS_COMMEMORATION_DAY
+        description: True for September 11 (anniversary).
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: DATE_ID
+        expr: DATE_ID
+        data_type: DATE
+      - name: DATE_DAY
+        expr: DATE_DAY
+        data_type: DATE

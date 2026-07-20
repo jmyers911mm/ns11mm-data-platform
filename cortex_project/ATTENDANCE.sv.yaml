@@ -1,0 +1,328 @@
+name: ATTENDANCE
+description: Attendance analytics model for museum operations. Covers daily scan counts
+  by market segment, ticket demand forecasting with presale lead-time analysis, and
+  real-time ticket capacity/utilization. Supports attendance budgeting, demand planning,
+  and visitor flow analysis.
+tables:
+  - name: FCT_DAILY_SCAN
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_DAILY_SCAN
+    primary_key:
+      columns:
+        - DATE_KEY
+    dimensions:
+      - name: SEGMENT_KEY
+        expr: SEGMENT_KEY
+        data_type: VARCHAR
+      - name: SEGMENT_NAME
+        expr: SEGMENT_NAME
+        data_type: VARCHAR
+      - name: IS_COMMEMORATION_DAY
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: DATE_KEY
+        expr: DATE_KEY
+        data_type: DATE
+      - name: DATE_VALUE
+        expr: DATE_VALUE
+        data_type: DATE
+    facts:
+      - name: PASSES_SCANNED
+        expr: PASSES_SCANNED
+        data_type: NUMBER
+      - name: TICKETS_SOLD
+        expr: TICKETS_SOLD
+        data_type: NUMBER
+      - name: PASSES_BUDGET
+        expr: PASSES_BUDGET
+        data_type: NUMBER
+    metrics:
+      - name: TOTAL_PASSES_SCANNED
+        expr: SUM(PASSES_SCANNED)
+        data_type: NUMBER
+        description: Total passes scanned (attendance count)
+      - name: TOTAL_TICKETS_SOLD
+        expr: SUM(TICKETS_SOLD)
+        data_type: NUMBER
+        description: Total tickets sold
+  - name: FCT_TICKET_DEMAND_FORECAST
+    description: Ticket demand aggregated for forecasting and presale analysis
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_TICKET_DEMAND_FORECAST
+    dimensions:
+      - name: ENTRY_DOW
+        expr: ENTRY_DOW
+        data_type: NUMBER
+      - name: ENTRY_DAY_NAME
+        expr: ENTRY_DAY_NAME
+        data_type: VARCHAR
+      - name: ENTRY_WEEK
+        expr: ENTRY_WEEK
+        data_type: NUMBER
+      - name: ENTRY_MONTH
+        expr: ENTRY_MONTH
+        data_type: NUMBER
+      - name: ENTRY_QUARTER
+        expr: ENTRY_QUARTER
+        data_type: NUMBER
+      - name: ENTRY_YEAR
+        expr: ENTRY_YEAR
+        data_type: NUMBER
+      - name: IS_WEEKEND
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: PLU
+        expr: PLU
+        data_type: VARCHAR
+      - name: TICKET_TYPE_NAME
+        expr: TICKET_TYPE_NAME
+        data_type: VARCHAR
+      - name: TICKET_KIND
+        expr: TICKET_KIND
+        data_type: NUMBER
+      - name: PRESALE_BUCKET
+        expr: PRESALE_BUCKET
+        data_type: VARCHAR
+      - name: PURCHASE_CHANNEL
+        expr: PURCHASE_CHANNEL
+        data_type: VARCHAR
+    time_dimensions:
+      - name: ENTRY_DATE
+        expr: ENTRY_DATE
+        data_type: DATE
+    facts:
+      - name: TICKET_COUNT
+        expr: TICKET_COUNT
+        data_type: NUMBER
+      - name: TOTAL_QUANTITY
+        expr: TOTAL_QUANTITY
+        data_type: NUMBER
+      - name: TOTAL_REVENUE
+        expr: TOTAL_REVENUE
+        data_type: NUMBER
+      - name: AVG_PRICE
+        expr: AVG_PRICE
+        data_type: NUMBER
+      - name: AVG_PRESALE_LEAD_DAYS
+        expr: AVG_PRESALE_LEAD_DAYS
+        data_type: NUMBER
+      - name: MEDIAN_PRESALE_LEAD_DAYS
+        expr: MEDIAN_PRESALE_LEAD_DAYS
+        data_type: NUMBER
+      - name: TICKETS_USED
+        expr: TICKETS_USED
+        data_type: NUMBER
+      - name: TICKETS_UNUSED
+        expr: TICKETS_UNUSED
+        data_type: NUMBER
+      - name: UTILIZATION_RATE
+        expr: UTILIZATION_RATE
+        data_type: FLOAT
+      - name: QTY_SOLD_90PLUS_DAYS_OUT
+        expr: QTY_SOLD_90PLUS_DAYS_OUT
+        data_type: NUMBER
+      - name: QTY_SOLD_30PLUS_DAYS_OUT
+        expr: QTY_SOLD_30PLUS_DAYS_OUT
+        data_type: NUMBER
+      - name: QTY_SOLD_14PLUS_DAYS_OUT
+        expr: QTY_SOLD_14PLUS_DAYS_OUT
+        data_type: NUMBER
+      - name: QTY_SOLD_7PLUS_DAYS_OUT
+        expr: QTY_SOLD_7PLUS_DAYS_OUT
+        data_type: NUMBER
+      - name: QTY_SOLD_1PLUS_DAYS_OUT
+        expr: QTY_SOLD_1PLUS_DAYS_OUT
+        data_type: NUMBER
+      - name: QTY_SOLD_SAME_DAY
+        expr: QTY_SOLD_SAME_DAY
+        data_type: NUMBER
+      - name: PRESALE_PCT
+        expr: PRESALE_PCT
+        data_type: FLOAT
+    metrics:
+      - name: TOTAL_TICKET_REVENUE
+        expr: SUM(TOTAL_REVENUE)
+        data_type: NUMBER
+        description: Total ticket revenue
+      - name: TOTAL_TICKETS_QUANTITY
+        expr: SUM(TOTAL_QUANTITY)
+        data_type: NUMBER
+        description: Total ticket quantity sold
+  - name: FCT_TICKET_AVAILABILITY
+    description: Real-time ticket capacity and utilization by date/window/type
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_TICKET_AVAILABILITY
+    dimensions:
+      - name: AVAILABILITY_KEY
+        expr: AVAILABILITY_KEY
+        data_type: VARCHAR
+      - name: DAY_NAME
+        expr: DAY_NAME
+        data_type: VARCHAR
+      - name: DAY_OF_WEEK_NUM
+        expr: DAY_OF_WEEK_NUM
+        data_type: NUMBER
+      - name: IS_WEEKEND
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: MONTH_NAME
+        expr: MONTH_NAME
+        data_type: VARCHAR
+      - name: FISCAL_YEAR
+        expr: FISCAL_YEAR
+        data_type: NUMBER
+      - name: TICKET_TYPE
+        expr: TICKET_TYPE
+        data_type: VARCHAR
+      - name: DEMAND_LEVEL
+        expr: DEMAND_LEVEL
+        data_type: VARCHAR
+      - name: IS_OVERRIDE
+        expr: IS_OVERRIDE
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: ENTRY_DATE
+        expr: ENTRY_DATE
+        data_type: DATE
+      - name: ENTRY_WINDOW_START
+        expr: ENTRY_WINDOW_START
+        data_type: DATE
+      - name: ENTRY_WINDOW_END
+        expr: ENTRY_WINDOW_END
+        data_type: DATE
+    facts:
+      - name: TICKET_CAPACITY
+        expr: TICKET_CAPACITY
+        data_type: NUMBER
+      - name: TICKETS_RESERVED
+        expr: TICKETS_RESERVED
+        data_type: NUMBER
+      - name: TICKETS_AVAILABLE
+        expr: TICKETS_AVAILABLE
+        data_type: NUMBER
+      - name: UTILIZATION_PCT
+        description: Percentage of capacity reserved (0-100)
+        expr: UTILIZATION_PCT
+        data_type: FLOAT
+    metrics:
+      - name: TOTAL_CAPACITY
+        expr: SUM(TICKET_CAPACITY)
+        data_type: NUMBER
+        description: Total ticket capacity across all types
+      - name: TOTAL_RESERVED
+        expr: SUM(TICKETS_RESERVED)
+        data_type: NUMBER
+        description: Total tickets reserved
+  - name: DIM_DATE
+    description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_DATE
+    primary_key:
+      columns:
+        - DATE_ID
+    dimensions:
+      - name: DAY_OF_WEEK
+        expr: DAY_OF_WEEK
+        data_type: NUMBER
+      - name: DAY_OF_WEEK_NAME
+        expr: DAY_OF_WEEK_NAME
+        data_type: VARCHAR
+      - name: DAY_OF_MONTH
+        expr: DAY_OF_MONTH
+        data_type: NUMBER
+      - name: DAY_OF_YEAR
+        expr: DAY_OF_YEAR
+        data_type: NUMBER
+      - name: WEEK_OF_YEAR
+        expr: WEEK_OF_YEAR
+        data_type: NUMBER
+      - name: MONTH_OF_YEAR
+        expr: MONTH_OF_YEAR
+        data_type: NUMBER
+      - name: MONTH_NAME
+        expr: MONTH_NAME
+        data_type: VARCHAR
+      - name: QUARTER_OF_YEAR
+        expr: QUARTER_OF_YEAR
+        data_type: NUMBER
+      - name: YEAR_NUMBER
+        expr: YEAR_NUMBER
+        data_type: NUMBER
+      - name: FISCAL_YEAR
+        expr: FISCAL_YEAR
+        data_type: NUMBER
+      - name: FISCAL_MONTH
+        expr: FISCAL_MONTH
+        data_type: NUMBER
+      - name: IS_WEEKEND
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: IS_WEEKDAY
+        expr: IS_WEEKDAY
+        data_type: BOOLEAN
+      - name: IS_COMMEMORATION_DAY
+        description: True for September 11 (anniversary). Flags structural anomalies across all metrics.
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+      - name: IS_FIRST_OF_MONTH
+        expr: IS_FIRST_OF_MONTH
+        data_type: BOOLEAN
+      - name: IS_LAST_OF_MONTH
+        expr: IS_LAST_OF_MONTH
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: DATE_ID
+        expr: DATE_ID
+        data_type: DATE
+      - name: DATE_DAY
+        expr: DATE_DAY
+        data_type: DATE
+  - name: SEED_SCAN_MARKET_SEGMENT
+    description: Market segment reference for scan/attendance classification
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: SEED_SCAN_MARKET_SEGMENT
+    primary_key:
+      columns:
+        - SEGMENT_KEY
+    dimensions:
+      - name: SEGMENT_KEY
+        expr: SEGMENT_KEY
+        data_type: VARCHAR
+      - name: SEGMENT_NAME
+        expr: SEGMENT_NAME
+        data_type: VARCHAR
+      - name: MATCH_TYPE
+        expr: MATCH_TYPE
+        data_type: VARCHAR
+      - name: MATCH_VALUE
+        expr: MATCH_VALUE
+        data_type: VARCHAR
+      - name: NOTES
+        expr: NOTES
+        data_type: VARCHAR
+relationships:
+  - name: SCAN_TO_DATE
+    left_table: FCT_DAILY_SCAN
+    right_table: DIM_DATE
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: DATE_KEY
+        right_column: DATE_ID
+  - name: SCAN_TO_SEGMENT
+    left_table: FCT_DAILY_SCAN
+    right_table: SEED_SCAN_MARKET_SEGMENT
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: SEGMENT_KEY
+        right_column: SEGMENT_KEY

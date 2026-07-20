@@ -1,0 +1,232 @@
+name: RETAIL
+description: Retail analytics model for museum store operations. Covers category-grain sales performance (net sales, profit, units, donations) and facility-grain daily aggregates (transactions, visitors, ecommerce orders). Supports per-store and per-category profitability analysis.
+tables:
+  - name: FCT_RETAIL_PERFORMANCE
+    description: Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_RETAIL_PERFORMANCE
+    dimensions:
+      - name: KEY_FACILITY
+        expr: KEY_FACILITY
+        data_type: NUMBER
+        description: Selling-area facility key (see seed_facility_area)
+      - name: AREA_NAME
+        expr: AREA_NAME
+        data_type: VARCHAR
+      - name: AREA_GROUP
+        expr: AREA_GROUP
+        data_type: VARCHAR
+      - name: CATEGORY_CODE
+        expr: CATEGORY_CODE
+        data_type: VARCHAR
+        description: CounterPoint product category (Donations folded to 'Donations')
+      - name: IS_COMMEMORATION_DAY
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: DATE_KEY
+        expr: DATE_KEY
+        data_type: DATE
+      - name: DATE_VALUE
+        expr: DATE_VALUE
+        data_type: DATE
+    facts:
+      - name: NET_SALES
+        expr: NET_SALES
+        data_type: NUMBER
+        description: Sale minus return amount, non-donation lines
+      - name: NET_PROFIT
+        expr: NET_PROFIT
+        data_type: NUMBER
+      - name: NET_UNITS
+        expr: NET_UNITS
+        data_type: NUMBER
+      - name: COST_OF_GOODS
+        expr: COST_OF_GOODS
+        data_type: NUMBER
+      - name: DONATIONS
+        expr: DONATIONS
+        data_type: NUMBER
+      - name: NET_SALES_BUDGET
+        expr: NET_SALES_BUDGET
+        data_type: NUMBER
+      - name: NET_PROFIT_BUDGET
+        expr: NET_PROFIT_BUDGET
+        data_type: NUMBER
+    metrics:
+      - name: TOTAL_NET_SALES
+        expr: SUM(NET_SALES)
+        data_type: NUMBER
+        description: Total net sales across all facilities and categories
+      - name: TOTAL_NET_PROFIT
+        expr: SUM(NET_PROFIT)
+        data_type: NUMBER
+        description: Total net profit
+      - name: TOTAL_DONATIONS
+        expr: SUM(DONATIONS)
+        data_type: NUMBER
+        description: Total retail donations
+      - name: GROSS_MARGIN_PCT
+        expr: SUM(NET_PROFIT) / NULLIF(SUM(NET_SALES), 0)
+        data_type: NUMBER
+        description: Gross margin percentage (profit / sales)
+  - name: FCT_RETAIL_DAILY
+    description: Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_RETAIL_DAILY
+    dimensions:
+      - name: KEY_FACILITY
+        expr: KEY_FACILITY
+        data_type: NUMBER
+      - name: AREA_NAME
+        expr: AREA_NAME
+        data_type: VARCHAR
+      - name: AREA_GROUP
+        expr: AREA_GROUP
+        data_type: VARCHAR
+      - name: IS_COMMEMORATION_DAY
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: DATE_KEY
+        expr: DATE_KEY
+        data_type: DATE
+      - name: DATE_VALUE
+        expr: DATE_VALUE
+        data_type: DATE
+    facts:
+      - name: NET_SALES
+        expr: NET_SALES
+        data_type: NUMBER
+      - name: NET_PROFIT
+        expr: NET_PROFIT
+        data_type: NUMBER
+      - name: NET_UNITS
+        expr: NET_UNITS
+        data_type: NUMBER
+      - name: DONATIONS
+        expr: DONATIONS
+        data_type: NUMBER
+      - name: TRANSACTIONS
+        expr: TRANSACTIONS
+        data_type: NUMBER
+      - name: VISITOR_COUNT
+        expr: VISITOR_COUNT
+        data_type: NUMBER
+      - name: ECOM_ORDERS
+        expr: ECOM_ORDERS
+        data_type: NUMBER
+    metrics:
+      - name: TOTAL_TRANSACTIONS
+        expr: SUM(TRANSACTIONS)
+        data_type: NUMBER
+        description: Total transaction count
+      - name: TOTAL_VISITORS
+        expr: SUM(VISITOR_COUNT)
+        data_type: NUMBER
+        description: Total visitor count to retail areas
+      - name: TOTAL_ECOM_ORDERS
+        expr: SUM(ECOM_ORDERS)
+        data_type: NUMBER
+        description: Total ecommerce orders
+      - name: REVENUE_PER_VISITOR
+        expr: SUM(NET_SALES) / NULLIF(SUM(VISITOR_COUNT), 0)
+        data_type: NUMBER
+        description: Net sales per visitor
+  - name: DIM_DATE
+    description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: DIM_DATE
+    primary_key:
+      columns:
+        - DATE_ID
+    dimensions:
+      - name: DAY_OF_WEEK_NAME
+        expr: DAY_OF_WEEK_NAME
+        data_type: VARCHAR
+      - name: MONTH_NAME
+        expr: MONTH_NAME
+        data_type: VARCHAR
+      - name: QUARTER_OF_YEAR
+        expr: QUARTER_OF_YEAR
+        data_type: NUMBER
+      - name: YEAR_NUMBER
+        expr: YEAR_NUMBER
+        data_type: NUMBER
+      - name: FISCAL_YEAR
+        expr: FISCAL_YEAR
+        data_type: NUMBER
+      - name: FISCAL_MONTH
+        expr: FISCAL_MONTH
+        data_type: NUMBER
+      - name: IS_WEEKEND
+        expr: IS_WEEKEND
+        data_type: BOOLEAN
+      - name: IS_COMMEMORATION_DAY
+        description: True for September 11 (anniversary). Flags structural anomalies across all metrics.
+        expr: IS_COMMEMORATION_DAY
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: DATE_ID
+        expr: DATE_ID
+        data_type: DATE
+      - name: DATE_DAY
+        expr: DATE_DAY
+        data_type: DATE
+  - name: SEED_FACILITY_AREA
+    description: Retail selling-area facility reference
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: SEED_FACILITY_AREA
+    primary_key:
+      columns:
+        - KEY_FACILITY
+    dimensions:
+      - name: KEY_FACILITY
+        expr: KEY_FACILITY
+        data_type: NUMBER
+      - name: AREA_NAME
+        expr: AREA_NAME
+        data_type: VARCHAR
+      - name: AREA_GROUP
+        expr: AREA_GROUP
+        data_type: VARCHAR
+      - name: IS_SELLING
+        expr: IS_SELLING
+        data_type: BOOLEAN
+relationships:
+  - name: RETAIL_PERF_TO_DATE
+    left_table: FCT_RETAIL_PERFORMANCE
+    right_table: DIM_DATE
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: DATE_KEY
+        right_column: DATE_ID
+  - name: RETAIL_PERF_TO_FACILITY
+    left_table: FCT_RETAIL_PERFORMANCE
+    right_table: SEED_FACILITY_AREA
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: KEY_FACILITY
+        right_column: KEY_FACILITY
+  - name: RETAIL_DAILY_TO_DATE
+    left_table: FCT_RETAIL_DAILY
+    right_table: DIM_DATE
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: DATE_KEY
+        right_column: DATE_ID
+  - name: RETAIL_DAILY_TO_FACILITY
+    left_table: FCT_RETAIL_DAILY
+    right_table: SEED_FACILITY_AREA
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: KEY_FACILITY
+        right_column: KEY_FACILITY
