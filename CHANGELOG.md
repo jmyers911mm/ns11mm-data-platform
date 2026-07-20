@@ -39,6 +39,24 @@ the `JMYERS_TEST` agent and future Snowflake Intelligence surfaces.
 - **`cortex-project.yaml`** — Project manifest tracking all semantic view and
   agent artifacts with their Snowflake deployment targets.
 
+- **`UNIFIED.sv.yaml`** — Cross-domain reconciliation surface spanning all four
+  live day-grain facts against `DIM_DATE`. Curated metric subset for natural-
+  language retrieval; 3 verified queries, custom instructions.
+
+### Removed — consolidated to `cortex_project/` (single source of truth)
+
+- `semantic_models/dpr.yaml` — replaced by `cortex_project/DPR.sv.yaml`
+- `semantic_models/unified.yaml` — replaced by `cortex_project/UNIFIED.sv.yaml`
+- `semantic_models/attendance.yaml` — replaced by `cortex_project/ATTENDANCE.sv.yaml`
+- `semantic_models/retail.yaml` — replaced by `cortex_project/RETAIL.sv.yaml`
+- `semantic_models/fundraising_ecom.yaml` — replaced by `cortex_project/FUNDRAISING_ECOM.sv.yaml`
+- `semantic_models/create_dpr_semantic_view.sql` — deploy via `semantic_view_deploy` instead
+- `semantic_models/create_unified_semantic_view.sql` — deploy via `semantic_view_deploy` instead
+
+Per-metric governance metadata (MET-### IDs, owners, SLA tiers) remains in dbt
+exposure `meta:` blocks. The semantic view YAML carries only the semantic
+definition (expr, synonyms, descriptions, custom instructions) to avoid drift.
+
 ## [2.0.0] — 2026-07-16 — Semantic & Governance Layer: Metric Metadata, Report Exposures, Charter
 
 With the report-estate marts now fed with real data (1.6.x), this release
