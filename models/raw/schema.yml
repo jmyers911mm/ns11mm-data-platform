@@ -154,3 +154,99 @@ models:
         tests:
           - not_null
           - unique
+
+  # ─── Added coverage (round 2), CORRECTED ───────────────────────────────────
+  # Column names verified against each model's real OUTPUT (staging renames the
+  # source key_date -> business_date, tkt_hour -> hour_of_day, etc.). All grain
+  # tests are severity: warn — they assert the documented grain over source data
+  # (several are empty stubs until their feed lands). NOTE: a wrong column name
+  # here is a COMPILE error that warn cannot suppress, so these are verified.
+  - name: stg_budget__retail
+    description: "Retail budget/goal values per business_date x key_facility."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [business_date, key_facility]
+          config: { severity: warn }
+
+  - name: stg_counterpoint__todays_retail
+    description: "Intraday CounterPoint retail tickets per store_id x doc_id x hour_of_day."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [store_id, doc_id, hour_of_day]
+          config: { severity: warn }
+
+  - name: stg_counterpoint__todays_retail_product
+    description: "Intraday CounterPoint retail lines per store_id x doc_id x item_no x hour_of_day."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [store_id, doc_id, item_no, hour_of_day]
+          config: { severity: warn }
+
+  - name: stg_dpr__daily_metrics_wide
+    description: "Wide daily DPR metrics feed, one row per business_date."
+    columns:
+      - name: business_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+
+  - name: stg_ecommerce__website_recurring
+    description: "Recurring online revenue per order_id x sku."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, sku]
+          config: { severity: warn }
+
+  - name: stg_gateway__passes_by_hour
+    description: "Hourly gate passes per business_date x hour_of_day."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [business_date, hour_of_day]
+          config: { severity: warn }
+
+  - name: stg_sensource__attendance
+    description: "Sensource attendance, one row per business_date."
+    columns:
+      - name: business_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+
+  - name: stg_sensource__visitors
+    description: "Sensource visitor counts per business_date x key_facility x acp_id."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [business_date, key_facility, acp_id]
+          config: { severity: warn }
+
+  - name: stg_shopify__cost_values
+    description: "Shopify per-order cost values, one row per order_id."
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+
+  - name: stg_shopify__discounts
+    description: "Shopify discounts per order_id x discount_code."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, discount_code]
+          config: { severity: warn }
+
+  - name: stg_shopify__orders
+    description: "Shopify order lines per order_id x order_line_id."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, order_line_id]
+          config: { severity: warn }
+
+  - name: stg_wifi__audience
+    description: >
+      PII / RESTRICTED. WiFi captive-portal capture events, one row per
+      mac_address x logged_at. Contains email_address and names — no value-level
+      PII tests.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [mac_address, logged_at]
+          config: { severity: warn }

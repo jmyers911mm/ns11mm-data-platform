@@ -13,6 +13,13 @@
 -- t_reporting_memorial_audio_headset_revenue (Galaxy portion),
 -- t_reporting_mem_mus_tours_revenue.
 --
+-- PLU cohorts are enumerable lists, so they live in seed_service_plu
+-- (plu, dpr_line_item, notes) and are joined in, instead of being repeated
+-- inside each SUM(CASE). Ops edits that seed to onboard/retire a PLU -- no
+-- model change. Mirrors seed_tour_plu. Matrix-code cohorts (%MUF%/%FEE%,
+-- %MEF%/%FEE%, %MAG%) stay inline because they are pattern matches over an
+-- open set of PLUs, not an enumerable list.
+--
 -- NOTE: from 2024-01-16 the MUS AG audio revenue also has a CounterPoint
 -- component (facility 1060). That portion is added in the mart join, not here,
 -- to keep the Galaxy and CounterPoint grains separate (ADR-001 hygiene).
@@ -27,48 +34,57 @@ ticket_lines as (
     select * from {{ ref('int_gateway__ticket_journal_lines') }}
 ),
 
+-- Item-grain audio-guide PLUs (legacy AUDIO1001 / AUDIO0001), from the seed.
+service_plu as (
+    select plu
+    from {{ ref('seed_service_plu') }}
+    where dpr_line_item = 'mus_audio_guide'
+),
+
+-- Memorial + Museum combined tour cohort (legacy fact_memorial_museum_tour,
+-- rItmProductID = 178), from the seed. These PLUs carry NO matrix code, so the
+-- former %MTG% matrix filter matched nothing (verified 2026-07-08:
+-- MUSMMUADW001 = 1,426 rows / $107,270 with empty matrix_code).
+mem_mus_tour_plu as (
+    select plu
+    from {{ ref('seed_service_plu') }}
+    where dpr_line_item = 'mem_mus_tour'
+),
+
 fees as (
     select
-        date_key,
+        il.date_key,
         -- Museum service fees: matrix like %MUF% and %FEE%
-        sum(case when matrix_code like '%MUF%' and matrix_code like '%FEE%'
-                 then amount else 0 end)                                    as museum_service_fees,
+        sum(case when il.matrix_code like '%MUF%' and il.matrix_code like '%FEE%'
+                 then il.amount else 0 end)                                 as museum_service_fees,
         -- Memorial service fees: matrix like %MEF% and %FEE%
-        sum(case when matrix_code like '%MEF%' and matrix_code like '%FEE%'
-                 then amount else 0 end)                                    as memorial_service_fees,
+        sum(case when il.matrix_code like '%MEF%' and il.matrix_code like '%FEE%'
+                 then il.amount else 0 end)                                 as memorial_service_fees,
 
-        -- Museum audio guide (JnlItems kind 8) + headset (in item grain proxy):
-        -- guide PLUs
-        sum(case when plu in ('AUDIO1001','AUDIO0001') and item_kind = 8
-                 then amount else 0 end)                                    as mus_audio_guide_revenue,
-        sum(case when plu in ('AUDIO1001','AUDIO0001') and item_kind = 8
-                 then quantity else 0 end)                                  as mus_audio_guide_units,
+        -- Museum audio guide (JnlItems kind 8), PLUs from service_plu cohort
+        sum(case when sp.plu is not null and il.item_kind = 8
+                 then il.amount else 0 end)                                 as mus_audio_guide_revenue,
+        sum(case when sp.plu is not null and il.item_kind = 8
+                 then il.quantity else 0 end)                               as mus_audio_guide_units,
 
         -- Memorial audio guide (matrix %MAG% online/Galaxy portion)
-        sum(case when matrix_code like '%MAG%'
-                 then amount else 0 end)                                    as mem_audio_guide_revenue
+        sum(case when il.matrix_code like '%MAG%'
+                 then il.amount else 0 end)                                 as mem_audio_guide_revenue
 
-    from item_lines
-    group by date_key
+    from item_lines il
+    left join service_plu sp on il.plu = sp.plu
+    group by il.date_key
 ),
 
 mem_mus_tour as (
-    -- Memorial + Museum combined tour product cohort.
-    -- Legacy fact_memorial_museum_tour keys on rItmProductID = 178 and notes
-    -- these PLUs carry NO matrix code, so the former %MTG% matrix filter
-    -- matched nothing (verified 2026-07-08: MUSMMUADW001 = 1,426 rows /
-    -- $107,270 with empty matrix_code). Keyed on the product-178 PLU list:
-    --   MUSMMUADW001 (Memorial + Museum Tour)
-    --   MUSMMUADW003 (Memorial + Museum Tour Buyout)
-    --   MUSMMUADW005 (Architecture Memorial + Museum Tour)
+    -- Product-178 PLUs from the mem_mus_tour_plu cohort (see note above).
     select
-        date_key,
-        sum(case when plu in ('MUSMMUADW001','MUSMMUADW003','MUSMMUADW005')
-                 then quantity else 0 end)                                 as mem_mus_tours,
-        sum(case when plu in ('MUSMMUADW001','MUSMMUADW003','MUSMMUADW005')
-                 then amount else 0 end)                                   as mem_mus_tour_revenue
-    from ticket_lines
-    group by date_key
+        tl.date_key,
+        sum(case when mmp.plu is not null then tl.quantity else 0 end)      as mem_mus_tours,
+        sum(case when mmp.plu is not null then tl.amount else 0 end)        as mem_mus_tour_revenue
+    from ticket_lines tl
+    left join mem_mus_tour_plu mmp on tl.plu = mmp.plu
+    group by tl.date_key
 ),
 
 date_spine as (

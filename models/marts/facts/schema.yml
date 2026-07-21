@@ -55,7 +55,7 @@ models:
           - not_null
 
   - name: fct_daily_operations
-    description: "Daily operational metrics: visitors, ticket sales, revenue"
+    description: "Daily operational metrics: visitors, ticket sales, revenue, retail"
     columns:
       - name: visit_date
         description: "PK. Natural key (calendar date of operations)."
@@ -70,6 +70,20 @@ models:
       - name: ticket_revenue
         data_tests:
           - not_null
+      # Added round 2 (retail wiring). warn severity — coalesced to 0 so they
+      # cannot actually fail; kept warn only to guarantee no build-blocking.
+      - name: retail_revenue
+        description: "CounterPoint merchandise sales (non-donation), day grain."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: retail_transactions
+        description: "Distinct CounterPoint tickets with non-donation lines."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: total_revenue
+        description: "ticket_revenue + retail_revenue."
+        data_tests:
+          - not_null: { config: { severity: warn } }
 
   - name: fct_retail_performance
     description: >

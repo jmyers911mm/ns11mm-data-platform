@@ -16,7 +16,11 @@
 -- ADR-001: reads only from stg_ (RAW is upstream and immutable).
 -- ADR-004: all business logic lives here, not in Power BI.
 
-{{ config(materialized='view') }}
+-- Materialized as a TABLE, not a view: ~120 lines of feature derivation consumed
+-- by 2 downstream models (fct_ticket_demand_forecast, ml_ticket_demand_features)
+-- each run — a view recomputes all of it 2x per build. transient + copy_grants
+-- inherited from the intermediate defaults.
+{{ config(materialized='table') }}
 
 with tickets as (
     select

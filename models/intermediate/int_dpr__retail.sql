@@ -7,6 +7,12 @@
 -- silver model. Gross profit = sales - cost; donations are the summary-
 -- category-6 lines at specific facilities/items.
 --
+-- Facility selection and the donation flag come from int_counterpoint__retail_lines
+-- as facility_group / is_donation, so this model no longer hardcodes facility
+-- numbers (1003, 1020, ...) or the donation category (= 6). Item-level donation
+-- products are still selected by item_no because they are specific SKUs, not a
+-- facility cohort.
+--
 -- Legacy lineage: t_reporting_mus_store_profit, t_reporting_mem_cart_profit,
 -- t_reporting_museum_audio_headset_revenue (CounterPoint portion, fac 1060),
 -- t_reporting_mus_donation_box (fact_retail item 886 at Museum Store),
@@ -29,60 +35,60 @@ daily as (
     select
         cast(business_date as date)                                        as date_key,
 
-        -- Museum Store gross profit (fac 1003, non-donation summary category)
-        sum(case when key_facility = 1003 and summary_category <> 6
+        -- Museum Store gross profit (non-donation summary category)
+        sum(case when facility_group = 'museum_store' and not is_donation
                  then sale_amount + return_amount else 0 end)              as mus_store_sales,
-        sum(case when key_facility = 1003 and summary_category <> 6
+        sum(case when facility_group = 'museum_store' and not is_donation
                  then sale_cost else 0 end)                                as mus_store_cost,
 
-        -- Memorial Carts gross profit (fac 1020, non-donation)
-        sum(case when key_facility = 1020 and summary_category <> 6
+        -- Memorial Carts gross profit (non-donation)
+        sum(case when facility_group = 'memorial_carts' and not is_donation
                  then sale_amount + return_amount else 0 end)              as mem_cart_sales,
-        sum(case when key_facility = 1020 and summary_category <> 6
+        sum(case when facility_group = 'memorial_carts' and not is_donation
                  then sale_cost else 0 end)                                as mem_cart_cost,
 
-        -- Cafe gross profit (fac 4007, non-donation)
-        sum(case when key_facility = 4007 and summary_category <> 6
+        -- Cafe gross profit (non-donation)
+        sum(case when facility_group = 'museum_cafe' and not is_donation
                  then sale_amount + return_amount else 0 end)              as cafe1_sales,
-        sum(case when key_facility = 4007 and summary_category <> 6
+        sum(case when facility_group = 'museum_cafe' and not is_donation
                  then sale_cost else 0 end)                                as cafe1_cost,
 
-        -- Memorial Audio Guide, CounterPoint portion (fac 1040 = item 201114
+        -- Memorial Audio Guide, CounterPoint portion (mag_cart = item 201114
         -- via seed_retail_item_facility). Primary MAG source since 2023;
         -- previously carved out of the carts but aggregated NOWHERE, so the
         -- mart undercounted mem_audio_guide_revenue (Galaxy %MAG% only).
-        sum(case when key_facility = 1040 and summary_category <> 6
+        sum(case when facility_group = 'mag_cart' and not is_donation
                  then sale_amount + return_amount else 0 end)              as mag_cp_revenue,
 
-        -- MUS AG (fac 1060) profit + units for the audio_tour_headset roll-up
-        sum(case when key_facility = 1060 and summary_category <> 6
+        -- MUS AG profit + units for the audio_tour_headset roll-up
+        sum(case when facility_group = 'mus_ag' and not is_donation
                  then sale_amount + return_amount else 0 end)              as musag_sales,
-        sum(case when key_facility = 1060 and summary_category <> 6
+        sum(case when facility_group = 'mus_ag' and not is_donation
                  then sale_cost else 0 end)                                as musag_cost,
-        sum(case when key_facility = 1060 and summary_category <> 6
+        sum(case when facility_group = 'mus_ag' and not is_donation
                  then sale_quantity + return_quantity else 0 end)          as musag_units,
 
-        -- Retail-sourced donations (summary category 6)
+        -- Retail-sourced donations (summary category 6 -> is_donation)
         -- Surrogate keys resolved by inspection 2026-07-08 (legacy dim_item_descr
         -- key -> real CounterPoint item_no): 483 -> '7-999' (Donation Ask),
         -- 886 -> '101375' (Donation Box Store Exit). item_no is alphanumeric,
         -- which is why the numeric surrogates could never match.
         -- mus_store_donations excludes the exit-box item so it does not
         -- double-count mus_exit_donations (legacy item list excludes 886).
-        sum(case when key_facility = 1003 and summary_category = 6
+        sum(case when facility_group = 'museum_store' and is_donation
                   and item_no <> '101375'
                  then sale_amount + return_amount else 0 end)              as mus_store_donations,
         -- Cart ask narrowed to the Donation Ask item (legacy 483 at stores
         -- 11-14); the former all-cat-6 filter would double-count the plaza
         -- donation box (101165) now measured separately as donation_box.
-        sum(case when key_facility = 1020 and summary_category = 6
+        sum(case when facility_group = 'memorial_carts' and is_donation
                   and item_no = '7-999'
                  then sale_amount + return_amount else 0 end)              as cart_donation_ask,
-        sum(case when key_facility = 1003 and item_no = '101375'
+        sum(case when facility_group = 'museum_store' and item_no = '101375'
                  then sale_amount + return_amount else 0 end)              as mus_exit_donations,
-        sum(case when key_facility = 1234 and summary_category = 6
+        sum(case when facility_group = 'ecommerce' and is_donation
                  then sale_amount + return_amount else 0 end)              as ecom_donation_ask,
-        sum(case when key_facility = 4007 and summary_category = 6
+        sum(case when facility_group = 'museum_cafe' and is_donation
                  then sale_amount + return_amount else 0 end)              as cafe1_donations,
 
         -- Mask donations: CounterPoint item 200704 (legacy dim_item_descr 4618).

@@ -11,7 +11,10 @@
 --
 -- ADR-001 / ADR-004 as per int_gateway__ticket_journal_lines.
 
-{{ config(materialized='view') }}
+-- Materialized as a TABLE, not a view: 4 joins consumed by 2 downstream models
+-- (fees_and_services, donations) each run — a view re-runs the joins 2x per
+-- build. transient + copy_grants inherited from the intermediate defaults.
+{{ config(materialized='table') }}
 
 with jnl_details as (
     select *

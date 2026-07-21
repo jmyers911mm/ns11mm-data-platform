@@ -9,10 +9,9 @@
 -- per-(entry_date, plu) presale curve: cumulative quantity sold at 90/30/14/7/1
 -- day-out thresholds plus same-day, and presale_pct. Table-materialized,
 -- clustered by entry_date.
--- NOTE: the hourly_demand CTE is built for time-of-day analysis but is not
--- currently emitted in the final select. The presale curve joins on
--- entry_date + plu only (not the full daily grain), so its columns repeat across
--- the bucket/channel rows for a given date+plu.
+-- NOTE: the presale curve joins on entry_date + plu only (not the full daily
+-- grain), so its columns repeat across the bucket/channel rows for a given
+-- date+plu.
 --
 -- ADR-004: aggregation logic lives here, not in Power BI.
 -- ADR-005: metric definitions for these demand measures still owe the workshop.
@@ -66,21 +65,6 @@ daily_demand as (
     group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14
 ),
 
--- Entry hour distribution (separate grain for time-of-day analysis)
-hourly_demand as (
-    select
-        entry_date,
-        entry_hour,
-        plu,
-        ticket_type_name,
-        presale_bucket,
-        count(*)                                                as ticket_count,
-        sum(quantity)                                           as total_quantity
-    from features
-    where entry_hour is not null
-    group by 1,2,3,4,5
-),
-
 -- Presale curve: how tickets accumulate before entry date
 presale_curve as (
     select
@@ -121,4 +105,3 @@ from daily_demand d
 left join presale_curve p
     on d.entry_date = p.entry_date
     and d.plu = p.plu
-

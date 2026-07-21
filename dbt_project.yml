@@ -37,7 +37,11 @@ models:
       +query_tag: 'dbt_ns11mm_staging'
       +group: staging
     intermediate:
-      +materialized: incremental
+      # Default view: every intermediate model is a view. The incremental_strategy
+      # / on_schema_change / transient keys below are inert for views and apply
+      # only if a specific model opts INTO materialized='incremental' (or 'table')
+      # in its own config() — sensible silver-layer defaults, not the default itself.
+      +materialized: view
       +schema: INTERMEDIATE
       +incremental_strategy: merge
       +on_schema_change: append_new_columns
@@ -47,7 +51,11 @@ models:
       +transient: true
       +group: silver
     marts:
-      +materialized: incremental
+      # Default table (matches every fact/dimension). incremental_strategy /
+      # on_schema_change apply only when a model opts INTO materialized='incremental'
+      # (e.g. fct_ticket_availability), so those two are opt-in defaults, not the
+      # default materialization. Reports override to view in their sub-group below.
+      +materialized: table
       +schema: MARTS
       +incremental_strategy: merge
       +on_schema_change: append_new_columns
@@ -65,6 +73,7 @@ models:
         +group: gold_facts
         +access: public
       reports:
+        +materialized: view
         +group: gold_reports
         +access: public
     ml_features:

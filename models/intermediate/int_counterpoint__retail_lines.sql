@@ -18,9 +18,20 @@
 -- Store-id families (from j_run_retail notes):
 --     8,9,10 -> 1003 Museum Store;   3 -> 1234 Ecommerce.
 --
+-- Semantic columns (define-once, consumed downstream so DPR marts do not
+-- re-hardcode facility numbers or the donation category):
+--   facility_group -- stable name for the resolved key_facility
+--   is_donation    -- true for summary_category 6 (legacy DONATE) lines
+-- Downstream models (e.g. int_dpr__retail) filter on these instead of
+-- repeating literals like `key_facility = 1003` and `summary_category = 6`.
+--
 -- ADR-001 / ADR-004 apply. lin_typ 'S' = sale, 'R' = return.
 
-{{ config(materialized='view') }}
+-- Materialized as a TABLE, not a view: 3 joins (item master + 2 seeds) consumed
+-- by 3 downstream models (int_dpr__retail, int_retail__performance,
+-- int_retail__customers) each run — a view re-runs the joins 3x per build.
+-- transient + copy_grants inherited from the intermediate defaults.
+{{ config(materialized='table') }}
 
 with lines as (
     select * from {{ ref('stg_counterpoint__pstkthistlin') }}
@@ -97,4 +108,24 @@ mapped as (
       and l.item_no <> '201205'
 )
 
-select * from mapped
+select
+    m.*,
+
+    -- Facility group: single source of truth for the facility-number ->
+    -- name mapping. Downstream models reference the name, not the literal,
+    -- so a facility renumber only touches this CASE.
+    case m.key_facility
+        when 1003 then 'museum_store'
+        when 1020 then 'memorial_carts'
+        when 4007 then 'museum_cafe'
+        when 1040 then 'mag_cart'
+        when 1060 then 'mus_ag'
+        when 1234 then 'ecommerce'
+        else 'other'
+    end                                                                     as facility_group,
+
+    -- Donation flag: derived once here (legacy summary_category 6) so
+    -- downstream marts filter on `is_donation` rather than `= 6`.
+    (m.summary_category = 6)                                                as is_donation
+
+from mapped m

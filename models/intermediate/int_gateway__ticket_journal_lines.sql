@@ -1,5 +1,4 @@
 -- Silver intermediate: enriched Gateway (Galaxy) ticket journal lines
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing
 -- Grain:  one row per JnlDetails line for a ticket (jnl_code_id = 101)
@@ -19,7 +18,11 @@
 -- ADR-001: reads only from stg_ (RAW is upstream and immutable).
 -- ADR-004: all business logic lives here, not in Power BI.
 
-{{ config(materialized='view') }}
+-- Materialized as a TABLE, not a view: this model runs 7 joins and is consumed
+-- by 3 downstream models (admissions, tour_revenue, fees) each run — a view
+-- would re-execute all 7 joins 3x per build. Build once, read 3x. transient +
+-- copy_grants are inherited from the intermediate defaults in dbt_project.yml.
+{{ config(materialized='table') }}
 
 with jnl_details as (
     select *

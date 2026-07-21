@@ -108,4 +108,57 @@ models:
         meta:
           classification: restricted_pii
           contains_pii: true
-      - name: rpt_retail_performance
+
+  # ---------------------------------------------------------------------------
+  # Added coverage (round 2). All grain/uniqueness tests are severity: warn —
+  # they assert the documented grain over data not verified in review; a warn
+  # means investigate the grain, then promote to error. (Removed a malformed
+  # dangling 'rpt_retail_performance' entry that had been left under the
+  # rpt_wifi_email_export columns; rpt_retail_performance is defined above.)
+  # ---------------------------------------------------------------------------
+
+  - name: rpt_daily_scan
+    description: "Scan utilization per date_key x segment_key with daily-total context."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, segment_key]
+          config: { severity: warn }
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_memorial_museum_tracker_ytd
+    description: "Year-to-date memorial+museum KPI tracker, one row per date_key."
+    columns:
+      - name: date_key
+        description: "PK. Calendar date."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+
+  - name: rpt_monthly_retail_kpi
+    description: "Monthly retail KPIs per fiscal month x selling area."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [calendar_year, calendar_month, area_name]
+          config: { severity: warn }
+    columns:
+      - name: calendar_year
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: calendar_month
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: area_name
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_carts_analysis
+    description: "Memorial Carts capture/per-cap analysis, one row per date_key."
+    columns:
+      - name: date_key
+        description: "PK. Calendar date."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }

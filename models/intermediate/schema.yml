@@ -120,3 +120,168 @@ models:
       - name: category
         description: Sales channel / market category string for segment mapping.
         data_tests: [not_null]
+
+  # ---------------------------------------------------------------------------
+  # Added coverage. Grain/uniqueness tests are severity: warn — they assert the
+  # documented grain over source data; a warn means investigate the grain
+  # (widen the key columns or confirm the dups are expected), then promote to
+  # error. error is kept only on columns the model GUARANTEES by construction
+  # (coalesced / CASE-derived), which cannot fail.
+  # ---------------------------------------------------------------------------
+
+  - name: int_counterpoint__retail_lines
+    description: >
+      CounterPoint (NCR) POS ticket-history lines conformed to the DPR facility
+      mapping. Line grain (one row per ps_tkt_hist_lin sale/return line).
+      Emits facility_group / is_donation for downstream DPR marts.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [doc_id, line_seq_no]
+          config: { severity: warn }
+    columns:
+      - name: doc_id
+        description: "CounterPoint ticket/document id (part of the line grain)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: business_date
+        description: "Transaction date."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: key_facility
+        description: "Resolved 911dw facility key (seed-driven, default 1020) — never null."
+        data_tests: [not_null]
+      - name: facility_group
+        description: "Stable facility name derived from key_facility — never null."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other]
+      - name: is_donation
+        description: "True for summary_category 6 (legacy DONATE) lines — never null."
+        data_tests: [not_null]
+      - name: summary_category
+        description: "Legacy key_summary_category (1 = retail, 6 = donation)."
+        data_tests:
+          - accepted_values:
+              values: [1, 6]
+      - name: line_type
+        description: "S = sale, R = return."
+        data_tests:
+          - accepted_values:
+              values: ['S', 'R']
+              config: { severity: warn }
+
+  - name: int_pos_tickets
+    description: >
+      POS ticket transactions, one row per ticket_id where sold_at is not null.
+      Feeds fct_daily_operations ticket measures.
+    columns:
+      - name: transaction_id
+        description: "PK. Ticket transaction id (grain from source)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+      - name: transaction_date
+        description: "Sale date (day grain of the operations fact)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: int_ticket_scans
+    description: >
+      Gate scan events, one row per usage_id (scan) where use_time is not null.
+      Feeds fct_daily_operations visitor/scan measures.
+    columns:
+      - name: scan_id
+        description: "PK. Scan event id (usage_id), grain from source."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+      - name: scan_date
+        description: "Scan date."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: is_valid_scan
+        description: "True = admitted scan, False = rejected."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: visitor_count
+        description: "Visitors admitted on this scan."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: int_ticket_inventory
+    description: >
+      Ticket availability/capacity, one row per entry_date + ticket_type_id.
+      Feeds fct_ticket_availability and ml_ticket_demand_features.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [entry_date, ticket_type_id]
+          config: { severity: warn }
+    columns:
+      - name: inventory_key
+        description: "PK. Surrogate for the entry_date + ticket_type_id grain."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
+      - name: entry_date
+        description: "Admission date."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: ticket_type_id
+        description: "Ticket type / PLU."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: int_retail__customers
+    description: "Retail transaction counts per business_date x key_facility."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
+          config: { severity: warn }   # grouped grain — should hold; promote after a clean run
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: key_facility
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: int_retail__performance
+    description: "Tidy category-grain retail performance (sales/profit/units/donations)."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, category_code]
+          config: { severity: warn }   # grouped grain — should hold; promote after a clean run
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: category_code
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: int_retail__visitors
+    description: "Visitor counts and ecom orders per business_date x key_facility."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
+          config: { severity: warn }   # grouped grain — should hold; promote after a clean run
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: key_facility
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: int_gateway__ticket_demand_features
+    description: >
+      Per-ticket demand features (presale timing, channel, utilization) feeding
+      fct_ticket_demand_forecast and ml_ticket_demand_features. One row per
+      ticket_id. Table-materialized (multi-consumer).
+    columns:
+      - name: ticket_id
+        description: "PK. Ticket id (grain inherited from the ticket source)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }

@@ -107,3 +107,27 @@ seeds:
   - name: tmp_seed_wifi__audience
     description: "STUB + PII: WiFi captive-portal marketing audience (email, name). RESTRICTED. Empty until the WiFi feed is ingested; treat as PII when populated."
     config: { schema: raw_seed, tags: ['build_temp','stub','pii','restricted'], column_types: { business_date: date, email_address: varchar, first_name: varchar, last_name: varchar } }
+
+  - name: seed_service_plu
+    description: >
+      One row per Galaxy PLU mapping to a DPR visitor-services line. Enumerates
+      the item-grain museum audio-guide PLUs (mus_audio_guide, JnlItems
+      item_kind 8) and the product-178 memorial+museum tour PLUs (mem_mus_tour),
+      which carry no matrix code and so cannot be matched by a matrix pattern.
+      Consumed by int_dpr__fees_and_services. Edit here to onboard/retire a PLU.
+    config:
+      # PLUs are alphanumeric Galaxy codes; pin to varchar so dbt seed does not
+      # infer a numeric type and break the string join.
+      column_types:
+        plu: varchar
+        dpr_line_item: varchar
+    columns:
+      - name: plu
+        description: "Galaxy product PLU."
+        data_tests: [not_null, unique]
+      - name: dpr_line_item
+        description: "DPR services cohort this PLU rolls up to."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [mus_audio_guide, mem_mus_tour]
