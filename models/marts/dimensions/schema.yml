@@ -4,8 +4,12 @@ models:
   - name: dim_date
     description: "Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag"
     columns:
-      - name: date_id
-        tests:
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        data_type: date
+        constraints:
+          - type: primary_key
+        data_tests:
           - unique
           - not_null
       - name: is_commemoration_day
@@ -13,14 +17,17 @@ models:
           True for September 11 (anniversary). This flag exists because the anniversary
           creates structural anomalies across all metrics. Models reference this flag to
           treat September 11 as a known exception rather than a statistical outlier.
-        tests:
+        data_tests:
           - not_null
 
   - name: dim_marketing_channel
     description: "Marketing channel reference dimension from ref_marketing_channels seed"
     columns:
       - name: channel_id
-        tests:
+        description: "PK. Natural key (channel identifier from seed)."
+        constraints:
+          - type: primary_key
+        data_tests:
           - unique
           - not_null
 
@@ -28,28 +35,60 @@ models:
     description: "Unified customer dimension using connected-component identity resolution across Gateway, CounterPoint, Shopify, and Salesforce."
     columns:
       - name: customer_id
-        description: "MD5 hash-based surrogate key from identity resolution"
-        tests:
+        description: "PK. Surrogate key (MD5 hash from identity resolution)."
+        constraints:
+          - type: primary_key
+        data_tests:
           - unique
           - not_null
 
   - name: dim_gate
     description: "Ticketing gate dimension from Gateway. STATUS: Awaiting RAW connection."
+    columns:
+      - name: id
+        description: "PK. Natural key."
+        constraints:
+          - type: primary_key
 
   - name: dim_campaign
     description: "Campaign dimension from Salesforce. STATUS: Awaiting RAW connection."
+    columns:
+      - name: id
+        description: "PK. Natural key (Salesforce campaign ID)."
+        constraints:
+          - type: primary_key
 
   - name: dim_ticket_type
     description: "Ticket type dimension from Gateway. STATUS: Awaiting RAW connection."
+    columns:
+      - name: id
+        description: "PK. Natural key."
+        constraints:
+          - type: primary_key
 
   - name: dim_product
     description: "Retail product dimension from CounterPoint/Shopify. STATUS: Awaiting RAW connection."
+    columns:
+      - name: id
+        description: "PK. Natural key."
+        constraints:
+          - type: primary_key
 
   - name: dim_payment_method
     description: "Payment method reference dimension."
+    columns:
+      - name: id
+        description: "PK. Natural key."
+        constraints:
+          - type: primary_key
 
   - name: dim_fund
     description: "Blackbaud GL fund dimension. STATUS: Awaiting Blackbaud RAW connection."
+    columns:
+      - name: fund_id
+        description: "PK. Natural key (Blackbaud fund ID)."
+        constraints:
+          - type: primary_key
 
   - name: dim_budget_version
     description: "Vena plan version dimension. STATUS: Awaiting Vena RAW connection."

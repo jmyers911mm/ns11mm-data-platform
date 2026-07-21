@@ -13,7 +13,7 @@ with date_spine as (
 
 final as (
     select
-        date_day                                                         as date_id,
+        date_day                                                         as date_key,
         date_day,
         dayofweek(date_day)                                              as day_of_week,
         dayname(date_day)                                                as day_of_week_name,

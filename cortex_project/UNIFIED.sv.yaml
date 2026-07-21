@@ -17,7 +17,7 @@ tables:
       schema: MARTS
       table: DIM_DATE
     primary_key:
-      columns: [DATE_ID]
+      columns: [DATE_KEY]
     dimensions:
       - name: report_date
         synonyms: ["date", "day", "business date"]
@@ -83,7 +83,7 @@ tables:
       schema: MARTS
       table: FCT_DAILY_PERFORMANCE
     primary_key:
-      columns: [DATE_ID]
+      columns: [DATE_KEY]
     dimensions: []
     metrics:
       - name: total_tickets_sold
@@ -291,26 +291,26 @@ relationships:
     left_table: dpr
     right_table: date
     relationship_columns:
-      - left_column: DATE_ID
-        right_column: DATE_ID
+      - left_column: DATE_KEY
+        right_column: DATE_KEY
   - name: retail_daily_to_date
     left_table: retail_daily
     right_table: date
     relationship_columns:
       - left_column: DATE_KEY
-        right_column: DATE_ID
+        right_column: DATE_KEY
   - name: retail_category_to_date
     left_table: retail_category
     right_table: date
     relationship_columns:
       - left_column: DATE_KEY
-        right_column: DATE_ID
+        right_column: DATE_KEY
   - name: daily_scan_to_date
     left_table: daily_scan
     right_table: date
     relationship_columns:
       - left_column: DATE_KEY
-        right_column: DATE_ID
+        right_column: DATE_KEY
 
 verified_queries:
   - name: cross_domain_weekend_snapshot

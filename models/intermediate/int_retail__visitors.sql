@@ -18,7 +18,7 @@
 with sensource as (
     -- Real Sensource feed: entries per facility per day = the visitor count.
     select
-        cast(business_date as date)                 as key_date,
+        cast(business_date as date)                 as date_key,
         key_facility,
         sum(num_entry)                              as visitor_count
     from {{ ref('stg_sensource__visitors') }}
@@ -28,7 +28,7 @@ with sensource as (
 shopify as (
     -- Ecom orders map to the Ecommerce facility (1234)
     select
-        cast(business_date as date)                 as key_date,
+        cast(business_date as date)                 as date_key,
         1234                                        as key_facility,
         count(distinct order_id)                    as ecom_orders
     from {{ ref('stg_shopify__orders') }}
@@ -37,13 +37,13 @@ shopify as (
 
 combined as (
     select
-        coalesce(s.key_date, e.key_date)            as key_date,
+        coalesce(s.date_key, e.date_key)            as date_key,
         coalesce(s.key_facility, e.key_facility)    as key_facility,
         coalesce(s.visitor_count, 0)                as visitor_count,
         coalesce(e.ecom_orders, 0)                  as ecom_orders
     from sensource s
     full outer join shopify e
-      on s.key_date = e.key_date
+      on s.date_key = e.date_key
      and s.key_facility = e.key_facility
 )
 

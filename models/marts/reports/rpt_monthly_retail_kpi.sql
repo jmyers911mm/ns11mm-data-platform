@@ -19,7 +19,7 @@ with daily as (
 dated as (
     select d.*, dd.fiscal_year, dd.fiscal_month, dd.month_name, dd.year_number, dd.month_of_year
     from daily d
-    inner join {{ ref('dim_date') }} dd on d.date_key = dd.date_id
+    inner join {{ ref('dim_date') }} dd on d.date_key = dd.date_key
 ),
 
 monthly as (

@@ -31,7 +31,7 @@ with inventory as (
 ),
 
 date_attrs as (
-    select date_id, day_of_week_name, day_of_week, is_weekend, month_name, fiscal_year
+    select date_key, day_of_week_name, day_of_week, is_weekend, month_name, fiscal_year
     from {{ ref('dim_date') }}
 )
 
@@ -54,4 +54,4 @@ select
     i.is_override,
     current_timestamp()                                     as _loaded_at
 from inventory i
-left join date_attrs d on i.entry_date = d.date_id
+left join date_attrs d on i.entry_date = d.date_key

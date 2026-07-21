@@ -228,7 +228,7 @@ tables:
       table: DIM_DATE
     primary_key:
       columns:
-        - DATE_ID
+        - DATE_KEY
     dimensions:
       - name: DAY_OF_WEEK
         expr: DAY_OF_WEEK
@@ -280,8 +280,8 @@ tables:
         expr: IS_LAST_OF_MONTH
         data_type: BOOLEAN
     time_dimensions:
-      - name: DATE_ID
-        expr: DATE_ID
+      - name: DATE_KEY
+        expr: DATE_KEY
         data_type: DATE
       - name: DATE_DAY
         expr: DATE_DAY
@@ -318,7 +318,7 @@ relationships:
     join_type: many_to_one
     relationship_columns:
       - left_column: DATE_KEY
-        right_column: DATE_ID
+        right_column: DATE_KEY
   - name: SCAN_TO_SEGMENT
     left_table: FCT_DAILY_SCAN
     right_table: SEED_SCAN_MARKET_SEGMENT

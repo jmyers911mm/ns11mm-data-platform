@@ -5,84 +5,124 @@ models:
     description: "Real-time ticket capacity and utilization by date/window/type"
     columns:
       - name: availability_key
-        tests:
+        description: "PK. Surrogate key (hash of entry_date + ticket_type + window)."
+        constraints:
+          - type: primary_key
+        data_tests:
           - unique
           - not_null
       - name: entry_date
-        tests:
+        description: "FK to dim_date.date_key. Visitor entry date."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
           - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
       - name: ticket_type
-        tests:
+        data_tests:
           - not_null
       - name: utilization_pct
         description: "Percentage of capacity reserved (0-100)"
-        tests:
+        data_tests:
           - not_null
 
   - name: fct_ticket_demand_forecast
     description: "Ticket demand aggregated for forecasting and presale analysis"
     columns:
       - name: entry_date
-        tests:
+        description: "FK to dim_date.date_key. Visitor entry date."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
           - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
       - name: plu
-        tests:
+        data_tests:
           - not_null
       - name: ticket_count
-        tests:
+        data_tests:
           - not_null
       - name: total_revenue
-        tests:
+        data_tests:
           - not_null
 
   - name: fct_daily_operations
     description: "Daily operational metrics: visitors, ticket sales, revenue"
     columns:
       - name: visit_date
-        tests:
+        description: "PK. Natural key (calendar date of operations)."
+        constraints:
+          - type: primary_key
+        data_tests:
           - unique
           - not_null
       - name: total_visitors
-        tests:
+        data_tests:
           - not_null
       - name: ticket_revenue
-        tests:
+        data_tests:
           - not_null
+
   - name: fct_retail_performance
     description: >
       Tidy category-grain retail fact (one row per date x facility x category).
       Additive sales/profit/units/donations; replaces legacy fact_retail.
     columns:
       - name: date_key
-        description: FK to dim_date.
-        data_tests: [not_null]
+        description: "FK to dim_date.date_key."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
       - name: key_facility
-        description: Selling-area facility key (see seed_facility_area).
+        description: "FK to seed_facility_area.key_facility."
         data_tests: [not_null]
       - name: category_code
-        description: CounterPoint product category (Donations folded to 'Donations').
+        description: "CounterPoint product category (Donations folded to 'Donations')."
         data_tests: [not_null]
       - name: net_sales
-        description: Sale minus return amount, non-donation lines.
+        description: "Sale minus return amount, non-donation lines."
         data_tests: [not_null]
     tests:
-      # Composite-grain uniqueness (package-free): unique on the concatenated key.
       - unique:
           column_name: "date_key || '-' || key_facility || '-' || category_code"
           config:
             where: "category_code is not null"
           name: fct_retail_performance_grain_unique
+
   - name: fct_retail_daily
     description: >
       Facility-grain retail fact (one row per date x facility). Transaction and
       visitor counts plus facility rollups; grain for the report ratios.
     columns:
       - name: date_key
-        data_tests: [not_null]
+        description: "FK to dim_date.date_key."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
       - name: key_facility
+        description: "FK to seed_facility_area.key_facility."
         data_tests: [not_null]
     tests:
-      # Composite-grain uniqueness (package-free): unique on the concatenated key.
       - unique:
           column_name: "date_key || '-' || key_facility"
           name: fct_retail_daily_grain_unique
@@ -92,13 +132,19 @@ models:
       Day-grain DPR fact. One additive measure per column; ratios excluded
       by design (computed in rpt_ layer). Replaces legacy fact_dpr_report_data.
     columns:
-      - name: date_id
+      - name: date_key
+        description: "PK / FK to dim_date.date_key."
+        constraints:
+          - type: primary_key
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
         data_tests:
           - not_null
           - unique
           - relationships:
               to: ref('dim_date')
-              field: date_id
+              field: date_key
       - name: tickets_sold
         data_tests: [not_null]
       - name: ticket_revenue
@@ -118,13 +164,18 @@ models:
       budget by market segment per day. Feeds rpt_daily_scan.
     columns:
       - name: date_key
-        description: FK to dim_date.date_id.
+        description: "FK to dim_date.date_key."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
         data_tests:
           - not_null
           - relationships:
               to: ref('dim_date')
-              field: date_id
+              field: date_key
       - name: segment_key
+        description: "FK to seed_scan_market_segment.segment_key."
         data_tests: [not_null]
       - name: passes_scanned
         data_tests: [not_null]

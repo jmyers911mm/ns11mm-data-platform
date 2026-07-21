@@ -20,7 +20,7 @@ with lines as (
 
 counted as (
     select
-        cast(business_date as date)                 as key_date,
+        cast(business_date as date)                 as date_key,
         key_facility,
         count(distinct doc_id)                      as transactions
     from lines

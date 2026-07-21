@@ -73,7 +73,7 @@ tables:
       table: DIM_DATE
     primary_key:
       columns:
-        - DATE_ID
+        - DATE_KEY
     dimensions:
       - name: DAY_OF_WEEK_NAME
         expr: DAY_OF_WEEK_NAME
@@ -101,8 +101,8 @@ tables:
         expr: IS_COMMEMORATION_DAY
         data_type: BOOLEAN
     time_dimensions:
-      - name: DATE_ID
-        expr: DATE_ID
+      - name: DATE_KEY
+        expr: DATE_KEY
         data_type: DATE
       - name: DATE_DAY
         expr: DATE_DAY

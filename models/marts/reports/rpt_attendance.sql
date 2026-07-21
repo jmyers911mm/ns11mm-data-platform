@@ -14,7 +14,7 @@
 -- ADR-004: no logic in Power BI.
 
 with dpr as (
-    select date_id as date_key, date_value, is_commemoration_day, mem_attendance, mus_attendance
+    select date_key, date_value, is_commemoration_day, mem_attendance, mus_attendance
     from {{ ref('fct_daily_performance') }}
 ),
 
@@ -22,7 +22,7 @@ sensource as (
     -- Real Sensource feed is pre-aggregated by named area per day (no facility
     -- mapping): mem/mus attendance + memorial-only, store, store-Vesey counts.
     select
-        business_date                              as key_date,
+        business_date                              as date_key,
         memorial_only,
         mus_store,
         mus_store_vesey,
@@ -41,4 +41,4 @@ select
     coalesce(s.mus_store, 0)                            as museum_store,
     coalesce(s.mus_store_vesey, 0)                      as museum_store_vesey
 from dpr d
-left join sensource s on d.date_value = s.key_date
+left join sensource s on d.date_value = s.date_key

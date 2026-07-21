@@ -61,7 +61,7 @@ joined as (
         jt.event_no,
 
         -- Recognized reporting date (event / ticket / sold+14 depending on basis)
-        {{ gateway_recognized_date('va', 'jt', 'rme') }}                     as key_date,
+        {{ gateway_recognized_date('va', 'jt', 'rme') }}                     as date_key,
 
         -- Product classification
         trim(it.plu)                                                        as plu,
@@ -110,4 +110,4 @@ joined as (
 )
 
 select * from joined
-where key_date is not null
+where date_key is not null

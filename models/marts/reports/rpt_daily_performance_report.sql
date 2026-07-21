@@ -26,7 +26,7 @@ with fct as (
         dd.month_of_year as calendar_month
     from {{ ref('fct_daily_performance') }} f
     inner join {{ ref('dim_date') }} dd
-        on f.date_id = dd.date_id
+        on f.date_key = dd.date_key
 ),
 
 with_periods as (
@@ -74,7 +74,7 @@ with_periods as (
 )
 
 select
-    date_id,
+    date_key,
     date_value,
     is_commemoration_day,
 

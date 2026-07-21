@@ -53,7 +53,7 @@ attr as (
 joined as (
     select
         s.usage_id,
-        s.scan_date                        as key_date,
+        s.scan_date                        as date_key,
         s.gate_id,
         s.is_valid_scan,
         s.scanned_qty,

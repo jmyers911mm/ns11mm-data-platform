@@ -50,7 +50,7 @@ joined as (
                 when jh.jnl_tran_id = 12383495 then jh.fiscal_date
                 else jh.tran_date
             end as date
-        )                                                                   as key_date,
+        )                                                                   as date_key,
 
         -- Product classification
         it.plu,
@@ -77,4 +77,4 @@ joined as (
 )
 
 select * from joined
-where key_date is not null
+where date_key is not null

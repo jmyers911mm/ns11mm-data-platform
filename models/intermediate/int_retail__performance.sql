@@ -22,7 +22,7 @@ with lines as (
 
 aggregated as (
     select
-        cast(business_date as date)                                 as key_date,
+        cast(business_date as date)                                 as date_key,
         key_facility,
         category_code,
 

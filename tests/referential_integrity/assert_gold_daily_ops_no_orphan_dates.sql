@@ -3,5 +3,5 @@
 
 select f.visit_date
 from {{ ref('fct_daily_operations') }} f
-left join {{ ref('dim_date') }} d on f.visit_date = d.date_id
-where d.date_id is null
+left join {{ ref('dim_date') }} d on f.visit_date = d.date_key
+where d.date_key is null

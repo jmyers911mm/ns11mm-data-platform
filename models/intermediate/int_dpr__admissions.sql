@@ -1,7 +1,7 @@
 -- Silver DPR: general-admission tickets sold, ticket revenue, attendance
 -- ---------------------------------------------------------------------------
 -- Domain: admissions
--- Grain:  one row per key_date
+-- Grain:  one row per date_key
 --
 -- The GA cohort (ga_flag = 1) drives tickets_sold, ticket_revenue and the
 -- Galaxy-scanned museum attendance proxy. Pass revenue (CityPASS/C3) is a
@@ -29,7 +29,7 @@ with ticket_lines as (
 
 ga as (
     select
-        key_date,
+        date_key,
         -- Tickets sold / issued (general admission)
         sum(case when ga_flag = 1 then quantity else 0 end)                as tickets_sold_ga,
         sum(case when ga_flag = 1 then amount else 0 end)                  as ticket_revenue_ga,
@@ -44,11 +44,11 @@ ga as (
                  then amount else 0 end)                                    as pass_revenue
 
     from ticket_lines
-    group by key_date
+    group by date_key
 )
 
 select
-    key_date,
+    date_key,
     tickets_sold_ga                                                        as tickets_sold,
     ticket_revenue_ga                                                      as ticket_revenue,
     mus_attendance_scanned_ga                                             as mus_attendance,

@@ -1,7 +1,7 @@
 -- Silver DPR: scan-based museum and memorial attendance
 -- ---------------------------------------------------------------------------
 -- Domain: attendance
--- Grain:  one row per key_date
+-- Grain:  one row per date_key
 --
 -- Recreates the DPR memorial-attendance line item (and a scanned-museum
 -- companion for reconciliation) from the Gateway usage/scan feed now exposed
@@ -30,7 +30,7 @@
 
 with scans as (
     select
-        scan_date                                                          as key_date,
+        scan_date                                                          as date_key,
         facility_id,
         visitor_count
     from {{ ref('int_ticket_scans') }}
@@ -47,7 +47,7 @@ facility as (
 
 classified as (
     select
-        s.key_date,
+        s.date_key,
         case
             when upper(coalesce(f.facility_name, '')) like '%MEMORIAL%'
               or upper(coalesce(f.facility_name, '')) like '%PLAZA%'   then 'memorial'
@@ -60,8 +60,8 @@ classified as (
 )
 
 select
-    key_date,
+    date_key,
     sum(case when area = 'memorial' then visitor_count else 0 end)         as mem_attendance,
     sum(case when area = 'museum'   then visitor_count else 0 end)         as mus_attendance_scanned
 from classified
-group by key_date
+group by date_key

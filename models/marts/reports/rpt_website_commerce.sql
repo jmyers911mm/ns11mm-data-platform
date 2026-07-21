@@ -13,7 +13,7 @@
 
 with recurring as (
     select
-        cast(created_at as date)                    as key_date,
+        cast(created_at as date)                    as date_key,
         case
             when lower(coalesce(order_type,'')) like '%member%'
               or lower(coalesce(title,''))      like '%member%' then 'Membership'
@@ -34,7 +34,7 @@ dated as (
         dd.month_of_year,
         dd.month_name
     from recurring r
-    inner join {{ ref('dim_date') }} dd on cast(r.key_date as date) = dd.date_id
+    inner join {{ ref('dim_date') }} dd on r.date_key = dd.date_key
 )
 
 select

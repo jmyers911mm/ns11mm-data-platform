@@ -64,7 +64,7 @@ mapped as (
         -- Category normalization (legacy folds DONATE -> Donations)
         case
             when trim(l.category_code) = 'DONATE' then 'Donations'
-            else trim(l.category_code)
+            else coalesce(nullif(trim(l.category_code), ''), 'UNKNOWN')
         end                                                                 as category_code,
         trim(l.subcategory_code)                                            as subcategory_code,
 

@@ -24,6 +24,6 @@ select
     ticket_transactions,
     gates_active
 from {{ ref('fct_daily_operations') }}
-left join {{ ref('dim_date') }} dd on visit_date = dd.date_id
+left join {{ ref('dim_date') }} dd on visit_date = dd.date_key
 where total_visitors > 0
 order by visit_date

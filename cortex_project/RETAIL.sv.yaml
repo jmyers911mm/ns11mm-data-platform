@@ -145,7 +145,7 @@ tables:
       table: DIM_DATE
     primary_key:
       columns:
-        - DATE_ID
+        - DATE_KEY
     dimensions:
       - name: DAY_OF_WEEK_NAME
         expr: DAY_OF_WEEK_NAME
@@ -173,8 +173,8 @@ tables:
         expr: IS_COMMEMORATION_DAY
         data_type: BOOLEAN
     time_dimensions:
-      - name: DATE_ID
-        expr: DATE_ID
+      - name: DATE_KEY
+        expr: DATE_KEY
         data_type: DATE
       - name: DATE_DAY
         expr: DATE_DAY
@@ -208,7 +208,7 @@ relationships:
     join_type: many_to_one
     relationship_columns:
       - left_column: DATE_KEY
-        right_column: DATE_ID
+        right_column: DATE_KEY
   - name: RETAIL_PERF_TO_FACILITY
     left_table: FCT_RETAIL_PERFORMANCE
     right_table: SEED_FACILITY_AREA
@@ -222,7 +222,7 @@ relationships:
     join_type: many_to_one
     relationship_columns:
       - left_column: DATE_KEY
-        right_column: DATE_ID
+        right_column: DATE_KEY
   - name: RETAIL_DAILY_TO_FACILITY
     left_table: FCT_RETAIL_DAILY
     right_table: SEED_FACILITY_AREA

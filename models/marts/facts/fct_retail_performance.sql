@@ -29,7 +29,7 @@ budget as (
     -- with metric columns. revenue_budget -> net_sales seam, profit_budget ->
     -- net_profit seam. Already 1:1 at facility/day.
     select
-        business_date                       as key_date,
+        business_date                       as date_key,
         key_facility,
         revenue_budget                      as net_sales_budget,
         profit_budget                       as net_profit_budget
@@ -38,8 +38,8 @@ budget as (
 
 final as (
     select
-        dd.date_id                                          as date_key,
-        p.key_date                                          as date_value,
+        dd.date_key,
+        p.date_key                                          as date_value,
         p.key_facility,
         coalesce(a.area_name, 'Unmapped ' || p.key_facility) as area_name,
         a.area_group,
@@ -58,9 +58,9 @@ final as (
         b.net_profit_budget
 
     from perf p
-    inner join {{ ref('dim_date') }} dd on p.key_date = dd.date_id
+    inner join {{ ref('dim_date') }} dd on p.date_key = dd.date_key
     left join area a on p.key_facility = a.key_facility
-    left join budget b on p.key_date = b.key_date and p.key_facility = b.key_facility
+    left join budget b on p.date_key = b.date_key and p.key_facility = b.key_facility
 )
 
 select * from final

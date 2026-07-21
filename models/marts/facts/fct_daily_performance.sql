@@ -20,7 +20,7 @@
 
 {{ config(
     materialized='table',
-    cluster_by=['date_id']
+    cluster_by=['date_key']
 ) }}
 
 with tours as (
@@ -48,21 +48,21 @@ attendance as (
 ),
 
 -- Union all contributing dates to form the day spine.
--- key_date is normalized to DATE at every source to guarantee the
+-- date_key is normalized to DATE at every source to guarantee the
 -- downstream inner join to dim_date is 1:1 (grain-integrity guard for the
 -- unique/not_null test on date_key).
 date_spine as (
-    select cast(key_date as date) as key_date from tours where key_date is not null
-    union select cast(key_date as date) from fees where key_date is not null
-    union select cast(key_date as date) from retail where key_date is not null
-    union select cast(key_date as date) from donations where key_date is not null
-    union select cast(key_date as date) from admissions where key_date is not null
-    union select cast(key_date as date) from attendance where key_date is not null
+    select cast(date_key as date) as date_key from tours where date_key is not null
+    union select cast(date_key as date) from fees where date_key is not null
+    union select cast(date_key as date) from retail where date_key is not null
+    union select cast(date_key as date) from donations where date_key is not null
+    union select cast(date_key as date) from admissions where date_key is not null
+    union select cast(date_key as date) from attendance where date_key is not null
 ),
 
 combined as (
     select
-        s.key_date,
+        s.date_key,
 
         -- Admissions
         coalesce(a.tickets_sold, 0)                                        as tickets_sold,
@@ -128,19 +128,19 @@ combined as (
         coalesce(r.cafe1_donations, 0)                                     as cafe1_donations
 
     from date_spine s
-    left join tours       t   on s.key_date = cast(t.key_date as date)
-    left join fees        f   on s.key_date = cast(f.key_date as date)
-    left join retail      r   on s.key_date = cast(r.key_date as date)
-    left join donations   d   on s.key_date = cast(d.key_date as date)
-    left join admissions  a   on s.key_date = cast(a.key_date as date)
-    left join attendance  att on s.key_date = cast(att.key_date as date)
+    left join tours       t   on s.date_key = cast(t.date_key as date)
+    left join fees        f   on s.date_key = cast(f.date_key as date)
+    left join retail      r   on s.date_key = cast(r.date_key as date)
+    left join donations   d   on s.date_key = cast(d.date_key as date)
+    left join admissions  a   on s.date_key = cast(a.date_key as date)
+    left join attendance  att on s.date_key = cast(att.date_key as date)
 )
 
 select
-    dd.date_id,
-    c.key_date                                                             as date_value,
+    dd.date_key,
+    c.date_key                                                             as date_value,
     dd.is_commemoration_day,
-    c.* exclude (key_date)
+    c.* exclude (date_key)
 from combined c
 inner join {{ ref('dim_date') }} dd
-    on c.key_date = dd.date_id
+    on c.date_key = dd.date_key

@@ -13,14 +13,14 @@
 
 with passes as (
     select
-        cast(business_date as date)     as key_date,
+        cast(business_date as date)     as date_key,
         sum(passes)                     as passes
     from {{ ref('stg_gateway__passes_by_hour') }}
     group by 1
 ),
 
 dpr as (
-    select date_id as date_key, date_value, mus_attendance
+    select date_key, date_value, mus_attendance
     from {{ ref('fct_daily_performance') }}
 )
 
@@ -30,4 +30,4 @@ select
     coalesce(p.passes, d.mus_attendance)    as museum_attendance,   -- hourly passes stub, scan fallback
     p.passes                                as passes_by_hour_total  -- null until feed lands
 from dpr d
-left join passes p on d.date_value = p.key_date
+left join passes p on d.date_value = p.date_key

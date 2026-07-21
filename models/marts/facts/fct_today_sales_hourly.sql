@@ -29,7 +29,7 @@ store_facility as (
 
 mapped as (
     select
-        cast(t.business_date as date)               as key_date,
+        cast(t.business_date as date)               as date_key,
         t.hour_of_day,
         coalesce(sf.key_facility, -1)               as key_facility,
         t.doc_id,
@@ -42,7 +42,7 @@ mapped as (
 
 hourly as (
     select
-        key_date,
+        date_key,
         hour_of_day,
         key_facility,
         count(distinct doc_id)                      as transactions,
@@ -59,8 +59,8 @@ area as (
 )
 
 select
-    dd.date_id                          as date_key,
-    h.key_date                          as date_value,
+    dd.date_key,
+    h.date_key                          as date_value,
     h.hour_of_day,
     h.key_facility,
     coalesce(a.area_name, 'Unmapped')   as area_name,
@@ -70,5 +70,5 @@ select
     h.cost,
     h.profit
 from hourly h
-inner join {{ ref('dim_date') }} dd on h.key_date = dd.date_id
+inner join {{ ref('dim_date') }} dd on h.date_key = dd.date_key
 left join area a on h.key_facility = a.key_facility

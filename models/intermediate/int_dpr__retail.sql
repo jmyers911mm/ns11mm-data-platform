@@ -1,7 +1,7 @@
 -- Silver DPR: retail gross profit, MUS AG, and retail-sourced donations
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per business_date (aliased key_date)
+-- Grain:  one row per business_date (aliased date_key)
 --
 -- Recreates the CounterPoint-sourced DPR line items from the retail-line
 -- silver model. Gross profit = sales - cost; donations are the summary-
@@ -27,7 +27,7 @@ with retail as (
 
 daily as (
     select
-        cast(business_date as date)                                        as key_date,
+        cast(business_date as date)                                        as date_key,
 
         -- Museum Store gross profit (fac 1003, non-donation summary category)
         sum(case when key_facility = 1003 and summary_category <> 6
@@ -102,7 +102,7 @@ daily as (
 )
 
 select
-    key_date,
+    date_key,
 
     -- Gross profit line items (sales - cost)
     mus_store_sales - mus_store_cost                                       as mus_store_gross_profit,

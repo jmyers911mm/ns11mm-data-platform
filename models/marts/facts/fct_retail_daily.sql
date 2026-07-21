@@ -17,7 +17,7 @@
 
 with perf as (
     select
-        date_value                          as key_date,
+        date_value                          as date_key,
         key_facility,
         sum(net_sales)                      as net_sales,
         sum(net_profit)                     as net_profit,
@@ -28,12 +28,12 @@ with perf as (
 ),
 
 customers as (
-    select key_date, key_facility, transactions
+    select date_key, key_facility, transactions
     from {{ ref('int_retail__customers') }}
 ),
 
 visitors as (
-    select key_date, key_facility, visitor_count, ecom_orders
+    select date_key, key_facility, visitor_count, ecom_orders
     from {{ ref('int_retail__visitors') }}
 ),
 
@@ -44,8 +44,8 @@ area as (
 
 final as (
     select
-        dd.date_id                                          as date_key,
-        p.key_date                                          as date_value,
+        dd.date_key,
+        p.date_key                                          as date_value,
         p.key_facility,
         coalesce(a.area_name, 'Unmapped ' || p.key_facility) as area_name,
         a.area_group,
@@ -61,9 +61,9 @@ final as (
         coalesce(v.ecom_orders, 0)                          as ecom_orders      -- stub until Shopify
 
     from perf p
-    inner join {{ ref('dim_date') }} dd on p.key_date = dd.date_id
-    left join customers c on p.key_date = c.key_date and p.key_facility = c.key_facility
-    left join visitors  v on p.key_date = v.key_date and p.key_facility = v.key_facility
+    inner join {{ ref('dim_date') }} dd on p.date_key = dd.date_key
+    left join customers c on p.date_key = c.date_key and p.key_facility = c.key_facility
+    left join visitors  v on p.date_key = v.date_key and p.key_facility = v.key_facility
     left join area a on p.key_facility = a.key_facility
 )
 

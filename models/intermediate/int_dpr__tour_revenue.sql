@@ -1,7 +1,7 @@
 -- Silver DPR: guided-tour, virtual-tour, field-trip, and program revenue
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / tours
--- Grain:  one row per key_date
+-- Grain:  one row per date_key
 --
 -- Recreates the DPR tour-family line items from the enriched Gateway ticket
 -- journal. Each measure is (quantity, revenue) for a product cohort selected
@@ -50,7 +50,7 @@ labeled as (
 
 aggregated as (
     select
-        key_date,
+        date_key,
 
         -- Museum guided tours: TOU matrix, excluding any seed-listed PLU
         sum(case when matrix_code like '%TOU%' and plu_line_item is null
@@ -99,7 +99,7 @@ aggregated as (
         sum(case when matrix_code like '%VTF%' then amount else 0 end)     as virtual_yf_mem_tour_revenue
 
     from labeled
-    group by key_date
+    group by date_key
 )
 
 select * from aggregated

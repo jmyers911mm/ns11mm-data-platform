@@ -1,7 +1,7 @@
 -- Silver DPR: service fees, audio guide/headset, memorial+museum tour
 -- ---------------------------------------------------------------------------
 -- Domain: revenue / visitor services
--- Grain:  one row per key_date
+-- Grain:  one row per date_key
 --
 -- Service fees and audio-guide revenue derive from the item-journal grain
 -- (JnlItems, jnl_code_id 102-104), not the ticket grain. The memorial+museum
@@ -29,7 +29,7 @@ ticket_lines as (
 
 fees as (
     select
-        key_date,
+        date_key,
         -- Museum service fees: matrix like %MUF% and %FEE%
         sum(case when matrix_code like '%MUF%' and matrix_code like '%FEE%'
                  then amount else 0 end)                                    as museum_service_fees,
@@ -49,7 +49,7 @@ fees as (
                  then amount else 0 end)                                    as mem_audio_guide_revenue
 
     from item_lines
-    group by key_date
+    group by date_key
 ),
 
 mem_mus_tour as (
@@ -62,23 +62,23 @@ mem_mus_tour as (
     --   MUSMMUADW003 (Memorial + Museum Tour Buyout)
     --   MUSMMUADW005 (Architecture Memorial + Museum Tour)
     select
-        key_date,
+        date_key,
         sum(case when plu in ('MUSMMUADW001','MUSMMUADW003','MUSMMUADW005')
                  then quantity else 0 end)                                 as mem_mus_tours,
         sum(case when plu in ('MUSMMUADW001','MUSMMUADW003','MUSMMUADW005')
                  then amount else 0 end)                                   as mem_mus_tour_revenue
     from ticket_lines
-    group by key_date
+    group by date_key
 ),
 
 date_spine as (
-    select key_date from fees
+    select date_key from fees
     union
-    select key_date from mem_mus_tour
+    select date_key from mem_mus_tour
 )
 
 select
-    d.key_date,
+    d.date_key,
     coalesce(f.museum_service_fees, 0)
       + coalesce(f.memorial_service_fees, 0)                               as service_fees,
     coalesce(f.museum_service_fees, 0)                                     as museum_service_fees,
@@ -89,5 +89,5 @@ select
     coalesce(t.mem_mus_tours, 0)                                          as mem_mus_tours,
     coalesce(t.mem_mus_tour_revenue, 0)                                  as mem_mus_tour_revenue
 from date_spine d
-left join fees          f on d.key_date = f.key_date
-left join mem_mus_tour  t on d.key_date = t.key_date
+left join fees          f on d.date_key = f.date_key
+left join mem_mus_tour  t on d.date_key = t.date_key

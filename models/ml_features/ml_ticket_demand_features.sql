@@ -35,7 +35,7 @@ with_features as (
            avg(d.daily_reserved) over (partition by d.ticket_type order by d.entry_date rows between 29 preceding and current row) as reserved_30d_avg,
            stddev(d.daily_reserved) over (partition by d.ticket_type order by d.entry_date rows between 29 preceding and current row) as reserved_30d_stddev
     from daily_demand d
-    left join {{ ref('dim_date') }} dd on d.entry_date = dd.date_id
+    left join {{ ref('dim_date') }} dd on d.entry_date = dd.date_key
 )
 
 select

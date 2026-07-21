@@ -1,7 +1,7 @@
 -- Silver DPR: Gateway ticketing donations (issued) and box/exit donations
 -- ---------------------------------------------------------------------------
 -- Domain: donations
--- Grain:  one row per key_date
+-- Grain:  one row per date_key
 --
 -- Ticketing donations come from the item-journal grain filtered to donation
 -- museum categories. The box-office memorial donation and museum-exit
@@ -29,7 +29,7 @@ with item_lines as (
 
 donations as (
     select
-        key_date,
+        date_key,
 
         -- Aggregate ticketing donations: museum+donation matrix, excluding the
         -- box/exit/special categories handled separately.
@@ -62,7 +62,7 @@ donations as (
         -- not the Gateway item journal. See int_dpr__retail.
 
     from item_lines
-    group by key_date
+    group by date_key
 )
 
 select * from donations

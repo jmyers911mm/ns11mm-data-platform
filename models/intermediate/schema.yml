@@ -8,10 +8,12 @@ models:
       Line grain. Backbone for all DPR ticket/tour/pass metrics.
     columns:
       - name: jnl_detail_id
-        description: Journal detail identifier (line grain).
+        description: "PK. Natural key (journal detail line grain)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null]
-      - name: key_date
-        description: Recognized reporting date from the recognize-basis logic.
+      - name: date_key
+        description: "FK to dim_date.date_key. Recognized reporting date."
         data_tests: [not_null]
       - name: ga_flag
         description: 1 = general admission, 0 = tour/other.
@@ -24,7 +26,8 @@ models:
       Enriched Gateway item journal lines (JnlDetails jnl_code_id 102-104).
       Feeds audio guide, service fee and ticketing donation metrics.
     columns:
-      - name: key_date
+      - name: date_key
+        description: "FK to dim_date.date_key."
         data_tests: [not_null]
 
   - name: int_dpr__tour_revenue
@@ -32,7 +35,10 @@ models:
       Guided (museum + memorial), virtual, field-trip and program tour
       quantities and revenue per day.
     columns:
-      - name: key_date
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null, unique]
       - name: mem_guided_tour_revenue
         description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
@@ -41,19 +47,28 @@ models:
   - name: int_dpr__fees_and_services
     description: Service fees, audio guide revenue, memorial+museum tour per day.
     columns:
-      - name: key_date
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null, unique]
 
   - name: int_dpr__retail
     description: CounterPoint retail gross profit, MUS AG, and retail donations per day.
     columns:
-      - name: key_date
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null, unique]
 
   - name: int_dpr__donations
     description: Gateway ticketing/box/exit donations per day.
     columns:
-      - name: key_date
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null, unique]
 
   - name: int_dpr__admissions
@@ -62,7 +77,10 @@ models:
       CityPASS/C3 pass revenue per day. Partial attendance (see model header
       scope note; Sensource + additional-revenue inputs not yet staged).
     columns:
-      - name: key_date
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null, unique]
 
   - name: int_dpr__attendance
@@ -73,7 +91,10 @@ models:
       the ga-ticket attendance proxy in int_dpr__admissions. See model header
       scope note (facility-name classification; Sensource blend not yet staged).
     columns:
-      - name: key_date
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null, unique]
       - name: mem_attendance
         description: Valid scans at memorial-classified facilities.
@@ -89,10 +110,12 @@ models:
       Feeds fct_daily_scan.
     columns:
       - name: usage_id
-        description: Scan event identifier (from stg_gateway__usage).
+        description: "PK. Natural key (scan event identifier)."
+        constraints:
+          - type: primary_key
         data_tests: [not_null]
-      - name: key_date
-        description: Scan date.
+      - name: date_key
+        description: "FK to dim_date.date_key. Scan date."
         data_tests: [not_null]
       - name: category
         description: Sales channel / market category string for segment mapping.

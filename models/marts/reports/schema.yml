@@ -63,7 +63,7 @@ models:
       MTD / YTD additive roll-ups plus non-additive ratios computed at this
       grain. Budget/variance columns gated on budget-source staging + ADR-005.
     columns:
-      - name: date_id
+      - name: date_key
         data_tests: [not_null, unique]
       - name: date_value
         data_tests: [not_null, unique]
