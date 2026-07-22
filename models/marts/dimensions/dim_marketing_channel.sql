@@ -4,7 +4,7 @@
   No RAW dependency; safe to build immediately.
 */
 
-{{ config(enabled=false,materialized='table') }}
+{{ config(materialized='table') }}
 
 select
     channel_id,

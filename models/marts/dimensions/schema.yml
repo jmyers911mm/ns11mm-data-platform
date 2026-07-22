@@ -32,45 +32,153 @@ models:
           - not_null
 
   - name: dim_customer
-    description: "Unified customer dimension using connected-component identity resolution across Gateway, CounterPoint, Shopify, and Salesforce."
+    description: "Customer dimension from Gateway ticketing. Derives customer type from CUSTNO prefix patterns (Web, CityPass, Viator, etc.)."
     columns:
-      - name: customer_id
-        description: "PK. Surrogate key (MD5 hash from identity resolution)."
+      - name: customer_key
+        description: "PK. Gateway CUSTOMERID."
         constraints:
           - type: primary_key
         data_tests:
           - unique
           - not_null
+      - name: gate_custno
+        description: "CUSTNO text code (e.g. WEB001, CIT058). Prefix encodes customer type."
+      - name: customer_type
+        description: "Derived from CUSTNO prefix: Web, CityPass, Viator, Go City, GetYourGuide, Tiqets, Group, Pre-Sale, Rides/Partner, Other."
+        data_tests:
+          - not_null
 
   - name: dim_gate
-    description: "Ticketing gate dimension from Gateway. STATUS: Awaiting RAW connection."
+    description: "Gate/access-point dimension combining ACPs with their parent facility from Gateway."
     columns:
-      - name: id
-        description: "PK. Natural key."
+      - name: gate_key
+        description: "PK. ACP unique ID."
         constraints:
           - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: acp_id
+        description: "Access control point ID (join key for usage/scan tables)."
+        data_tests:
+          - not_null
+      - name: facility_name
+        description: "Parent facility name (Memorial, Museum Entrance, Guided Tour, etc.)."
 
+  - name: dim_ticket_type
+    description: "Ticket/admission type dimension from Gateway items catalog. Classifies PLUs into Ticket, Pass, Tour, Event, Merchandise."
+    columns:
+      - name: ticket_type_key
+        description: "PK. Gateway ITEMID."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: plu
+        description: "PLU code — business key for ticket items. Join key to tickets and orders."
+        data_tests:
+          - unique
+          - not_null
+      - name: item_type
+        description: "Derived classification: Ticket, Pass, Tour, Event, Merchandise."
+        data_tests:
+          - not_null
+
+  - name: dim_product
+    description: "Retail product dimension from CounterPoint POS (museum store, carts, ecommerce)."
+    columns:
+      - name: product_key
+        description: "PK. CounterPoint item_no."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: item_description
+        description: "Short product description."
+      - name: price_tier
+        description: "Derived: Premium (>=50), Mid-Range (>=20), Value (>0), Unpriced."
+
+  - name: dim_access_code
+    description: "Access code dimension — maps the ~36 Gateway access codes to admission type categories."
+    columns:
+      - name: access_code_key
+        description: "PK. Access code value."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: admission_type
+        description: "Derived category: Museum General, Memorial, CityPass, Tour, Pass/Membership, Education, Audio Guide, Admin/Test, Other."
+        data_tests:
+          - not_null
+
+  - name: dim_event
+    description: "Event dimension from Gateway resource management — tours, timed-entry slots, programs, shows."
+    columns:
+      - name: event_key
+        description: "PK. Gateway EVENTID."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: event_name
+        description: "Event name."
+
+  - name: dim_store
+    description: "Retail store dimension mapping CounterPoint store IDs to facility names via seed_retail_store_facility."
+    columns:
+      - name: store_key
+        description: "PK. CounterPoint store_id."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: store_name
+        description: "Facility name (Museum Store, Memorial Carts, Ecommerce, Museum Cafe)."
+        data_tests:
+          - not_null
+
+  - name: dim_coa
+    description: "Chart of Accounts dimension from Gateway GL system for journal entry classification."
+    columns:
+      - name: coa_key
+        description: "PK. Gateway COA ID."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: account_name
+        description: "GL account name."
+      - name: account_kind
+        description: "S=Summary, D=Detail."
+
+  - name: dim_tour_product
+    description: "Tour product classification mapping PLU codes to DPR tour types for reporting segmentation."
+    columns:
+      - name: tour_product_key
+        description: "PK. PLU code."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: tour_type
+        description: "DPR line item category: mem_field_trip, mus_field_trip, revealed_tour, ask_educator, youth_fam_tour, early_access_tour, ea_mem_mus_tour, architecture_tour."
+        data_tests:
+          - not_null
+
+  # ─── Still awaiting external source connections ─────────────────────────────
   - name: dim_campaign
     description: "Campaign dimension from Salesforce. STATUS: Awaiting RAW connection."
     columns:
       - name: id
         description: "PK. Natural key (Salesforce campaign ID)."
-        constraints:
-          - type: primary_key
-
-  - name: dim_ticket_type
-    description: "Ticket type dimension from Gateway. STATUS: Awaiting RAW connection."
-    columns:
-      - name: id
-        description: "PK. Natural key."
-        constraints:
-          - type: primary_key
-
-  - name: dim_product
-    description: "Retail product dimension from CounterPoint/Shopify. STATUS: Awaiting RAW connection."
-    columns:
-      - name: id
-        description: "PK. Natural key."
         constraints:
           - type: primary_key
 
