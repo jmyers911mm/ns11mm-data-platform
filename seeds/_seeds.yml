@@ -49,7 +49,7 @@ seeds:
         data_tests: [not_null]
 
   - name: seed_facility_area
-    description: "Selling-area labels and grouping for retail facility keys (1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships)."
+    description: "Selling-area labels, grouping, and stable facility_group name for retail facility keys (1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships). facility_group is the single source of truth for the key_facility -> name map consumed by int_counterpoint__retail_lines and dim_facility."
     config:
       column_types:
         key_facility: integer
@@ -58,6 +58,9 @@ seeds:
       - name: key_facility
         data_tests: [not_null, unique]
       - name: area_name
+        data_tests: [not_null]
+      - name: facility_group
+        description: "Stable snake_case facility identity (museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other). Downstream references this name, not the raw key_facility number."
         data_tests: [not_null]
 
   - name: tmp_seed_sensource__visitors
@@ -131,3 +134,76 @@ seeds:
           - not_null
           - accepted_values:
               values: [mus_audio_guide, mem_mus_tour]
+
+  # ─── Config-as-data lists (2026-07-23 cleanup) ─────────────────────────────
+  - name: seed_retail_store_scope
+    description: >
+      CounterPoint store_ids in scope for the retail-lines silver model (legacy
+      t_fact_retail store filter). Edit to add/remove a store without touching SQL.
+    config:
+      column_types:
+        store_id: varchar
+    columns:
+      - name: store_id
+        description: CounterPoint store id in scope.
+        data_tests: [not_null, unique]
+
+  - name: seed_retail_excluded_item
+    description: "CounterPoint item_no values dropped from retail lines (legacy t_fact_retail hygiene)."
+    config:
+      column_types:
+        item_no: varchar
+    columns:
+      - name: item_no
+        description: CounterPoint item number to exclude.
+        data_tests: [not_null, unique]
+
+  - name: seed_retail_zero_price_item
+    description: "CounterPoint item_no values whose sale price is zero-rated in retail lines (legacy t_fact_retail)."
+    config:
+      column_types:
+        item_no: varchar
+    columns:
+      - name: item_no
+        description: CounterPoint item number to zero-rate.
+        data_tests: [not_null, unique]
+
+  - name: seed_retail_donation_item
+    description: >
+      CounterPoint donation SKUs mapped to their DPR donation line. Replaces the
+      inline item_no literals in int_dpr__retail; edit here to re-point a donation
+      product. donation_line drives cart_ask / mus_exit / mask / plaza_box.
+    config:
+      column_types:
+        item_no: varchar
+        donation_line: varchar
+    columns:
+      - name: item_no
+        description: CounterPoint item number for the donation product.
+        data_tests: [not_null, unique]
+      - name: donation_line
+        description: DPR donation line this SKU rolls up to.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [cart_ask, mus_exit, mask, plaza_box]
+
+  - name: seed_gateway_excluded_plu
+    description: "Gateway PLUs always dropped from the ticket journal (placeholder/external-event products)."
+    config:
+      column_types:
+        plu: varchar
+    columns:
+      - name: plu
+        description: Galaxy product PLU to exclude.
+        data_tests: [not_null, unique]
+
+  - name: seed_gateway_excluded_customer
+    description: "Gateway itm_default_customer_id values excluded from the ticket journal (internal/default customers)."
+    config:
+      column_types:
+        customer_id: integer
+    columns:
+      - name: customer_id
+        description: Gateway default customer id to exclude.
+        data_tests: [not_null, unique]

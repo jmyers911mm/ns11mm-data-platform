@@ -15,6 +15,8 @@
 -- compile and the join seam exists today; it populates once those feeds land.
 -- Base tables to seed: sensordata (ServerManager), fact_shopify_orders / Shopify.
 
+{% set ecom_key_facility = 1234 %}   {# Ecommerce facility (see seed_facility_area) #}
+
 with sensource as (
     -- Real Sensource feed: entries per facility per day = the visitor count.
     select
@@ -26,10 +28,10 @@ with sensource as (
 ),
 
 shopify as (
-    -- Ecom orders map to the Ecommerce facility (1234)
+    -- Ecom orders map to the Ecommerce facility.
     select
         cast(business_date as date)                 as date_key,
-        1234                                        as key_facility,
+        {{ ecom_key_facility }}                     as key_facility,
         count(distinct order_id)                    as ecom_orders
     from {{ ref('stg_shopify__orders') }}
     group by 1

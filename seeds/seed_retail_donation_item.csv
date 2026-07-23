@@ -1,0 +1,5 @@
+item_no,donation_line,notes
+7-999,cart_ask,Retail cart donation ask (legacy dim_item_descr 483; Memorial Carts stores 11-14)
+101375,mus_exit,Museum exit donation box (legacy dim_item_descr 886; Museum Store)
+200704,mask,Mask donations (legacy dim_item_descr 4618; dormant since 2021)
+101165,plaza_box,Plaza donation box (legacy dim_item_descr 3375)

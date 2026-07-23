@@ -10,6 +10,7 @@
 --   t_fact_service_fees_new, t_fact_museum_ticketing_donations_issued.
 --
 -- ADR-001 / ADR-004 as per int_gateway__ticket_journal_lines.
+-- Attribute (matrix_code) lookup comes from the shared int_gateway__item_attributes.
 
 -- Materialized as a TABLE, not a view: 4 joins consumed by 2 downstream models
 -- (fees_and_services, donations) each run — a view re-runs the joins 2x per
@@ -34,8 +35,8 @@ items as (
     select * from {{ ref('stg_gateway__items') }}
 ),
 
-vattribute as (
-    select * from {{ ref('stg_gateway__vattribute') }}
+attributes as (
+    select * from {{ ref('int_gateway__item_attributes') }}
 ),
 
 joined as (
@@ -76,7 +77,7 @@ joined as (
     inner join jnl_items    ji  on jd.aux_table_id = ji.jnl_item_id
     inner join jnl_headers  jh  on jd.jnl_tran_id  = jh.jnl_tran_id
     inner join items        it  on ji.plu          = it.plu
-    left join vattribute    va  on it.attribute_value_group_id = va.avg_id
+    left join attributes    va  on it.attribute_value_group_id = va.avg_id
 )
 
 select * from joined

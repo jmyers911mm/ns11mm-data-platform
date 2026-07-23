@@ -1,10 +1,10 @@
-key_facility,area_name,area_group,is_selling
-1003,Museum Store,Retail,TRUE
-1020,Memorial Carts,Retail,TRUE
-1030,Atrium,Visitors,FALSE
-1234,Ecommerce,Ecom,TRUE
-4007,Museum Cafe,Cafe,TRUE
-1040,Memorial Audio Guide,Audio,TRUE
-1060,Museum Audio Guide,Audio,TRUE
-1070,Museum w Tour Guides,Retail,TRUE
-1080,Museum Memberships,Membership,TRUE
+key_facility,area_name,area_group,is_selling,facility_group
+1003,Museum Store,Retail,TRUE,museum_store
+1020,Memorial Carts,Retail,TRUE,memorial_carts
+1030,Atrium,Visitors,FALSE,other
+1234,Ecommerce,Ecom,TRUE,ecommerce
+4007,Museum Cafe,Cafe,TRUE,museum_cafe
+1040,Memorial Audio Guide,Audio,TRUE,mag_cart
+1060,Museum Audio Guide,Audio,TRUE,mus_ag
+1070,Museum w Tour Guides,Retail,TRUE,other
+1080,Museum Memberships,Membership,TRUE,other

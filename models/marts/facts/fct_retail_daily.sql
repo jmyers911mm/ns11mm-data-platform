@@ -37,18 +37,13 @@ visitors as (
     from {{ ref('int_retail__visitors') }}
 ),
 
-area as (
-    select key_facility, area_name, area_group, is_selling
-    from {{ ref('seed_facility_area') }}
-),
-
 final as (
     select
         dd.date_key,
         p.date_key                                          as date_value,
         p.key_facility,
-        coalesce(a.area_name, 'Unmapped ' || p.key_facility) as area_name,
-        a.area_group,
+        coalesce(f.area_name, 'Unmapped ' || p.key_facility) as area_name,
+        f.area_group,
         dd.is_commemoration_day,
 
         -- Facility-level additive measures
@@ -64,7 +59,7 @@ final as (
     inner join {{ ref('dim_date') }} dd on p.date_key = dd.date_key
     left join customers c on p.date_key = c.date_key and p.key_facility = c.key_facility
     left join visitors  v on p.date_key = v.date_key and p.key_facility = v.key_facility
-    left join area a on p.key_facility = a.key_facility
+    left join {{ ref('dim_facility') }} f on p.key_facility = f.key_facility
 )
 
 select * from final

@@ -11,6 +11,10 @@
 -- only foot traffic the carts actually convert. Capture rate, profit-per-cap
 -- and sales-per-cap all divide by that adjusted denominator.
 --
+-- Facilities are referenced by their conformed area_name (carried on
+-- fct_retail_daily from dim_facility) rather than raw key_facility numbers:
+-- 'Memorial Carts' (was 1020) and 'Atrium' (was 1030, museum-visitor proxy).
+--
 -- NOTE: mem/mus visitor counts come from the Sensource stub (int_retail__
 -- visitors) and are 0 until sensordata lands -- so the per-cap/capture ratios
 -- are NULL by design today. The additive sales/profit/customers are live now.
@@ -21,16 +25,16 @@ with carts as (
         date_key, date_value, is_commemoration_day,
         net_sales, net_profit, transactions
     from {{ ref('fct_retail_daily') }}
-    where key_facility = 1020          -- Memorial Carts
+    where area_name = 'Memorial Carts'
 ),
 
 visitors as (
-    -- Facility-day visitor counts: 1030 Atrium proxies museum visitors;
+    -- Facility-day visitor counts: Atrium proxies museum visitors;
     -- memorial visitors are the plaza count (stub until Sensource).
     select
         date_value,
-        sum(case when key_facility = 1020 then visitor_count else 0 end) as mem_visitors,
-        sum(case when key_facility = 1030 then visitor_count else 0 end) as mus_visitors
+        sum(case when area_name = 'Memorial Carts' then visitor_count else 0 end) as mem_visitors,
+        sum(case when area_name = 'Atrium'         then visitor_count else 0 end) as mus_visitors
     from {{ ref('fct_retail_daily') }}
     group by 1
 ),

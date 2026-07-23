@@ -25,10 +25,16 @@
 -- Downstream models (e.g. int_dpr__retail) filter on these instead of
 -- repeating literals like `key_facility = 1003` and `summary_category = 6`.
 --
+-- Config-as-data (2026-07-23 cleanup):
+--   * facility_group name comes from seed_facility_area (was an inline CASE).
+--   * store scope, zero-price SKUs, and dropped items are seed-driven
+--     (seed_retail_store_scope / seed_retail_zero_price_item /
+--      seed_retail_excluded_item) -- edit the seed, not this SQL.
+--
 -- ADR-001 / ADR-004 apply. lin_typ 'S' = sale, 'R' = return.
 
--- Materialized as a TABLE, not a view: 3 joins (item master + 2 seeds) consumed
--- by 3 downstream models (int_dpr__retail, int_retail__performance,
+-- Materialized as a TABLE, not a view: joins (item master + seeds) consumed by
+-- 3 downstream models (int_dpr__retail, int_retail__performance,
 -- int_retail__customers) each run — a view re-runs the joins 3x per build.
 -- transient + copy_grants inherited from the intermediate defaults.
 {{ config(materialized='table') }}
@@ -54,6 +60,18 @@ item_facility as (
 store_facility as (
     select store_id, key_facility
     from {{ ref('seed_retail_store_facility') }}
+),
+
+-- key_facility -> stable facility_group name (was an inline CASE)
+facility_area as (
+    select key_facility, facility_group
+    from {{ ref('seed_facility_area') }}
+),
+
+-- Zero-rated SKUs: sale price contributes 0 (legacy t_fact_retail)
+zero_price_item as (
+    select item_no
+    from {{ ref('seed_retail_zero_price_item') }}
 ),
 
 mapped as (
@@ -89,43 +107,37 @@ mapped as (
         case when l.line_type = 'S' then l.quantity_sold else 0 end         as sale_quantity,
         case when l.line_type = 'R' then l.quantity_returned else 0 end     as return_quantity,
         case when l.line_type = 'S'
-             then case when l.item_no in ('200933','201229') then 0 else l.ext_price end
+             then case when zp.item_no is not null then 0 else l.ext_price end
              else 0 end                                                     as sale_amount,
         case when l.line_type = 'R' then l.ext_price else 0 end             as return_amount,
         case when l.line_type = 'S' then l.ext_cost else 0 end              as sale_cost
 
     from lines l
-    left join item_master    im  on l.item_no  = im.item_no
-    left join item_facility  itf on cast(l.item_no as varchar)  = cast(itf.item_no as varchar)
-    left join store_facility stf on cast(l.store_id as varchar) = cast(stf.store_id as varchar)
+    left join item_master     im  on l.item_no  = im.item_no
+    left join item_facility   itf on cast(l.item_no as varchar)  = cast(itf.item_no as varchar)
+    left join store_facility  stf on cast(l.store_id as varchar) = cast(stf.store_id as varchar)
+    left join zero_price_item zp  on cast(l.item_no as varchar)  = cast(zp.item_no as varchar)
 
-    -- Legacy t_fact_retail store scope + hygiene filters
+    -- Legacy t_fact_retail store scope + hygiene filters (scope/exclusions seed-driven).
     -- Store 1 = Museum Cafe (facility 4007); added 2026-07-08 to fix
-    -- cafe1_all_profit / cafe1_donations always reading zero (store was
-    -- outside scope and 4007 unmapped). Confirm store id with Gennady.
-    where l.store_id in ('1','3','8','9','10','11','12','13','14')
+    -- cafe1_all_profit / cafe1_donations always reading zero.
+    where l.store_id in (select store_id from {{ ref('seed_retail_store_scope') }})
       and coalesce(l.description, '') not ilike '%shipping%'
-      and l.item_no <> '201205'
+      and l.item_no not in (select item_no from {{ ref('seed_retail_excluded_item') }})
 )
 
 select
     m.*,
 
-    -- Facility group: single source of truth for the facility-number ->
-    -- name mapping. Downstream models reference the name, not the literal,
-    -- so a facility renumber only touches this CASE.
-    case m.key_facility
-        when 1003 then 'museum_store'
-        when 1020 then 'memorial_carts'
-        when 4007 then 'museum_cafe'
-        when 1040 then 'mag_cart'
-        when 1060 then 'mus_ag'
-        when 1234 then 'ecommerce'
-        else 'other'
-    end                                                                     as facility_group,
+    -- Facility group: single source of truth is seed_facility_area. Downstream
+    -- models reference the name, not the literal, so a facility renumber only
+    -- touches the seed. Facilities absent from the seed fall back to 'other'
+    -- (matches the old CASE else branch).
+    coalesce(fa.facility_group, 'other')                                    as facility_group,
 
     -- Donation flag: derived once here (legacy summary_category 6) so
     -- downstream marts filter on `is_donation` rather than `= 6`.
     (m.summary_category = 6)                                                as is_donation
 
 from mapped m
+left join facility_area fa on m.key_facility = fa.key_facility

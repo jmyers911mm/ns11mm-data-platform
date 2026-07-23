@@ -9,7 +9,7 @@
 -- same-day CounterPoint feed (stg_counterpoint__todays_retail) instead of the
 -- stub. store_id is mapped to key_facility via seed_retail_store_facility;
 -- transactions = count(distinct doc_id); units = quantity_sold. ADR-004:
--- additive only.
+-- additive only. Area label comes from the conformed dim_facility.
 
 with today as (
     select
@@ -52,10 +52,6 @@ hourly as (
         sum(sales) - sum(cost)                      as profit
     from mapped
     group by 1, 2, 3
-),
-
-area as (
-    select key_facility, area_name from {{ ref('seed_facility_area') }}
 )
 
 select
@@ -63,7 +59,7 @@ select
     h.date_key                          as date_value,
     h.hour_of_day,
     h.key_facility,
-    coalesce(a.area_name, 'Unmapped')   as area_name,
+    coalesce(f.area_name, 'Unmapped')   as area_name,
     h.transactions,
     h.units,
     h.sales,
@@ -71,4 +67,4 @@ select
     h.profit
 from hourly h
 inner join {{ ref('dim_date') }} dd on h.date_key = dd.date_key
-left join area a on h.key_facility = a.key_facility
+left join {{ ref('dim_facility') }} f on h.key_facility = f.key_facility

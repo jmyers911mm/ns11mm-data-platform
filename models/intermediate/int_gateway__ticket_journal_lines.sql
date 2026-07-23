@@ -17,6 +17,9 @@
 --
 -- ADR-001: reads only from stg_ (RAW is upstream and immutable).
 -- ADR-004: all business logic lives here, not in Power BI.
+-- Attribute (matrix_code) lookup comes from the shared int_gateway__item_attributes.
+-- Placeholder-PLU and excluded-customer lists are seed-driven
+-- (seed_gateway_excluded_plu / seed_gateway_excluded_customer).
 
 -- Materialized as a TABLE, not a view: this model runs 7 joins and is consumed
 -- by 3 downstream models (admissions, tour_revenue, fees) each run — a view
@@ -38,8 +41,8 @@ items as (
     select * from {{ ref('stg_gateway__items') }}
 ),
 
-vattribute as (
-    select * from {{ ref('stg_gateway__vattribute') }}
+attributes as (
+    select * from {{ ref('int_gateway__item_attributes') }}
 ),
 
 coa as (
@@ -95,7 +98,7 @@ joined as (
     from jnl_details            jd
     inner join jnl_tickets      jt   on jd.aux_table_id = jt.jnl_detail_id
     inner join items            it   on jt.plu          = it.plu
-    inner join vattribute       va   on it.attribute_value_group_id = va.avg_id
+    inner join attributes       va   on it.attribute_value_group_id = va.avg_id
     inner join coa              c    on jd.account_id   = c.account_id
     left join disbursement      dd   on jt.disbursement_id = dd.disbursement_id
                                     and c.gl_code       = 101
@@ -104,11 +107,13 @@ joined as (
                                     and c.subcategory   = dd.subcategory
     left join events            rme  on rme.event_id    = jt.event_no
 
-    -- Exclude the external-event placeholder PLU that legacy queries always drop
-    where it.plu <> 'EXTEVENTAD001'
-      and (
-             try_cast(va.itm_default_customer_id as number) not in (20056, 23361)
-          or va.itm_default_customer_id is null
+    -- Exclusions (seed-driven). Placeholder/external-event PLU always dropped;
+    -- internal/default customers excluded (NULL customer is kept, as before).
+    where it.plu not in (select plu from {{ ref('seed_gateway_excluded_plu') }})
+      and not exists (
+            select 1
+            from {{ ref('seed_gateway_excluded_customer') }} ec
+            where ec.customer_id = try_cast(va.itm_default_customer_id as number)
       )
 )
 

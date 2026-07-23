@@ -1,5 +1,4 @@
 -- Fix visual_id type mismatch join between usage (TEXT) and jnltickets (FLOAT)
--- Co-authored with CoCo
 {{ config(materialized='view') }}
 
 -- Silver intermediate: gate scan lines with ticket market segment
@@ -22,6 +21,8 @@
 -- sales_program_id) and let the segment seed map them. If the legacy category
 -- came from a Galaxy market/reseller table not yet seeded, that table becomes
 -- the mapping source -- flagged for confirmation.
+-- Attribute (matrix_code / channel) lookup comes from the shared
+-- int_gateway__item_attributes.
 
 with scans as (
     select
@@ -47,7 +48,7 @@ tickets as (
 
 attr as (
     select avg_id, itm_matrix_code, acs_dynamic_channel
-    from {{ ref('stg_gateway__vattribute') }}
+    from {{ ref('int_gateway__item_attributes') }}
 ),
 
 joined as (

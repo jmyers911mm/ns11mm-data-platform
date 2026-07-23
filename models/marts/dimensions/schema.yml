@@ -143,6 +143,36 @@ models:
         data_tests:
           - not_null
 
+  - name: dim_facility
+    description: "Facility/selling-area dimension from seed_facility_area. Single home for the key_facility -> area_name / area_group / is_selling / facility_group mapping consumed by fct_retail_daily, fct_retail_performance, fct_today_sales_hourly, dim_store, and (for facility_group) int_counterpoint__retail_lines."
+    columns:
+      - name: facility_key
+        description: "PK. 911dw key_facility surrogate key."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: key_facility
+        description: "Selling-area key. Join key from the retail facts and dim_store."
+        data_tests:
+          - unique
+          - not_null
+      - name: area_name
+        description: "Human-readable area name (Museum Store, Memorial Carts, Atrium, Ecommerce, Museum Cafe, etc.)."
+        data_tests:
+          - not_null
+      - name: area_group
+        description: "Area rollup used as store_type / reporting group: Retail, Visitors, Ecom, Cafe, Audio, Membership."
+        data_tests:
+          - not_null
+      - name: facility_group
+        description: "Stable snake_case facility identity (museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other) referenced by the DPR retail model."
+        data_tests:
+          - not_null
+      - name: is_selling
+        description: "True if the area transacts sales (vs. traffic-only areas like the Atrium)."
+
   - name: dim_coa
     description: "Chart of Accounts dimension from Gateway GL system for journal entry classification."
     columns:
