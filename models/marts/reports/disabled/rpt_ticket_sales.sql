@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_ticket_sales
   Sources: fct_ticket_sales + dim_date + dim_ticket_type + dim_payment_method + dim_gate + dim_customer
@@ -11,7 +13,7 @@ select
     ts.transaction_date,
     dd_txn.day_of_week_name                                as purchase_day_name,
     dd_txn.month_name                                      as purchase_month,
-    dd_txn.fiscal_year                                     as purchase_fiscal_year,
+    dd_txn.year_number                                      as purchase_year,
     dd_txn.is_weekend                                      as purchased_on_weekend,
     ts.scan_date,
     dd_scan.day_of_week_name                               as scan_day_name,

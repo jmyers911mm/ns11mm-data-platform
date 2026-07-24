@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_visitor_traffic
   Sources: fct_visitor_traffic + dim_date + dim_gate + fct_ticket_sales
@@ -11,7 +13,7 @@ select
     vt.scan_hour,
     dd.day_of_week_name                                    as day_name,
     dd.month_name,
-    dd.fiscal_year,
+    dd.year_number as year,
     dd.is_weekend,
     dd.is_commemoration_day,
     vt.gate_id,

@@ -1,3 +1,5 @@
+-- Rename fiscal_year/fiscal_quarter to year/quarter for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_daily_operations
   Sources: fct_daily_operations + dim_date
@@ -11,8 +13,8 @@ select
     dd.day_of_week_name                                     as day_name,
     dd.month_name,
     dd.year_number                                          as year_num,
-    dd.fiscal_year,
-    dd.quarter_of_year                                      as fiscal_quarter,
+    dd.year_number                                          as year,
+    dd.quarter_of_year                                      as quarter,
     dd.is_weekend,
     dd.is_commemoration_day,
     ops.total_visitors,

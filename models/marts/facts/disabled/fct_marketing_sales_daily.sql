@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   fct_marketing_sales_daily
   Sources: fct_marketing_channel_summary + fct_ticket_sales + fct_retail_line_items
@@ -31,7 +33,7 @@ retail_sales as (
 )
 
 select
-    m.report_date, dd.fiscal_year, dd.month_name, dd.day_of_week_name as day_name, dd.is_weekend,
+    m.report_date, dd.year_number as year, dd.month_name, dd.day_of_week_name as day_name, dd.is_weekend,
     m.channel, m.is_paid, m.impressions, m.clicks, m.spend, m.conversions,
     coalesce(ts.ticket_transactions, 0) as ticket_transactions,
     coalesce(ts.tickets_sold, 0) as tickets_sold,

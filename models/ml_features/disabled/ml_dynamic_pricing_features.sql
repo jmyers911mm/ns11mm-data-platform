@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   ml_dynamic_pricing_features
   Sources: fct_ticket_availability + fct_ticket_demand_benchmarks
@@ -9,7 +11,7 @@
 with availability as (
     select entry_date, entry_window_start, ticket_type, ticket_capacity,
            tickets_reserved, tickets_available, utilization_pct, demand_level,
-           day_name, day_of_week_num, is_weekend, fiscal_year
+           day_name, day_of_week_num, is_weekend, year
     from {{ ref('fct_ticket_availability') }}
 ),
 

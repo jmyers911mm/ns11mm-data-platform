@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   fct_campaign_attribution
   Sources: fct_ad_campaign_daily + bridge_session_customer + fct_ticket_sales + fct_retail_line_items
@@ -41,7 +43,7 @@ attributed_retail as (
 
 select
     coalesce(t.transaction_date, r.transaction_date) as report_date,
-    dd.fiscal_year, dd.month_name, dd.is_weekend,
+    dd.year_number as year, dd.month_name, dd.is_weekend,
     coalesce(t.channel_grouping, r.channel_grouping) as channel_grouping,
     coalesce(t.source, r.source) as source,
     coalesce(t.medium, r.medium) as medium,

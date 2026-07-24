@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 -- Marts fact: ticket availability by entry date and ticket type
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (capacity)
@@ -31,7 +33,7 @@ with inventory as (
 ),
 
 date_attrs as (
-    select date_key, day_of_week_name, day_of_week, is_weekend, month_name, fiscal_year
+    select date_key, day_of_week_name, day_of_week, is_weekend, month_name, year_number as year
     from {{ ref('dim_date') }}
 )
 
@@ -42,7 +44,7 @@ select
     d.day_of_week                                           as day_of_week_num,
     d.is_weekend,
     d.month_name,
-    d.fiscal_year,
+    d.year,
     i.entry_window_start,
     i.entry_window_end,
     i.ticket_type_id                                        as ticket_type,

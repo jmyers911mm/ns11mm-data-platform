@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   fct_marketing_channel_summary
   Sources: int_google_ads + int_meta_ads + int_sf_marketing_cloud + fct_website_traffic
@@ -50,7 +52,7 @@ all_channels as (
 
 select
     ac.report_date,
-    dd.fiscal_year,
+    dd.year_number as year,
     dd.month_name,
     dd.is_weekend,
     ac.channel,

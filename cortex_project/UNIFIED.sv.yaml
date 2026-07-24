@@ -24,15 +24,15 @@ tables:
         description: Calendar date the numbers are recognized on.
         expr: DATE_DAY
         data_type: DATE
-      - name: fiscal_year
-        synonyms: ["fiscal year", "FY"]
-        description: Fiscal year (starts in October; Oct-Dec roll into the next FY number).
-        expr: FISCAL_YEAR
+      - name: year
+        synonyms: ["year", "FY", "fiscal year"]
+        description: Calendar year (from dim_date year_number).
+        expr: YEAR_NUMBER
         data_type: NUMBER
-      - name: fiscal_month
-        synonyms: ["fiscal month", "fiscal period"]
-        description: Fiscal month number (October = 1 ... September = 12).
-        expr: FISCAL_MONTH
+      - name: month
+        synonyms: ["month", "fiscal month", "fiscal period"]
+        description: Month of year (1-12).
+        expr: MONTH_OF_YEAR
         data_type: NUMBER
       - name: calendar_year
         synonyms: ["year", "calendar year"]
@@ -359,9 +359,8 @@ module_custom_instructions:
     from more than one fact, group only by date.* dimensions; each metric is
     aggregated from its own fact and aligned on date, so there is no double
     counting. Round currency to 2 decimals; round attendance, ticket, tour,
-    unit, transaction and scan counts to whole numbers. Use fiscal_year /
-    fiscal_month when the question says "fiscal"; otherwise use the calendar
-    dimensions. If no period is given, default to the most recent complete day.
+    unit, transaction and scan counts to whole numbers. Use year /
+    month dimensions for all period questions. If no period is given, default to the most recent complete day.
   question_categorization: |-
     Use this model for questions that span ticketing, retail and/or scanning
     together, or when the domain is ambiguous; the per-domain models

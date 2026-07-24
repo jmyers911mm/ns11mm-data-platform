@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 {{ config(materialized='view') }}
 
 -- Marts report: Memorial Museum Daily Tracker - YTD
@@ -12,7 +14,7 @@
 -- value, the fiscal-YTD cumulative, the YTD budget, and the variance.
 --
 -- YTD is computed on demand with a windowed cumulative sum partitioned by
--- fiscal_year (never materialized per period), mirroring the DPR rpt_ pattern.
+-- year (never materialized per period), mirroring the DPR rpt_ pattern.
 -- Budget columns are joined from the retail/DPR budget stub and are NULL until
 -- the budget source is staged (ADR-005), so every *_variance is currently the
 -- actual (budget treated as 0). civic_programs is a placeholder measure until
@@ -23,7 +25,7 @@ with fct as (
     select
         f.date_key                                  as date_key,
         f.date_value,
-        dd.fiscal_year,
+        dd.year_number as year,
         dd.is_commemoration_day,
 
         -- Attendance
@@ -63,19 +65,19 @@ with fct as (
 with_ytd as (
     select
         *,
-        -- Fiscal-YTD cumulative on the headline tracked measures
-        sum(mem_attendance)          over (partition by fiscal_year order by date_value) as mem_attendance_ytd,
-        sum(mus_attendance)          over (partition by fiscal_year order by date_value) as mus_attendance_ytd,
-        sum(ticket_revenue)          over (partition by fiscal_year order by date_value) as ticket_revenue_ytd,
-        sum(pass_revenue)            over (partition by fiscal_year order by date_value) as pass_revenue_ytd,
-        sum(mus_store_gross_profit)  over (partition by fiscal_year order by date_value) as mus_store_gross_profit_ytd,
-        sum(retail_carts_gross_profit) over (partition by fiscal_year order by date_value) as retail_carts_gross_profit_ytd,
-        sum(cafe1_all_profit)        over (partition by fiscal_year order by date_value) as cafe1_profit_ytd,
-        sum(service_fees)            over (partition by fiscal_year order by date_value) as service_fees_ytd,
-        sum(audio_tour_headset)      over (partition by fiscal_year order by date_value) as audio_tour_headset_ytd,
+        -- YTD cumulative on the headline tracked measures
+        sum(mem_attendance)          over (partition by year order by date_value) as mem_attendance_ytd,
+        sum(mus_attendance)          over (partition by year order by date_value) as mus_attendance_ytd,
+        sum(ticket_revenue)          over (partition by year order by date_value) as ticket_revenue_ytd,
+        sum(pass_revenue)            over (partition by year order by date_value) as pass_revenue_ytd,
+        sum(mus_store_gross_profit)  over (partition by year order by date_value) as mus_store_gross_profit_ytd,
+        sum(retail_carts_gross_profit) over (partition by year order by date_value) as retail_carts_gross_profit_ytd,
+        sum(cafe1_all_profit)        over (partition by year order by date_value) as cafe1_profit_ytd,
+        sum(service_fees)            over (partition by year order by date_value) as service_fees_ytd,
+        sum(audio_tour_headset)      over (partition by year order by date_value) as audio_tour_headset_ytd,
         sum(ticketing_donations + coatcheck_don + mus_exit_donations + cart_donation_ask
             + mus_store_donations + donation_box + mask_donations)
-            over (partition by fiscal_year order by date_value)                          as total_donations_ytd
+            over (partition by year order by date_value)                          as total_donations_ytd
     from fct
 )
 

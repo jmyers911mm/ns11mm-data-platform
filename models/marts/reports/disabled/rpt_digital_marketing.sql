@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_digital_marketing
   Sources: fct_digital_ad_performance + fct_website_traffic + dim_date
@@ -10,7 +12,7 @@ select
     a.report_date,
     dd.day_of_week_name         as day_name,
     dd.is_weekend,
-    dd.fiscal_year,
+    dd.year_number as year,
     a.ad_platform,
     a.campaign_id,
     a.campaign_name,

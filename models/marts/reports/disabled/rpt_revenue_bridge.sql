@@ -1,3 +1,5 @@
+-- Rename fiscal_year/fiscal_quarter to year/quarter for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_revenue_bridge
   Sources: fct_daily_operations + dim_date
@@ -11,8 +13,8 @@ with daily_revenue as (
         ops.visit_date,
         dd.year_number          as year_num,
         dd.week_of_year,
-        dd.fiscal_year,
-        dd.quarter_of_year      as fiscal_quarter,
+        dd.year_number          as year,
+        dd.quarter_of_year      as quarter,
         dd.is_weekend,
         dd.is_commemoration_day,
         ops.ticket_revenue,
@@ -30,7 +32,7 @@ with daily_revenue as (
 
 weekly_agg as (
     select
-        year_num, week_of_year, fiscal_year, fiscal_quarter,
+        year_num, week_of_year, year, quarter,
         min(visit_date)         as week_start_date,
         max(visit_date)         as week_end_date,
         count(distinct visit_date) as operating_days,
@@ -46,7 +48,7 @@ weekly_agg as (
         sum(total_visitors)     as total_visitors
     from daily_revenue
     where is_commemoration_day = false   -- exclude Sep 11 from revenue bridge
-    group by year_num, week_of_year, fiscal_year, fiscal_quarter
+    group by year_num, week_of_year, year, quarter
 )
 
 select

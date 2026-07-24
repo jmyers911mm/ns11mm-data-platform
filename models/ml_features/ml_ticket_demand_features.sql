@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 -- ML feature table: ticket demand features for Snowflake ML FORECAST
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (ML)
@@ -28,7 +30,7 @@ with daily_demand as (
 
 with_features as (
     select d.*, dd.day_of_week as day_of_week_num, dd.day_of_week_name as day_name,
-           dd.is_weekend, dd.month_of_year as month_num, dd.fiscal_year,
+           dd.is_weekend, dd.month_of_year as month_num, dd.year_number as year,
            lag(d.daily_reserved, 1) over (partition by d.ticket_type order by d.entry_date) as reserved_lag_1d,
            lag(d.daily_reserved, 7) over (partition by d.ticket_type order by d.entry_date) as reserved_lag_7d,
            avg(d.daily_reserved) over (partition by d.ticket_type order by d.entry_date rows between 6 preceding and current row) as reserved_7d_avg,
@@ -51,7 +53,7 @@ select
     day_name,
     is_weekend,
     month_num,
-    fiscal_year,
+    year,
     reserved_lag_1d,
     reserved_lag_7d,
     reserved_7d_avg,

@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_retail_performance
   Sources: fct_retail_line_items + dim_date + dim_product + dim_payment_method + dim_customer
@@ -12,7 +14,7 @@ select
     r.retail_channel,
     dd.day_of_week_name                                    as day_name,
     dd.month_name,
-    dd.fiscal_year,
+    dd.year_number as year,
     dd.is_weekend,
     r.item_sku,
     r.item_name,

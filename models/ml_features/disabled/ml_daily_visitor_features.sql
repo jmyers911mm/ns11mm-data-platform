@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   ml_daily_visitor_features
   Sources: fct_digital_ad_performance + fct_website_traffic + fct_daily_operations + fct_visitor_traffic + dim_date
@@ -42,7 +44,7 @@ peak_hour as (
 
 select
     d.visit_date, dd.day_of_week_name as day_of_week, dd.is_weekend, dd.is_commemoration_day,
-    dd.month_of_year as month_num, dd.fiscal_year,
+     dd.month_of_year as month_num, dd.year_number as year,
     d.daily_visitors, d.valid_scans, d.rejected_scans, d.gates_active,
     d.ticket_transactions, d.ticket_revenue, d.avg_ticket_value,
     d.retail_transactions, d.retail_revenue, d.avg_basket_value, d.total_revenue,

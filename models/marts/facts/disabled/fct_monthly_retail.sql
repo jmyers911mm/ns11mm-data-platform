@@ -1,3 +1,5 @@
+-- Rename fiscal_year/fiscal_quarter to year/quarter for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   fct_monthly_retail
   Sources: fct_retail_line_items + dim_date
@@ -9,7 +11,7 @@
 
 with daily as (
     select
-        r.transaction_date, dd.fiscal_year, dd.quarter_of_year as fiscal_quarter,
+        r.transaction_date, dd.year_number as year, dd.quarter_of_year as quarter,
         dd.year_number as year_num, dd.month_of_year as month_num, dd.month_name,
         r.item_category,
         count(distinct r.transaction_id) as transaction_count,
@@ -20,13 +22,13 @@ with daily as (
         count(case when r.is_discounted then 1 end) as discounted_transactions
     from {{ ref('fct_retail_line_items') }} r
     left join {{ ref('dim_date') }} dd on r.transaction_date = dd.date_id
-    group by r.transaction_date, dd.fiscal_year, dd.quarter_of_year, dd.year_number,
+    group by r.transaction_date, dd.year_number, dd.quarter_of_year, dd.year_number,
              dd.month_of_year, dd.month_name, r.item_category
 )
 
 select
     year_num || '-' || lpad(month_num, 2, '0') || '-' || item_category as month_category,
-    fiscal_year, fiscal_quarter, year_num, month_num, month_name, item_category,
+    year, quarter, year_num, month_num, month_name, item_category,
     count(distinct transaction_date)                        as selling_days,
     sum(transaction_count)                                  as transaction_count,
     sum(items_sold)                                         as items_sold,
@@ -38,4 +40,4 @@ select
     sum(discounted_transactions)                            as discounted_transactions,
     current_timestamp()                                     as _loaded_at
 from daily
-group by fiscal_year, fiscal_quarter, year_num, month_num, month_name, item_category
+group by year, quarter, year_num, month_num, month_name, item_category

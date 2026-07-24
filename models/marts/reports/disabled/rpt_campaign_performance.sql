@@ -1,3 +1,5 @@
+-- Rename fiscal_year to year for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   rpt_campaign_performance
   Sources: fct_campaign_performance + dim_campaign + dim_date
@@ -14,7 +16,7 @@ select
     dc.audience_size_tier,
     dc.campaign_duration_days,
     cp.first_send_date,
-    dd.fiscal_year,
+    dd.year_number as year,
     dd.month_name,
     dd.is_weekend                                          as sent_on_weekend,
     cp.last_event_date,

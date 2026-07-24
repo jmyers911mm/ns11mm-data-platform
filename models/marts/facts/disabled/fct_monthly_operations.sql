@@ -1,3 +1,5 @@
+-- Rename fiscal_year/fiscal_quarter to year/quarter for simplified calendar dimensions
+-- Co-authored with CoCo
 /*
   fct_monthly_operations
   Sources: fct_daily_operations + dim_date
@@ -8,7 +10,7 @@
 
 with daily as (
     select
-        ops.visit_date, dd.fiscal_year, dd.quarter_of_year as fiscal_quarter,
+        ops.visit_date, dd.year_number as year, dd.quarter_of_year as quarter,
         dd.year_number as year_num, dd.month_of_year as month_num, dd.month_name, dd.is_weekend,
         ops.total_visitors, ops.ticket_transactions, ops.tickets_sold,
         ops.ticket_revenue, ops.ticket_discounts, ops.retail_transactions,
@@ -19,8 +21,8 @@ with daily as (
 )
 
 select
-    fiscal_year || '-' || lpad(month_num, 2, '0')          as fiscal_year_month,
-    fiscal_year, fiscal_quarter, year_num, month_num, month_name,
+    year || '-' || lpad(month_num, 2, '0')          as year_month,
+    year, quarter, year_num, month_num, month_name,
     count(distinct visit_date)                              as operating_days,
     count(distinct case when is_weekend then visit_date end) as weekend_days,
     sum(total_visitors)                                     as total_visitors,
@@ -39,4 +41,4 @@ select
     sum(rejected_scans)                                     as rejected_scans,
     current_timestamp()                                     as _loaded_at
 from daily
-group by fiscal_year, fiscal_quarter, year_num, month_num, month_name
+group by year, quarter, year_num, month_num, month_name

@@ -1,9 +1,11 @@
+-- Rename fiscal_year/fiscal_month to year/month for simplified calendar dimensions
+-- Co-authored with CoCo
 {{ config(materialized='view') }}
 
 -- Marts report: Monthly Retail KPI
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per fiscal month x selling area
+-- Grain:  one row per month x selling area
 --
 -- Monthly rollup of fct_retail_daily for report.monthly_retail_kpi (the legacy
 -- report is a kettle-driven monthly matrix per area: sales, profit, units,
@@ -17,15 +19,15 @@ with daily as (
 ),
 
 dated as (
-    select d.*, dd.fiscal_year, dd.fiscal_month, dd.month_name, dd.year_number, dd.month_of_year
+    select d.*, dd.year_number as year, dd.month_of_year as month, dd.month_name, dd.year_number, dd.month_of_year
     from daily d
     inner join {{ ref('dim_date') }} dd on d.date_key = dd.date_key
 ),
 
 monthly as (
     select
-        fiscal_year,
-        fiscal_month,
+        year,
+        month,
         year_number      as calendar_year,
         month_of_year    as calendar_month,
         max(month_name)  as month_name,
@@ -44,8 +46,8 @@ monthly as (
 )
 
 select
-    fiscal_year,
-    fiscal_month,
+    year,
+    month,
     calendar_year,
     calendar_month,
     month_name,
