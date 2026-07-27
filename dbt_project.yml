@@ -89,8 +89,7 @@ models:
 
 seeds:
   ns11mm_data_platform:
-    seed_tour_plu:
-      +schema: RAW
+    +schema: SEEDS
 
 snapshots:
   ns11mm_data_platform:

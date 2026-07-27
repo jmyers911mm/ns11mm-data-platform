@@ -1,0 +1,20 @@
+sources:
+  - name: dpr_semantic
+    description: Native Snowflake SEMANTIC VIEW objects (generated from semantic_models/, deployed as DDL — not dbt-built).
+    database: "{{ target.database }}"
+    schema: MARTS
+    tables:
+      - name: DPR
+        description: DPR semantic view — 49 metrics over fct_daily_performance × dim_date.
+
+  - name: dpr_budget
+    database: "{{ target.database }}"
+    schema: MARTS
+    description: DPR budget/forecast tables (admissions, retail, and the conformed DPR shape).
+    tables:
+      - name: fct_budget_dpr_forecasts
+        description: Day-grain DPR-shaped budget (tickets, revenue, audio, ecom, cafe, early access, youth & family, donations).
+      - name: fct_budget_admissions_forecasts
+        description: Facility-grain admissions budget (attendance, tickets, guided tours, CityPASS).
+      - name: fct_budget_retail_forecasts
+        description: Facility-grain retail budget (profit, revenue, donations by facility 1003/1020/4007).

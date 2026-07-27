@@ -1,0 +1,29 @@
+line_item_code,sort_order,section,line_item,indent,format,value_type,availability
+MEMORIAL_ATTENDANCE,10,Memorial Attendance,Memorial Attendance,0,Number0,additive,Available
+MUSEUM_ATTENDANCE,20,Museum Attendance,Museum Attendance,0,Number0,additive,Available
+TICKETS_SOLD,30,Museum Attendance,Tickets Sold,1,Number0,additive,Available
+TICKET_REVENUE,40,Museum Attendance,Ticket Revenue,1,Currency0,additive,Available
+PASS_REVENUE,50,Museum Attendance,Pass Revenue,1,Currency0,additive,Available
+AVG_TICKET_PRICE,60,Museum Attendance,Average Ticket Price,1,Currency2,ratio,Available
+ADMISSION_REVENUE,70,Museum Attendance,Total Admission Revenue,1,Currency0,additive,Available
+EARLY_ACCESS_TOUR_COUNT,80,Guided Tours,Early Access Museum Tour,1,Number0,additive,Gap
+REVEALED_TOUR_REVENUE,90,Guided Tours,Early Access Museum Tour Revenue,1,Currency0,additive,Partial
+MEM_MUS_TOURS,100,Guided Tours,Memorial & Museum Tour,1,Number0,additive,Available
+MEM_MUS_TOUR_REVENUE,110,Guided Tours,Memorial & Museum Tour Revenue,1,Currency0,additive,Available
+MUSEUM_GUIDED_TOURS,120,Guided Tours,Museum Tours,1,Number0,additive,Available
+MUS_GUIDED_TOUR_REVENUE,130,Guided Tours,Museum Tour Revenue,1,Currency0,additive,Available
+MEMORIAL_GUIDED_TOURS,140,Guided Tours,Memorial Tours,1,Number0,additive,Available
+MEM_GUIDED_TOUR_REVENUE,150,Guided Tours,Memorial Tour Revenue,1,Currency0,additive,Available
+VIRTUAL_TOUR_REVENUE,160,Guided Tours,Virtual Tour Revenue,1,Currency0,additive,Available
+TOTAL_TOUR_REVENUE,170,Guided Tours,Total Tour Revenue,0,Currency0,additive,Available
+MUS_STORE_GROSS_PROFIT,180,Retail & Cafe,Museum Store Gross Profit,1,Currency0,additive,Available
+RETAIL_CARTS_GROSS_PROFIT,190,Retail & Cafe,Retail Carts Gross Profit,1,Currency0,additive,Available
+ECOM_GROSS_PROFIT,200,Retail & Cafe,E-Commerce Gross Profit,1,Currency0,additive,Gap
+TOTAL_RETAIL_GROSS_PROFIT,210,Retail & Cafe,Total Retail Gross Profit,0,Currency0,additive,Partial
+CAFE_PROFIT,220,Retail & Cafe,Total Museum Cafe Gross Profit,0,Currency0,additive,Available
+AUDIO_TOUR_HEADSET,230,Other Revenue,Museum Audio Tour,0,Currency0,additive,Available
+TOTAL_MEMORIAL_DONATIONS,240,Other Revenue,Total Memorial Visitor Donations,0,Currency0,additive,Available
+TOTAL_MUSEUM_DONATIONS,250,Other Revenue,Total Museum Visitor Donations,0,Currency0,additive,Available
+TOTAL_ESTIMATED_REVENUE,260,Total,Total Estimated Revenue,0,Currency0,additive,Available
+PROF_PROGRAM_REVENUE,270,Footer,Professional Program Revenue,0,Currency0,additive,Gap
+VIRTUAL_YF_TOUR_REVENUE,280,Footer,Youth & Family Tour Revenue YTD,0,Currency0,additive,Partial

@@ -1,164 +1,203 @@
+# models/marts/reports/_reports__models.yml
 version: 2
 
 models:
-  - name: rpt_member_360
-    description: "Unified member/customer 360 view aggregating tickets, retail, donations, and email engagement"
-    columns:
-      - name: customer_id
-        description: "Resolved customer identifier from dim_customer"
-        tests:
-          - unique
-          - not_null
-      - name: total_lifetime_value
-        description: "Sum of ticket + retail + donation spend"
-        tests:
-          - not_null
-      - name: engagement_segment
-        description: "Derived engagement level based on email activity and recency"
-        tests:
-          - accepted_values:
-              values: ['Highly Engaged', 'Engaged', 'Lapsed']
-      - name: ltv_tier
-        description: "Value tier: High Value (>=1000), Medium (>=200), Low (>0), No Spend"
-        tests:
-          - accepted_values:
-              values: ['High Value', 'Medium Value', 'Low Value', 'No Spend']
-
-  - name: rpt_customer_ltv
-    description: "Customer lifetime value report with spend breakdown across ticket, retail, and donations"
-    columns:
-      - name: customer_id
-        tests:
-          - unique
-          - not_null
-      - name: ltv_tier
-        tests:
-          - accepted_values:
-              values: ['Platinum', 'Gold', 'Silver', 'Bronze']
-
-  - name: rpt_daily_operations
-    description: "Daily executive operations dashboard: visitors, revenue, retail, and weather"
-
-  - name: rpt_ticket_sales
-    description: "Ticket sales summary report with visitor category breakdown and trend analysis"
-
-  - name: rpt_visitor_traffic
-    description: "Visitor traffic patterns report with day-of-week and seasonal analysis"
-
-  - name: rpt_retail_performance
-    description: "Retail performance report: revenue, units, AOV by channel and category"
-
-  - name: rpt_digital_marketing
-    description: "Digital marketing performance report: spend, conversions, ROAS across channels"
-
-  - name: rpt_campaign_performance
-    description: "Campaign performance report with attribution and ROI metrics"
-
-  - name: rpt_revenue_bridge
-    description: "Revenue bridge analysis: period-over-period variance decomposition by revenue stream"
-
-  - name: rpt_daily_performance_report
+  - name: rpt_dpr_report_long
     description: >
-      Power BI consumption layer for the Daily Performance Report. Today /
-      MTD / YTD additive roll-ups plus non-additive ratios computed at this
-      grain. Budget/variance columns gated on budget-source staging + ADR-005.
-    columns:
-      - name: date_key
-        data_tests: [not_null, unique]
-      - name: date_value
-        data_tests: [not_null, unique]
-      - name: avg_ticket_price
-        description: Non-additive; total_admission_revenue / tickets_sold.
-
-  - name: rpt_attendance
-    description: "Attendance Report: memorial/museum attendance + Sensource memorial-only and store visitor counts (Sensource stubbed)."
-  - name: rpt_daily_attendance
-    description: "Daily Attendance Report: museum attendance from hourly passes (stubbed) with scan-based fallback."
-  - name: rpt_website_commerce
-    description: "Website Commerce Report: recurring online donation/membership revenue by month/year (ecom source stubbed, ADR-008)."
-  - name: fct_today_sales_hourly
-    description: "Today's Sales hourly retail fact (real-time CP feed stubbed)."
-    columns:
-      - name: date_key
-        data_tests: [not_null]
-
-  - name: rpt_wifi_email_export
-    description: >
-      RESTRICTED / PII. Blue State WiFi marketing email extract. Classified
-      Restricted per DATA_CLASSIFICATION.md; masking applied via on-run-end
-      hook; least-privilege access only; do not grant to POWERBI_ROLE/ML_ROLE.
+      Tidy DPR presentation, one row per (report_date, line_item_code). All
+      composites and the ratio components are resolved in SQL (ADR-004: no logic
+      in Power BI). amount is additive; numerator/denominator carry the ratio row.
     config:
-      tags: ['pii', 'restricted', 'marketing_export']
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
     columns:
-      - name: capture_date
-        description: Date the audience row was captured.
-      - name: email_address
-        description: "PII (Restricted). Direct identifier. Masked for non-privileged roles."
-        meta:
-          classification: restricted_pii
-          contains_pii: true
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
         data_tests: [not_null]
-      - name: first_name
-        description: "PII (Restricted). Direct identifier."
-        meta:
-          classification: restricted_pii
-          contains_pii: true
-      - name: last_name
-        description: "PII (Restricted). Direct identifier."
-        meta:
-          classification: restricted_pii
-          contains_pii: true
-
-  # ---------------------------------------------------------------------------
-  # Added coverage (round 2). All grain/uniqueness tests are severity: warn —
-  # they assert the documented grain over data not verified in review; a warn
-  # means investigate the grain, then promote to error. (Removed a malformed
-  # dangling 'rpt_retail_performance' entry that had been left under the
-  # rpt_wifi_email_export columns; rpt_retail_performance is defined above.)
-  # ---------------------------------------------------------------------------
-
-  - name: rpt_daily_scan
-    description: "Scan utilization per date_key x segment_key with daily-total context."
-    data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, segment_key]
-          config: { severity: warn }
-    columns:
-      - name: date_key
+      - name: line_item_code
+        description: Joins to dim_dpr_line_items.line_item_code.
         data_tests:
-          - not_null: { config: { severity: warn } }
-
-  - name: rpt_memorial_museum_tracker_ytd
-    description: "Year-to-date memorial+museum KPI tracker, one row per date_key."
+          - not_null
+          - relationships:
+              to: ref('dpr_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item on the date (NULL for ratio rows).
+      - name: numerator
+        description: Actual ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Actual ratio denominator (NULL for additive rows).
+      - name: budget_amount
+        description: Budget additive value (NULL for ratio rows and for unmapped rows — donation composites, Professional Program, Total Estimated Revenue, Virtual Tour Revenue).
+      - name: budget_numerator
+        description: Budget ratio numerator (NULL for additive rows).
+      - name: budget_denominator
+        description: Budget ratio denominator (NULL for additive rows).
+  
+  - name: rpt_dpr_budget_daily
+    description: >
+      Day-grain DPR budget, conformed from FCT_BUDGET_DPR_FORECASTS (primary),
+      FCT_BUDGET_ADMISSIONS_FORECASTS (attendance + guided tours, facility-summed),
+      and FCT_BUDGET_RETAIL_FORECASTS (store/carts/cafe profit by facility). Column
+      names mirror rpt_dpr_powerbi so both unpivot identically in rpt_dpr_report_long.
+    config:
+      materialized: view
     columns:
-      - name: date_key
-        description: "PK. Calendar date."
+      - name: report_date
+        description: Calendar date.
+        data_tests: [not_null, unique]
+  - name: rpt_dpr_powerbi
+    description: >
+      Power BI consumption layer over the DPR semantic view (MARTS.DPR).
+      One row per REPORT_DATE. Thin, display-only projection per ADR-004 — no
+      business logic; metric definitions live in the semantic view. Non-additive
+      ratios (avg ticket price, store per-cap) are intentionally omitted and
+      recomputed in DAX from summed components.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+      # contract:                 # enable after confirming column types (DESCRIBE the view)
+      #   enforced: true
+    meta:
+      owner: "Data & AI Team"
+      serves: "Power BI — Daily Performance Report"
+      source_of_truth: "MARTS.DPR semantic view"
+    columns:
+      # ---------------- grain / date dimensions ----------------
+      - name: report_date
+        description: Calendar date the numbers are recognized on. Table grain.
+        data_type: date
         data_tests:
-          - not_null: { config: { severity: warn } }
-          - unique:   { config: { severity: warn } }
-
-  - name: rpt_monthly_retail_kpi
-    description: "Monthly retail KPIs per fiscal month x selling area."
-    data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [calendar_year, calendar_month, area_name]
-          config: { severity: warn }
-    columns:
+          - not_null
+          - unique
       - name: calendar_year
-        data_tests:
-          - not_null: { config: { severity: warn } }
+        description: Calendar year (Jan–Dec).
+        data_type: number
+      - name: calendar_quarter
+        description: Calendar quarter (1–4).
+        data_type: number
       - name: calendar_month
-        data_tests:
-          - not_null: { config: { severity: warn } }
-      - name: area_name
-        data_tests:
-          - not_null: { config: { severity: warn } }
+        description: Calendar month number (1–12).
+        data_type: number
+      - name: month_name
+        description: Abbreviated month name.
+        data_type: varchar
+      - name: day_of_month
+        description: Day of the month (1–31).
+        data_type: number
+      - name: day_name
+        description: Abbreviated day-of-week name.
+        data_type: varchar
+      - name: fiscal_year
+        description: Fiscal year (starts October; Oct–Dec roll into the next FY).
+        data_type: number
+      - name: fiscal_month
+        description: Fiscal month number (October = 1 … September = 12).
+        data_type: number
+      - name: is_weekend
+        description: TRUE on Saturday and Sunday.
+        data_type: boolean
+      - name: is_commemoration_day
+        description: TRUE for the September 11 commemoration day (known structural exception).
+        data_type: boolean
 
-  - name: rpt_retail_carts_analysis
-    description: "Memorial Carts capture/per-cap analysis, one row per date_key."
-    columns:
-      - name: date_key
-        description: "PK. Calendar date."
-        data_tests:
-          - not_null: { config: { severity: warn } }
-          - unique:   { config: { severity: warn } }
+      # ---------------- attendance ----------------
+      - name: memorial_attendance
+        description: Memorial attendance (scan component only; Sensource blend not yet staged).
+        data_type: number
+      - name: museum_attendance
+        description: Museum attendance (GA-ticket-scanned proxy).
+        data_type: number
+
+      # ---------------- admissions (ratio components) ----------------
+      - name: tickets_sold
+        description: General-admission tickets sold (issued-GA definition).
+        data_type: number
+      - name: ticket_revenue
+        description: General-admission ticket revenue.
+        data_type: number
+      - name: pass_revenue
+        description: CityPASS / C3 pass revenue (estimated; updated ~6 weeks later).
+        data_type: number
+      - name: admission_revenue
+        description: Ticket revenue plus pass revenue.
+        data_type: number
+
+      # ---------------- guided tours ----------------
+      - name: mem_mus_tours
+        description: Memorial + Museum combined tour ticket count.
+        data_type: number
+      - name: mem_mus_tour_revenue
+        description: Memorial + Museum combined tour revenue.
+        data_type: number
+      - name: museum_guided_tours
+        description: Museum guided tour ticket count.
+        data_type: number
+      - name: mus_guided_tour_revenue
+        description: Museum guided tour revenue.
+        data_type: number
+      - name: memorial_guided_tours
+        description: Memorial guided tour ticket count.
+        data_type: number
+      - name: mem_guided_tour_revenue
+        description: Memorial guided tour revenue.
+        data_type: number
+      - name: revealed_tour_revenue
+        description: Revealed tour revenue (tentatively maps to PDF "Early Access Museum Tour" — confirm).
+        data_type: number
+      - name: virtual_tour_revenue
+        description: All virtual tour revenue (memorial + museum + youth & family).
+        data_type: number
+      - name: virtual_yf_tour_revenue
+        description: Virtual Youth & Family Memorial tour revenue.
+        data_type: number
+
+      # ---------------- retail & cafe ----------------
+      - name: mus_store_gross_profit
+        description: Museum Store gross profit (sales minus cost).
+        data_type: number
+      - name: retail_carts_gross_profit
+        description: Memorial Carts gross profit.
+        data_type: number
+      - name: cafe_profit
+        description: Cafe gross profit.
+        data_type: number
+
+      # ---------------- audio ----------------
+      - name: audio_tour_headset
+        description: Museum audio/headset revenue (Galaxy guide + CounterPoint MUS AG).
+        data_type: number
+
+      # ---------------- donation components (assembled into composites in DAX) ----------------
+      - name: cart_donation_ask
+        description: Memorial cart donation-ask collections.
+        data_type: number
+      - name: box_office_mem_don
+        description: Box office memorial (plaza) box donations.
+        data_type: number
+      - name: donation_box
+        description: General donation box collections.
+        data_type: number
+      - name: ecom_donation_ask
+        description: Ecommerce donation-ask collections.
+        data_type: number
+      - name: ticketing_donations
+        description: Gateway ticketing donations (excludes box/exit categories).
+        data_type: number
+      - name: box_office_mus_exit_don
+        description: Box office museum exit box donations.
+        data_type: number
+      - name: coatcheck_don
+        description: Coat check donations.
+        data_type: number
+      - name: mus_store_don
+        description: Museum Store donations.
+        data_type: number
+      - name: mus_exit_don
+        description: Museum exit donations (CounterPoint).
+        data_type: number
+      - name: cafe_don
+        description: Cafe donations.
+        data_type: number

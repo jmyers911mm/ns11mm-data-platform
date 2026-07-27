@@ -1,5 +1,32 @@
 version: 2
 seeds:
+  - name: dpr_line_items
+    description: >
+      Report-layout catalog for the Daily Performance Report: one row per printed
+      line (section, label, sort order, indent, number format, additive-vs-ratio,
+      availability). Report scaffolding, not a business dimension — joins to
+      rpt_dpr_report_long on line_item_code to drive the Power BI matrix rows.
+    config:
+      grants:
+        select: ['POWERBI_ROLE']
+      column_types:
+        line_item_code: varchar
+        sort_order: integer
+        section: varchar
+        line_item: varchar
+        indent: integer
+        format: varchar
+        value_type: varchar
+        availability: varchar
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_dpr_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
   - name: seed_tour_plu
     description: "One row per PLU mapping to a DPR tour line item. Labels the field-trip, revealed, and ask-educator cohorts, and enumerates the tour PLUs excluded from the core museum guided-tour cohort (youth and family, early access, all-inclusive early access, architecture). Any PLU here is excluded from mus_guided_tours."
     columns:

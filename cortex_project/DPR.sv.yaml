@@ -11,9 +11,6 @@ tables:
       database: NS11MM_DW_DEV_JMYERS
       schema: MARTS
       table: FCT_DAILY_PERFORMANCE
-    primary_key:
-      columns:
-        - DATE_KEY
     dimensions:
       - name: IS_COMMEMORATION_DAY
         synonyms:
@@ -409,20 +406,6 @@ tables:
         description: Day of the year (1-366).
         expr: DAY_OF_YEAR
         data_type: "NUMBER(4,0)"
-      - name: FISCAL_MONTH
-        synonyms:
-          - fiscal month
-          - fiscal period
-        description: Fiscal month number (October = 1 ... September = 12).
-        expr: FISCAL_MONTH
-        data_type: "NUMBER(3,0)"
-      - name: FISCAL_YEAR
-        synonyms:
-          - fiscal year
-          - FY
-        description: Fiscal year (starts in October; Oct-Dec roll into the next FY number).
-        expr: FISCAL_YEAR
-        data_type: "NUMBER(5,0)"
       - name: IS_FIRST_OF_MONTH
         synonyms:
           - first of month
@@ -478,5 +461,5 @@ relationships:
       - left_column: DATE_KEY
         right_column: DATE_KEY
 module_custom_instructions:
-  sql_generation: "Round all currency metrics to 2 decimal points and attendance, ticket, tour, and audio-unit counts to whole numbers. When a question does not specify a period, default to the most recent complete day available. When comparing two periods, note if either overlaps the September 6-16 commemoration window, since that window is a known structural exception. Use the year / month dimensions for all period questions."
-  question_categorization: "If a question asks for budget, forecast, or variance figures, treat it as out of scope: explain that budget/variance is not yet in this model (pending budget-source staging) and offer the actuals instead. Memorial attendance is available as the scan-based component (total_memorial_attendance); if a question needs the full Sensource turnstile-blended attendance, note that blend is not yet staged. If a question asks for membership revenue or ecommerce gross profit, note those sources are out of current scope. If a revenue question is ambiguous about which revenue stream, ask the user to specify (tickets, tours, retail, donations, fees, or audio)."
+  sql_generation: 'Round all currency metrics to 2 decimal points and attendance, ticket, tour, and audio-unit counts to whole numbers. When a question does not specify a period, default to the most recent complete day available. When comparing two periods, note if either overlaps the September 6-16 commemoration window, since that window is a known structural exception.'
+  question_categorization: 'If a question asks for budget, forecast, or variance figures, treat it as out of scope: explain that budget/variance is not yet in this model (pending budget-source staging) and offer the actuals instead. Memorial attendance is available as the scan-based component (total_memorial_attendance); if a question needs the full Sensource turnstile-blended attendance, note that blend is not yet staged. If a question asks for membership revenue or ecommerce gross profit, note those sources are out of current scope. If a revenue question is ambiguous about which revenue stream, ask the user to specify (tickets, tours, retail, donations, fees, or audio).'

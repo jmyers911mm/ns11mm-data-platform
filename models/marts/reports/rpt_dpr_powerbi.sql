@@ -1,0 +1,68 @@
+-- =====================================================================
+-- DPR_PBI_DAILY  -  Power BI consumption view over the DPR semantic view
+-- ---------------------------------------------------------------------
+-- Power BI's native Snowflake connector CANNOT browse a Snowflake
+-- SEMANTIC VIEW object directly (Microsoft has stated it will not support
+-- third-party semantic layers). The supported pattern is to wrap the
+-- SEMANTIC_VIEW() query in a normal view and point Power BI at the view.
+--
+-- This keeps every metric DEFINITION inside the DPR semantic view
+-- (ADR-004: no business logic in Power BI). The view is a thin, day-grain
+-- projection - one row per REPORT_DATE - that Power BI imports and slices.
+--
+-- Ratios (avg ticket price, per-cap) are intentionally NOT selected here:
+-- they are non-additive and must be recomputed in DAX from summed
+-- numerator/denominator at the display grain. Their components are included.
+-- =====================================================================
+
+-- models/marts/reports/rpt_dpr_powerbi.sql
+{{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
+
+-- Power BI consumption layer over the DPR semantic view (ADR-004: display-only).
+-- One row per REPORT_DATE. Ratios omitted (recomputed in DAX from components).
+
+select * from semantic_view(
+    {{ source('dpr_semantic', 'DPR') }}
+
+    dimensions
+        dt.report_date          as report_date,
+        dt.calendar_year        as calendar_year,
+        dt.calendar_quarter     as calendar_quarter,
+        dt.calendar_month       as calendar_month,
+        dt.month_name           as month_name,
+        dt.day_of_month         as day_of_month,
+        dt.day_name             as day_name,
+        dt.is_weekend           as is_weekend,
+        dp.is_commemoration_day as is_commemoration_day
+
+    metrics
+        dp.total_memorial_attendance         as memorial_attendance,
+        dp.total_museum_attendance           as museum_attendance,
+        dp.total_tickets_sold                as tickets_sold,
+        dp.total_ticket_revenue              as ticket_revenue,
+        dp.total_pass_revenue                as pass_revenue,
+        dp.total_admission_revenue           as admission_revenue,
+        dp.total_mem_mus_tours               as mem_mus_tours,
+        dp.total_mem_mus_tour_revenue        as mem_mus_tour_revenue,
+        dp.total_museum_guided_tours         as museum_guided_tours,
+        dp.total_mus_guided_tour_revenue     as mus_guided_tour_revenue,
+        dp.total_memorial_guided_tours       as memorial_guided_tours,
+        dp.total_mem_guided_tour_revenue     as mem_guided_tour_revenue,
+        dp.total_revealed_tour_revenue       as revealed_tour_revenue,
+        dp.total_virtual_tour_revenue        as virtual_tour_revenue,
+        dp.total_virtual_yf_mem_tour_revenue as virtual_yf_tour_revenue,
+        dp.total_mus_store_gross_profit      as mus_store_gross_profit,
+        dp.total_retail_carts_gross_profit   as retail_carts_gross_profit,
+        dp.total_cafe_profit                 as cafe_profit,
+        dp.total_audio_tour_headset          as audio_tour_headset,
+        dp.total_cart_donation_ask           as cart_donation_ask,
+        dp.total_box_office_mem_donations    as box_office_mem_don,
+        dp.total_donation_box                as donation_box,
+        dp.total_ecom_donation_ask           as ecom_donation_ask,
+        dp.total_ticketing_donations         as ticketing_donations,
+        dp.total_box_office_mus_exit_donations as box_office_mus_exit_don,
+        dp.total_coatcheck_donations         as coatcheck_don,
+        dp.total_mus_store_donations         as mus_store_don,
+        dp.total_mus_exit_donations          as mus_exit_don,
+        dp.total_cafe_donations              as cafe_don
+)

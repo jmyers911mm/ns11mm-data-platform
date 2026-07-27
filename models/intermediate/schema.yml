@@ -285,3 +285,44 @@ models:
         data_tests:
           - not_null: { config: { severity: warn } }
           - unique:   { config: { severity: warn } }
+
+  # ─── Budget / Forecast intermediates ──────────────────────────────────────────
+
+  - name: int_budget__dpr_forecasts
+    description: >
+      Cleansed DPR budget/forecast: key_date cast to DATE, TEXT columns to
+      numeric, NULLs coalesced to zero. One row per day.
+    columns:
+      - name: date_key
+        description: "PK. Calendar date (converted from YYYYMMDD integer)."
+        data_tests: [not_null, unique]
+
+  - name: int_budget__admissions_forecasts
+    description: >
+      Cleansed admissions/attendance budget by facility: key_date cast to DATE,
+      TEXT columns to numeric, NULLs coalesced. One row per day x facility.
+    columns:
+      - name: date_key
+        description: "Calendar date (converted from YYYYMMDD integer)."
+        data_tests: [not_null]
+      - name: key_facility
+        data_tests: [not_null]
+    tests:
+      - unique:
+          column_name: "date_key || '-' || key_facility"
+          name: int_budget_admissions_forecasts_grain_unique
+
+  - name: int_budget__retail_forecasts
+    description: >
+      Cleansed retail budget/forecast by facility: key_date cast to DATE,
+      TEXT columns to numeric, NULLs coalesced. One row per day x facility.
+    columns:
+      - name: date_key
+        description: "Calendar date (converted from YYYYMMDD integer)."
+        data_tests: [not_null]
+      - name: key_facility
+        data_tests: [not_null]
+    tests:
+      - unique:
+          column_name: "date_key || '-' || key_facility"
+          name: int_budget_retail_forecasts_grain_unique

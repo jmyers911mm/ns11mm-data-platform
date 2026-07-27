@@ -20,17 +20,6 @@ models:
         data_tests:
           - not_null
 
-  - name: dim_marketing_channel
-    description: "Marketing channel reference dimension from ref_marketing_channels seed"
-    columns:
-      - name: channel_id
-        description: "PK. Natural key (channel identifier from seed)."
-        constraints:
-          - type: primary_key
-        data_tests:
-          - unique
-          - not_null
-
   - name: dim_customer
     description: "Customer dimension from Gateway ticketing. Derives customer type from CUSTNO prefix patterns (Web, CityPass, Viator, etc.)."
     columns:

@@ -199,3 +199,75 @@ models:
       - unique:
           column_name: "date_key || '-' || segment_key"
           name: fct_daily_scan_grain_unique
+
+  # ─── Budget / Forecast facts ──────────────────────────────────────────────────
+
+  - name: fct_budget_dpr_forecasts
+    description: >
+      DPR budget/forecast fact (one row per day). Budget counterpart to
+      fct_daily_performance — tickets, revenue, audio, donations, ecommerce,
+      cafe, tours.
+    columns:
+      - name: date_key
+        description: "PK / FK to dim_date.date_key."
+        constraints:
+          - type: primary_key
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: tickets_sold
+        data_tests: [not_null]
+      - name: ticket_revenue
+        data_tests: [not_null]
+
+  - name: fct_budget_admissions_forecasts
+    description: >
+      Admissions/attendance budget by facility (one row per day x facility).
+      Attendance, tickets, tours, CityPASS.
+    columns:
+      - name: date_key
+        description: "FK to dim_date.date_key."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: key_facility
+        data_tests: [not_null]
+    tests:
+      - unique:
+          column_name: "date_key || '-' || key_facility"
+          name: fct_budget_admissions_forecasts_grain_unique
+
+  - name: fct_budget_retail_forecasts
+    description: >
+      Retail budget/forecast by facility (one row per day x facility).
+      Visitors, conversion, profit, donations, revenue.
+    columns:
+      - name: date_key
+        description: "FK to dim_date.date_key."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: key_facility
+        data_tests: [not_null]
+    tests:
+      - unique:
+          column_name: "date_key || '-' || key_facility"
+          name: fct_budget_retail_forecasts_grain_unique

@@ -1,0 +1,20 @@
+sources:
+  - name: budget_seeds
+    description: Budget and forecast seed tables loaded from Excel exports.
+    database: "{{ target.database }}"
+    schema: SEEDS
+    tables:
+      - name: SEED_DPR_FORECASTS
+        description: >
+          FY2026 daily DPR budget/forecast: tickets, revenue, audio, donations,
+          ecommerce, cafe, tours. One row per day (365).
+      - name: SEED_FORECASTED_VALUE_FOR_DATE
+        description: >
+          FY2026 daily admissions/attendance budget by facility: attendance,
+          tickets, revenue, guided tours, CityPASS, memorial tours. One row
+          per day x facility.
+      - name: SEED_RETAIL_FORECASTS
+        description: >
+          FY2026 daily retail budget by facility: capture rate, visitors,
+          customers, conversion, average sale, profit, donations, revenue.
+          One row per day x facility (3 facilities x 365 days).
