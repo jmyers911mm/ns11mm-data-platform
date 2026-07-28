@@ -101,6 +101,8 @@ windows as (
 ptd as (
     select
         f.date_key,
+        max(case when f.date_key = w.anchor_date then w.years_ago end) as today_years_ago,
+        max(case when f.date_key = dateadd(day, -1, w.anchor_date) then w.years_ago end) as yesterday_years_ago,
         max(case when f.date_key between w.wtd_start and w.anchor_date then w.years_ago end) as wtd_years_ago,
         max(case when f.date_key between w.mtd_start and w.anchor_date then w.years_ago end) as mtd_years_ago,
         max(case when f.date_key between w.qtd_start and w.anchor_date then w.years_ago end) as qtd_years_ago,
@@ -112,6 +114,8 @@ ptd as (
 
 select
     f.*,
+    iff(p.today_years_ago is not null, 'YES', 'NO')  as today_flag,
+    iff(p.yesterday_years_ago is not null, 'YES', 'NO')  as yesterday_flag,
     iff(p.wtd_years_ago is not null, 'YES', 'NO')  as wtd_flag,
     iff(p.mtd_years_ago is not null, 'YES', 'NO')  as mtd_flag,
     iff(p.qtd_years_ago is not null, 'YES', 'NO')  as qtd_flag,

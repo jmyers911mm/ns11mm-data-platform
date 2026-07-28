@@ -219,3 +219,30 @@ models:
 
   - name: dim_budget_version
     description: "Vena plan version dimension. STATUS: Awaiting Vena RAW connection."
+
+  - name: dim_dpr_line_item
+    description: "DPR report line-item metadata: section, display order, formatting, and availability status for each measure."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: line_item_code
+        description: "Business key (e.g. TICKETS_SOLD, MEM_ATTENDANCE)."
+        data_tests:
+          - not_null
+      - name: section
+        description: "Report section grouping (Memorial Attendance, Guided Tours, Retail & Cafe, etc.)."
+      - name: value_type
+        description: "additive (summable) or ratio (recompute at query grain)."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+      - name: availability
+        description: "Available = live in dbt today; Partial = some components gapped; Gap = source not yet staged."
+        data_tests:
+          - accepted_values:
+              values: ['Available', 'Partial', 'Gap']
