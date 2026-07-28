@@ -2,7 +2,7 @@
 -- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Consolidates every additive DPR "today" measure into a single day-grain
 -- fact by full-outer-joining the DPR silver models on key_date, then joining

@@ -1,9 +1,8 @@
-{{ config(materialized='table') }}
-
 -- Marts fact: retail daily (facility grain, non-additive-across-category inputs)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per date_key x key_facility
+-- Grain: one row per date_key x key_facility
 --
 -- Companion to fct_retail_performance. Holds the measures that live at the
 -- FACILITY (not category) grain: transaction/customer counts and visitor
@@ -14,6 +13,8 @@
 --
 -- Replaces legacy 911dw.fact_num_tickets + the facility rollup of fact_retail.
 -- ADR-004: additive measures only; ratios computed in rpt_retail_performance.
+
+{{ config(materialized='table') }}
 
 with perf as (
     select

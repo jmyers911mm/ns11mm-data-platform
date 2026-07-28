@@ -1,9 +1,8 @@
-{{ config(materialized='view') }}
-
 -- Silver intermediate: retail performance, tidy category grain
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per business_date x key_facility x category_code
+-- Grain: one row per business_date x key_facility x category_code
 --
 -- Replaces the legacy 911dw.fact_retail category rollup (built by t_fact_retail
 -- from ps_tkt_hist_lin). Aggregates the conformed CounterPoint retail lines into
@@ -17,6 +16,8 @@
 -- computed at query grain in rpt_retail_performance.
 -- Donation split uses the is_donation flag derived once in retail_lines, not
 -- the raw summary_category = 6 literal.
+
+{{ config(materialized='view') }}
 
 with lines as (
     select * from {{ ref('int_counterpoint__retail_lines') }}

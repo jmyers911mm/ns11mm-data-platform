@@ -1,11 +1,13 @@
-/*
-  dim_event
-  Source: stg_gateway__rmevents
-  Grain: one row per event_id
-
-  Timed-entry events, tours, programs, and shows from Gateway's resource
-  management system.
-*/
+-- Marts dimension: dim_event — timed-entry events, tours, programs, and shows
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (timed entry)
+-- Grain: one row per event_id
+--
+-- Timed-entry events, tours, programs, and shows from Gateway's resource
+-- management system.
+--
+-- Source: stg_gateway__rmevents
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

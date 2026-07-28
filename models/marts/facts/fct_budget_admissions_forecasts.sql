@@ -1,7 +1,8 @@
--- Mart fact: admissions/attendance budget by facility (one row per day x facility)
+-- Marts fact: admissions/attendance budget by facility (one row per day x facility)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
--- Grain:  one row per date_key x key_facility
+-- Grain: one row per date_key x key_facility
 --
 -- Budget/forecast counterpart to admissions actuals. Attendance, tickets,
 -- tours, CityPASS by facility per day. Joined to dim_date for the conformed

@@ -1,11 +1,8 @@
--- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
-{{ config(materialized='view') }}
-
 -- Marts report: Memorial Museum Daily Tracker - YTD
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR / cross-domain
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Presentation view for report.memorial_museum_daily_tracker_ytd. This report
 -- is a YTD actuals-vs-budget variance tracker built almost entirely on
@@ -20,6 +17,8 @@
 -- actual (budget treated as 0). civic_programs is a placeholder measure until
 -- its source is wired (Excel + the Gateway 'Civic Engagement Program Fee').
 -- ADR-004: no logic in Power BI.
+
+{{ config(materialized='view') }}
 
 with fct as (
     select

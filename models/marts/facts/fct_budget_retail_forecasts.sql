@@ -1,7 +1,8 @@
--- Mart fact: retail budget/forecast by facility (one row per day x facility)
+-- Marts fact: retail budget/forecast by facility (one row per day x facility)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
--- Grain:  one row per date_key x key_facility
+-- Grain: one row per date_key x key_facility
 --
 -- Budget/forecast counterpart to fct_retail_daily. Visitors, conversion,
 -- profit, donations, and revenue by facility per day. Joined to dim_date

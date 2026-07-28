@@ -1,9 +1,8 @@
--- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 -- Marts fact: ticket availability by entry date and ticket type
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (capacity)
--- Grain:  one row per entry_date + ticket_type (availability_key)
+-- Grain: one row per entry_date + ticket_type (availability_key)
 -- STATUS: Awaiting RAW data. Logic migrated from POC.
 --
 -- Publishes int_ticket_inventory joined to dim_date for calendar attributes.

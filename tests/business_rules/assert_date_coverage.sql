@@ -1,5 +1,6 @@
--- Validates dim_date covers required range (2000-01-01 through 2035-12-31)
+-- Test (business_rule): dim_date covers 2000-01-01 through 2035-12-31
 -- Co-authored with CoCo
+-- Severity: error — downstream date joins depend on full spine coverage
 select
     case when min(date_key) > '2000-01-01' then 'FAIL: missing early dates' end as check_start,
     case when max(date_key) < '2035-12-31' then 'FAIL: missing future dates' end as check_end

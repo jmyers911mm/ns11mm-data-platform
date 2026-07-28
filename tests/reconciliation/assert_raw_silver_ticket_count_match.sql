@@ -1,5 +1,6 @@
--- Reconciliation: int_pos_tickets count within 1% of deduplicated staging tickets with sold dates
+-- Test (reconciliation): int_pos_tickets count within 1% of deduped staging tickets (sold)
 -- Co-authored with CoCo
+-- Severity: error — drift beyond tolerance means silver dropped or duplicated rows
 
 with stg_count as (
     select count(*) as cnt

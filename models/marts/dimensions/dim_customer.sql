@@ -1,11 +1,13 @@
-/*
-  dim_customer
-  Source: stg_gateway__tickets (customer fields)
-  Grain: one row per customer_id (Gateway CUSTOMERID)
-
-  Derives customer type from CUSTNO prefix patterns. Identity resolution
-  across Gateway/CounterPoint/Salesforce deferred until those CRM feeds land.
-*/
+-- Marts dimension: dim_customer — customer dimension from Gateway ticketing
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain: one row per customer_id (Gateway CUSTOMERID)
+--
+-- Derives customer type from CUSTNO prefix patterns. Identity resolution
+-- across Gateway/CounterPoint/Salesforce deferred until those CRM feeds land.
+--
+-- Source: stg_gateway__tickets (customer fields)
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

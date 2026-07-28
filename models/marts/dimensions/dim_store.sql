@@ -1,13 +1,15 @@
-/*
-  dim_store
-  Source: seed_retail_store_facility (dbt seed) + dim_facility
-  Grain: one row per store_id (CounterPoint register/store)
-
-  Maps CounterPoint store IDs to facility names and locations using the
-  seed_retail_store_facility mapping table. store_type is sourced from the
-  conformed dim_facility (single home for key_facility -> area_group) rather
-  than re-reading seed_facility_area here.
-*/
+-- Marts dimension: dim_store — CounterPoint store dimension mapped to facility
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain: one row per store_id (CounterPoint register/store)
+--
+-- Maps CounterPoint store IDs to facility names and locations using the
+-- seed_retail_store_facility mapping table. store_type is sourced from the
+-- conformed dim_facility (single home for key_facility -> area_group) rather
+-- than re-reading seed_facility_area here.
+--
+-- Source: seed_retail_store_facility (dbt seed) + dim_facility
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

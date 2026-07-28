@@ -1,9 +1,8 @@
-{{ config(materialized='table') }}
-
 -- Marts fact: daily scan (passes scanned + tickets sold by market segment)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance / scanning
--- Grain:  one row per date_key x segment_key
+-- Grain: one row per date_key x segment_key
 --
 -- The additive backbone of the Daily Scan Report
 -- (report.daily_scan_report_new). One row per market segment per day with
@@ -13,6 +12,8 @@
 -- Category from int_gateway__scan_lines is mapped to the reporting segment via
 -- seed_scan_market_segment. Budget is left-joined from a stub (dsr forecasts)
 -- to preserve the seam (ADR-005). ADR-004: additive only.
+
+{{ config(materialized='table') }}
 
 with lines as (
     select * from {{ ref('int_gateway__scan_lines') }}

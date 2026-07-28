@@ -1,15 +1,16 @@
-{{ config(materialized='view') }}
-
 -- Marts report: Website Commerce Report
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: ecommerce / fundraising
--- Grain:  one row per month x revenue_type x revenue_year
+-- Grain: one row per month x revenue_type x revenue_year
 --
 -- Presentation view for report.website_commerce_report -- recurring online
 -- donation and membership revenue by month, pivoted by year. Now sourced from
 -- the real recurring feed (stg_ecommerce__website_recurring) instead of the
 -- stub. revenue_type is derived from order_type (Donation vs Membership);
 -- revenue_year and month come from the created date. ADR-004: no logic in PBI.
+
+{{ config(materialized='view') }}
 
 with recurring as (
     select

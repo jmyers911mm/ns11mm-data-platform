@@ -1,7 +1,8 @@
--- Silver DPR: general-admission tickets sold, ticket revenue, attendance
+-- Silver intermediate: general-admission tickets sold, ticket revenue, attendance
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- The GA cohort (ga_flag = 1) drives tickets_sold, ticket_revenue and the
 -- Galaxy-scanned museum attendance proxy. Pass revenue (CityPASS/C3) is a

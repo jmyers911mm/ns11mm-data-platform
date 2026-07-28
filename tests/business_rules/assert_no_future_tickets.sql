@@ -1,5 +1,6 @@
--- Asserts no future-dated tickets in the pipeline (data quality check)
+-- Test (business_rule): no future-dated tickets in the pipeline
 -- Co-authored with CoCo
+-- Severity: error — future dates indicate a source date-mapping defect
 
 select ticket_id, sold_at, ticket_date
 from {{ ref('stg_gateway__tickets') }}

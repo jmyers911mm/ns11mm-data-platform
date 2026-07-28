@@ -2,7 +2,7 @@
 -- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
--- Grain:  one row per date_value
+-- Grain: one row per date_value
 --
 -- Presentation model the DPR reads. Provides TODAY, month-to-date and
 -- year-to-date roll-ups of the additive measures from fct_daily_performance,

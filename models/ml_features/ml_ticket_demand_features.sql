@@ -1,9 +1,8 @@
--- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 -- ML feature table: ticket demand features for Snowflake ML FORECAST
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (ML)
--- Grain:  one row per entry_date (visit_date) + ticket_type
+-- Grain: one row per entry_date (visit_date) + ticket_type
 --
 -- Aggregates fct_ticket_availability to a daily per-type training row and adds
 -- calendar attributes (from dim_date) plus lag (1d, 7d) and rolling (7d/30d avg,

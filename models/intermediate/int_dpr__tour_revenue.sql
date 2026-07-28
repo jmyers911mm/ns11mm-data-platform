@@ -1,7 +1,8 @@
--- Silver DPR: guided-tour, virtual-tour, field-trip, and program revenue
+-- Silver intermediate: guided-tour, virtual-tour, field-trip, and program revenue
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / tours
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Recreates the DPR tour-family line items from the enriched Gateway ticket
 -- journal. Each measure is (quantity, revenue) for a product cohort selected

@@ -1,9 +1,8 @@
-{{ config(materialized='view') }}
-
 -- Marts report: Retail Carts Analysis Report
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per date_key (Memorial Carts area)
+-- Grain: one row per date_key (Memorial Carts area)
 --
 -- Presentation view for report.retail_carts_analysis_report. A memorial-carts
 -- lens on fct_retail_daily with the legacy "adjusted memorial visitor"
@@ -19,6 +18,8 @@
 -- visitors) and are 0 until sensordata lands -- so the per-cap/capture ratios
 -- are NULL by design today. The additive sales/profit/customers are live now.
 -- ADR-004: no logic in Power BI; reads this view as-is.
+
+{{ config(materialized='view') }}
 
 with carts as (
     select

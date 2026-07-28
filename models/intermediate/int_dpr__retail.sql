@@ -1,7 +1,8 @@
--- Silver DPR: retail gross profit, MUS AG, and retail-sourced donations
+-- Silver intermediate: retail gross profit, MUS AG, and retail-sourced donations
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per business_date (aliased date_key)
+-- Grain: one row per business_date (aliased date_key)
 --
 -- Recreates the CounterPoint-sourced DPR line items from the retail-line
 -- silver model. Gross profit = sales - cost; donations are the summary-
@@ -20,10 +21,10 @@
 -- t_reporting_cafe_revenue_donations, and fact_cogs.
 --
 -- Donation SKU roles (seed_retail_donation_item, resolved 2026-07-08):
---   cart_ask  -> '7-999'   (legacy 483, Donation Ask, Memorial Carts)
---   mus_exit  -> '101375'  (legacy 886, Donation Box Store Exit)
---   mask      -> '200704'  (legacy 4618, Mask donations; dormant since 2021)
---   plaza_box -> '101165'  (legacy 3375, Plaza donation box)
+-- cart_ask -> '7-999' (legacy 483, Donation Ask, Memorial Carts)
+-- mus_exit -> '101375' (legacy 886, Donation Box Store Exit)
+-- mask -> '200704' (legacy 4618, Mask donations; dormant since 2021)
+-- plaza_box -> '101165' (legacy 3375, Plaza donation box)
 
 {{ config(materialized='view') }}
 

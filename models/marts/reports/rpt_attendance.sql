@@ -1,9 +1,8 @@
-{{ config(materialized='view') }}
-
 -- Marts report: Attendance Report
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Presentation view for report.attendance_report. Combines DPR attendance
 -- (mem/mus) with the Sensource "memorial_only" plaza count and the retail
@@ -12,6 +11,8 @@
 -- from the Sensource stub (empty until sensordata lands). Store counts fall
 -- back to retail transactions as an interim proxy.
 -- ADR-004: no logic in Power BI.
+
+{{ config(materialized='view') }}
 
 with dpr as (
     select date_key, date_value, is_commemoration_day, mem_attendance, mus_attendance

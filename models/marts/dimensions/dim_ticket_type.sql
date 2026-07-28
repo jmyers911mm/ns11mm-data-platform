@@ -1,11 +1,13 @@
-/*
-  dim_ticket_type
-  Source: stg_gateway__items
-  Grain: one row per item_id (Gateway PLU/item catalog entry)
-
-  Classifies each ticket/pass/tour/merchandise item with derived item_type
-  and pricing context.
-*/
+-- Marts dimension: dim_ticket_type — ticket / pass / tour / merch item classification
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain: one row per item_id (Gateway PLU/item catalog entry)
+--
+-- Classifies each ticket/pass/tour/merchandise item with derived item_type
+-- and pricing context.
+--
+-- Source: stg_gateway__items
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

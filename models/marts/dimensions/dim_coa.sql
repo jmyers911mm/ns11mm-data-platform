@@ -1,10 +1,12 @@
-/*
-  dim_coa
-  Source: stg_gateway__coa
-  Grain: one row per coa_id (chart of accounts entry)
-
-  Gateway chart of accounts dimension for journal entry classification.
-*/
+-- Marts dimension: dim_coa — Gateway chart of accounts for journal classification
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (finance mapping)
+-- Grain: one row per coa_id (chart of accounts entry)
+--
+-- Gateway chart of accounts dimension for journal entry classification.
+--
+-- Source: stg_gateway__coa
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

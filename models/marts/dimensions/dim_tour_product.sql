@@ -1,11 +1,13 @@
-/*
-  dim_tour_product
-  Source: seed_tour_plu (dbt seed)
-  Grain: one row per PLU code
-
-  Maps tour-related PLU codes to their DPR line item classification (tour type)
-  for reporting segmentation.
-*/
+-- Marts dimension: dim_tour_product — tour PLU -> DPR line-item classification
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / tours
+-- Grain: one row per PLU code
+--
+-- Maps tour-related PLU codes to their DPR line item classification (tour type)
+-- for reporting segmentation.
+--
+-- Source: seed_tour_plu (dbt seed)
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

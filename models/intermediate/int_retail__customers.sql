@@ -1,9 +1,8 @@
-{{ config(materialized='view') }}
-
 -- Silver intermediate: retail customer / transaction counts
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per business_date x key_facility
+-- Grain: one row per business_date x key_facility
 --
 -- Replaces legacy 911dw.fact_num_tickets (t_fact_num_tickets from ps_tkt_hist +
 -- ps_tkt_hist_lin). Counts distinct retail transactions per selling area.
@@ -13,6 +12,8 @@
 -- grain rather than in int_retail__performance (category grain). The Retail
 -- Performance Report's customers_mus_store / customers_mem_cart /
 -- cafe1_transactions all resolve to this measure per facility.
+
+{{ config(materialized='view') }}
 
 with lines as (
     select * from {{ ref('int_counterpoint__retail_lines') }}

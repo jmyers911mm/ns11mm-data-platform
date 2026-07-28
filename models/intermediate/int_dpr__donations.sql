@@ -1,7 +1,8 @@
--- Silver DPR: Gateway ticketing donations (issued) and box/exit donations
+-- Silver intermediate: Gateway ticketing donations (issued) and box/exit donations
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: donations
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Ticketing donations come from the item-journal grain filtered to donation
 -- museum categories. The box-office memorial donation and museum-exit
@@ -13,9 +14,9 @@
 -- (box_office_mem_don, box_office_mus_exit_don, coatcheck_don).
 --
 -- Category keys (legacy key_museum_category):
---   3221 -> box_office_mem_don (DONOPSMEM003 Plaza Box)
---   3220 -> box_office_mus_exit_don (DONOPSMUS003 Museum Exit Box)
---   1131,1359,1909 -> excluded from aggregate ticketing donations
+-- 3221 -> box_office_mem_don (DONOPSMEM003 Plaza Box)
+-- 3220 -> box_office_mus_exit_don (DONOPSMUS003 Museum Exit Box)
+-- 1131,1359,1909 -> excluded from aggregate ticketing donations
 -- The category surrogate keys resolve via matrix code; the museum-category
 -- integer keys are a legacy 911dw dim_galaxy_items artifact. Where a category
 -- integer is unavailable at staging grain, matrix-code proxies are used and

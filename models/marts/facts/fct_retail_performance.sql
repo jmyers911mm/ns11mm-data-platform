@@ -1,9 +1,8 @@
-{{ config(materialized='table') }}
-
 -- Marts fact: retail performance (tidy, category grain)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per date_key x key_facility x category_code
+-- Grain: one row per date_key x key_facility x category_code
 --
 -- The additive backbone of the Retail Performance Report. Long/tidy layout:
 -- one row per selling area per product category per day, so any category
@@ -14,6 +13,8 @@
 -- and per-cap metrics are computed in rpt_retail_performance.
 -- Budget is left-joined from a stub seed (empty today) to preserve the seam
 -- per ADR-005 (budget source gated).
+
+{{ config(materialized='table') }}
 
 with perf as (
     select * from {{ ref('int_retail__performance') }}

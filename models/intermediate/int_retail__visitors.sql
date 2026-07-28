@@ -1,19 +1,20 @@
-{{ config(materialized='view') }}
-
 -- Silver intermediate: retail visitor counts + ecommerce orders (STUB)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per business_date x key_facility
+-- Grain: one row per business_date x key_facility
 --
 -- Holds the two measures the Retail Performance Report needs that do NOT come
 -- from CounterPoint:
---   1. Sensource / Atrium visitor counts  -> conversion-rate + rev-per-visitor
---   2. Shopify ecommerce order counts      -> ecom_total_orders
+-- 1. Sensource / Atrium visitor counts -> conversion-rate + rev-per-visitor
+-- 2. Shopify ecommerce order counts -> ecom_total_orders
 --
 -- STUB STATUS: both sources are not yet ingested (sensordata seed + Shopify
 -- pipeline / ADR-008). This model reads empty stub seeds so the fact and report
 -- compile and the join seam exists today; it populates once those feeds land.
 -- Base tables to seed: sensordata (ServerManager), fact_shopify_orders / Shopify.
+
+{{ config(materialized='view') }}
 
 {% set ecom_key_facility = 1234 %}   {# Ecommerce facility (see seed_facility_area) #}
 

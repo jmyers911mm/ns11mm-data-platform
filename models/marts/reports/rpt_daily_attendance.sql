@@ -1,15 +1,16 @@
-{{ config(materialized='view') }}
-
 -- Marts report: Daily Attendance Report
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Presentation view for report.daily_attendance_report. Legacy reads
 -- SUM(passes) from 911dw.fact_passes_by_hour. Built here from the hourly-passes
 -- stub (empty until the hourly passes feed lands); falls back to the scan-based
 -- museum attendance from fct_daily_performance so the report is non-empty today.
 -- ADR-004: no logic in Power BI.
+
+{{ config(materialized='view') }}
 
 with passes as (
     select

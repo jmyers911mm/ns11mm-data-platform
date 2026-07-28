@@ -1,11 +1,13 @@
-/*
-  dim_product
-  Source: stg_counterpoint__imitem
-  Grain: one row per item_no (CounterPoint retail SKU)
-
-  Retail product dimension for museum store, carts, ecommerce. Derives price_tier
-  and product_group from category/price attributes.
-*/
+-- Marts dimension: dim_product — retail product (SKU) dimension
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain: one row per item_no (CounterPoint retail SKU)
+--
+-- Retail product dimension for museum store, carts, ecommerce. Derives price_tier
+-- and product_group from category/price attributes.
+--
+-- Source: stg_counterpoint__imitem
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

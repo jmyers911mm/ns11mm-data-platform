@@ -1,11 +1,8 @@
--- Rename fiscal_year/fiscal_month to year/month for simplified calendar dimensions
--- Co-authored with CoCo
-{{ config(materialized='view') }}
-
 -- Marts report: Monthly Retail KPI
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per month x selling area
+-- Grain: one row per month x selling area
 --
 -- Monthly rollup of fct_retail_daily for report.monthly_retail_kpi (the legacy
 -- report is a kettle-driven monthly matrix per area: sales, profit, units,
@@ -13,6 +10,8 @@
 -- Ratios are recomputed at the month grain (ratio-of-sums), never averaged
 -- from the daily grain. Visitor-based KPIs are NULL until Sensource lands.
 -- ADR-004: no logic in Power BI.
+
+{{ config(materialized='view') }}
 
 with daily as (
     select * from {{ ref('fct_retail_daily') }}

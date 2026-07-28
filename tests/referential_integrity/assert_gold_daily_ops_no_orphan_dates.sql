@@ -1,5 +1,6 @@
--- Validates all dates in fct_daily_operations exist in dim_date
+-- Test (referential_integrity): every fct_daily_operations visit_date exists in dim_date
 -- Co-authored with CoCo
+-- Severity: error — orphan dates break date-dimension joins in reporting
 
 select f.visit_date
 from {{ ref('fct_daily_operations') }} f

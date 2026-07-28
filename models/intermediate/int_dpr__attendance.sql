@@ -1,7 +1,8 @@
--- Silver DPR: scan-based museum and memorial attendance
+-- Silver intermediate: scan-based museum and memorial attendance
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Recreates the DPR memorial-attendance line item (and a scanned-museum
 -- companion for reconciliation) from the Gateway usage/scan feed now exposed
@@ -13,18 +14,18 @@
 -- t_reporting_mem_attendance, t_reporting_mus_attendance.
 --
 -- SCOPE NOTE (ADR-005 gate):
---   * Museum vs. memorial is classified from stg_gateway__facility.facility_name
---     (name pattern) rather than the legacy numeric key_facility map
---     (museum 1006/3000, memorial 2000), because the RAW seed load carries
---     facility NAMES, not the 911dw key_facility surrogate keys. Confirm the
---     name-to-area mapping with Kenny Yeung / Chris Wogas before go-live; if a
---     facility should map elsewhere, adjust the CASE below (or promote it to a
---     seed) rather than editing downstream models.
---   * mem_attendance here is the SCAN component only. The legacy museum
---     attendance additionally blends Sensource turnstile counts, which are not
---     yet staged; mus_attendance_scanned is therefore provided for QA against
---     the existing ga-ticket proxy in int_dpr__admissions, and is intentionally
---     NOT wired into fct_daily_performance to avoid redefining a live measure.
+-- * Museum vs. memorial is classified from stg_gateway__facility.facility_name
+-- (name pattern) rather than the legacy numeric key_facility map
+-- (museum 1006/3000, memorial 2000), because the RAW seed load carries
+-- facility NAMES, not the 911dw key_facility surrogate keys. Confirm the
+-- name-to-area mapping with Kenny Yeung / Chris Wogas before go-live; if a
+-- facility should map elsewhere, adjust the CASE below (or promote it to a
+-- seed) rather than editing downstream models.
+-- * mem_attendance here is the SCAN component only. The legacy museum
+-- attendance additionally blends Sensource turnstile counts, which are not
+-- yet staged; mus_attendance_scanned is therefore provided for QA against
+-- the existing ga-ticket proxy in int_dpr__admissions, and is intentionally
+-- NOT wired into fct_daily_performance to avoid redefining a live measure.
 
 {{ config(materialized='view') }}
 

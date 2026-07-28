@@ -9,15 +9,18 @@ seeds:
     config:
       grants:
         select: ['POWERBI_ROLE']
-      column_types:
-        line_item_code: varchar
-        sort_order: integer
-        section: varchar
-        line_item: varchar
-        indent: integer
-        format: varchar
-        value_type: varchar
-        availability: varchar
+      # column_types intentionally omitted — dbt infers types from the CSV.
+      # (Numeric columns like sort_order / indent / section_sort_order load as NUMBER.)
+      # column_types:
+      #   line_item_code: varchar
+      #   sort_order: integer
+      #   section: varchar
+      #   section_sort_order: integer
+      #   line_item: varchar
+      #   indent: integer
+      #   format: varchar
+      #   value_type: varchar
+      #   availability: varchar
     columns:
       - name: line_item_code
         description: Stable key joined from rpt_dpr_report_long. Grain of this table.
@@ -39,7 +42,6 @@ seeds:
           - not_null
           - accepted_values:
               values: [mem_field_trip, mus_field_trip, revealed_tour, ask_educator, architecture_tour, youth_fam_tour, early_access_tour, ea_mem_mus_tour]
-
   - name: seed_retail_item_facility
     description: >
       CounterPoint item_no overrides for facility assignment. Checked before
@@ -58,7 +60,6 @@ seeds:
       - name: key_facility
         description: 911dw facility key the item rolls up to.
         data_tests: [not_null]
-
   - name: seed_retail_store_facility
     description: >
       CounterPoint store_id to facility fallback mapping, applied when no
@@ -74,7 +75,6 @@ seeds:
       - name: key_facility
         description: 911dw facility key the store rolls up to.
         data_tests: [not_null]
-
   - name: seed_facility_area
     description: "Selling-area labels, grouping, and stable facility_group name for retail facility keys (1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships). facility_group is the single source of truth for the key_facility -> name map consumed by int_counterpoint__retail_lines and dim_facility."
     config:
@@ -89,7 +89,6 @@ seeds:
       - name: facility_group
         description: "Stable snake_case facility identity (museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other). Downstream references this name, not the raw key_facility number."
         data_tests: [not_null]
-
   - name: tmp_seed_sensource__visitors
     description: "STUB: Sensource/Atrium visitor counts per facility per day. Empty until sensordata (ServerManager) is ingested. Populates conversion-rate and rev-per-visitor ratios."
     config:
@@ -99,7 +98,6 @@ seeds:
         business_date: date
         key_facility: integer
         visitor_count: integer
-
   - name: tmp_seed_shopify__orders
     description: "STUB: Shopify ecommerce order counts/sales/donations per day. Empty until the Shopify pipeline lands (ADR-008)."
     config:
@@ -110,7 +108,6 @@ seeds:
         order_count: integer
         ecom_sales: float
         ecom_donations: float
-
   - name: tmp_seed_retail__budget
     description: "STUB: retail budget/goal values per facility per day per metric. Empty until the budget source is staged (ADR-005)."
     config:
@@ -121,7 +118,6 @@ seeds:
         key_facility: integer
         metric_name: varchar
         budget_value: float
-
   - name: tmp_seed_sensource__attendance
     description: "STUB: Sensource attendance by area (memorial only, store, store-Vesey). Empty until sensordata (ServerManager) is ingested."
     config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, area: varchar, attendance: integer } }
@@ -137,7 +133,6 @@ seeds:
   - name: tmp_seed_wifi__audience
     description: "STUB + PII: WiFi captive-portal marketing audience (email, name). RESTRICTED. Empty until the WiFi feed is ingested; treat as PII when populated."
     config: { schema: raw_seed, tags: ['build_temp','stub','pii','restricted'], column_types: { business_date: date, email_address: varchar, first_name: varchar, last_name: varchar } }
-
   - name: seed_service_plu
     description: >
       One row per Galaxy PLU mapping to a DPR visitor-services line. Enumerates

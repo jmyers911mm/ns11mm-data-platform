@@ -1,11 +1,13 @@
-/*
-  dim_access_code
-  Source: stg_gateway__tickets (distinct access_code) + stg_gateway__items (name lookup)
-  Grain: one row per access_code value
-
-  Classifies the ~36 access codes into admission type categories. These codes
-  control which facility a ticket grants entry to.
-*/
+-- Marts dimension: dim_access_code — admission-type classification for Gateway access codes
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing
+-- Grain: one row per access_code value
+--
+-- Classifies the ~36 access codes into admission type categories. These codes
+-- control which facility a ticket grants entry to.
+--
+-- Source: stg_gateway__tickets (distinct access_code) + stg_gateway__items (name lookup)
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

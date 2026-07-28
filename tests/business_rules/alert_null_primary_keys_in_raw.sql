@@ -1,5 +1,6 @@
--- Alerts when raw source tables contain null primary keys (data quality issue in CSV loads)
+-- Test (business_rule): raw source seeds carry no null primary keys (CSV-load guard)
 -- Co-authored with CoCo
+-- Severity: warn — surfaces load issues without breaking the daily build
 
 {{ config(severity='warn') }}
 

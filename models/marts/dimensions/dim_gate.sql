@@ -1,11 +1,13 @@
-/*
-  dim_gate
-  Source: stg_gateway__acps + stg_gateway__facility
-  Grain: one row per acp_unique_id (access control point)
-
-  Combines ACP devices with their parent facility to provide a single gate
-  dimension for scan/usage attribution.
-*/
+-- Marts dimension: dim_gate — gate / access-control-point dimension for scan attribution
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: admissions / ticketing (attendance)
+-- Grain: one row per acp_unique_id (access control point)
+--
+-- Combines ACP devices with their parent facility to provide a single gate
+-- dimension for scan/usage attribution.
+--
+-- Source: stg_gateway__acps + stg_gateway__facility
 
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 

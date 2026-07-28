@@ -1,10 +1,8 @@
--- Fix visual_id type mismatch join between usage (TEXT) and jnltickets (FLOAT)
-{{ config(materialized='view') }}
-
 -- Silver intermediate: gate scan lines with ticket market segment
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance / scanning
--- Grain:  one row per usage (scan) event with its ticket's market category
+-- Grain: one row per usage (scan) event with its ticket's market category
 --
 -- Replaces legacy 911dw.fact_dailyscan_data (t_fact_dailyscan_data from Galaxy
 -- usage). Joins each scan event to the ticket behind it via visual_id, then to
@@ -23,6 +21,8 @@
 -- the mapping source -- flagged for confirmation.
 -- Attribute (matrix_code / channel) lookup comes from the shared
 -- int_gateway__item_attributes.
+
+{{ config(materialized='view') }}
 
 with scans as (
     select

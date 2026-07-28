@@ -1,5 +1,6 @@
--- Validates no negative revenue in fct_daily_operations
+-- Test (business_rule): no negative ticket_revenue in fct_daily_operations
 -- Co-authored with CoCo
+-- Severity: error — negative revenue indicates a sign / aggregation defect
 
 select visit_date, ticket_revenue
 from {{ ref('fct_daily_operations') }}

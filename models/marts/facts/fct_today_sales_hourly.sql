@@ -1,15 +1,16 @@
-{{ config(materialized='table') }}
-
 -- Marts fact: today's sales, hourly
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
--- Grain:  one row per date_key x hour_of_day x key_facility
+-- Grain: one row per date_key x hour_of_day x key_facility
 --
 -- Backs report.hourly_retail_report (Today's Sales). Now sourced from the real
 -- same-day CounterPoint feed (stg_counterpoint__todays_retail) instead of the
 -- stub. store_id is mapped to key_facility via seed_retail_store_facility;
 -- transactions = count(distinct doc_id); units = quantity_sold. ADR-004:
 -- additive only. Area label comes from the conformed dim_facility.
+
+{{ config(materialized='table') }}
 
 with today as (
     select

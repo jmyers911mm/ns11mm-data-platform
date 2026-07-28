@@ -1,6 +1,6 @@
--- Reconciliation test: rpt avg_ticket_price must equal revenue / tickets_sold from fact
+-- Test (reconciliation): rpt avg_ticket_price = revenue / tickets_sold from the fact (day grain)
 -- Co-authored with CoCo
--- Fails if the report's formula ever diverges from the governed fact at day grain.
+-- Severity: error — fails if the report formula diverges from the governed fact (define-once)
 with fact as (
     select date_key, total_admission_revenue, tickets_sold
     from {{ ref('fct_daily_performance') }}

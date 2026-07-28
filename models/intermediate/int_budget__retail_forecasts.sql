@@ -1,7 +1,8 @@
--- Intermediate: cleanse and type-cast retail forecast seed
+-- Silver intermediate: cleanse and type-cast retail forecast seed
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
--- Grain:  one row per date_key x key_facility
+-- Grain: one row per date_key x key_facility
 --
 -- Converts key_date (NUMBER 20260101) to DATE, casts mixed TEXT columns to
 -- numeric, and coalesces NULLs to zero for additive measures.

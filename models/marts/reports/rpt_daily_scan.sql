@@ -1,9 +1,8 @@
-{{ config(materialized='view') }}
-
 -- Marts report: Daily Scan Report
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance / scanning
--- Grain:  one row per date_key x segment_key, plus a daily total context column
+-- Grain: one row per date_key x segment_key, plus a daily total context column
 --
 -- Presentation view for report.daily_scan_report_new. Adds the report's
 -- market-mix percentages at query grain: each segment's share of total passes
@@ -11,6 +10,8 @@
 -- Percentages divide by the day total (window sum), never averaged. Budget
 -- variance is present but NULL until the DSR forecast seed is populated.
 -- ADR-004: no logic in Power BI.
+
+{{ config(materialized='view') }}
 
 with fct as (
     select * from {{ ref('fct_daily_scan') }}

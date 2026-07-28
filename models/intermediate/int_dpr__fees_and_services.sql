@@ -1,7 +1,8 @@
--- Silver DPR: service fees, audio guide/headset, memorial+museum tour
+-- Silver intermediate: service fees, audio guide/headset, memorial+museum tour
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: revenue / visitor services
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Service fees and audio-guide revenue derive from the item-journal grain
 -- (JnlItems, jnl_code_id 102-104), not the ticket grain. The memorial+museum

@@ -1,5 +1,6 @@
--- Asserts critical tables are not empty after a build
+-- Test (business_rule): critical fact / feature tables are non-empty after a build
 -- Co-authored with CoCo
+-- Severity: error — an empty critical table is a build failure
 
 {% set critical_tables = [
     'fct_daily_operations',

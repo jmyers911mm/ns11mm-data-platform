@@ -1,5 +1,6 @@
--- Validates Gold revenue totals reconcile with intermediate source within 0.1%
+-- Test (reconciliation): Gold revenue totals reconcile with the intermediate source within 0.1%
 -- Co-authored with CoCo
+-- Severity: error — drift beyond tolerance means a gold aggregation lost or double-counted revenue
 
 with int_revenue as (
     select sum(total_amount) as total

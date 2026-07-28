@@ -1,7 +1,8 @@
--- Mart fact: DPR budget/forecast (one row per day)
+-- Marts fact: DPR budget/forecast (one row per day)
+-- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
--- Grain:  one row per date_key
+-- Grain: one row per date_key
 --
 -- Budget/forecast counterpart to fct_daily_performance. All additive DPR
 -- budget lines — tickets, revenue, audio, donations, ecommerce, cafe, tours.

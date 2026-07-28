@@ -1,8 +1,12 @@
-/*
-  dim_date — Date dimension spanning 2000-01-01 to 2035-12-31.
-  Fully self-contained; no upstream source dependency.
-  Includes NS11MM-specific flags: is_commemoration_day (September 11 anniversary).
-*/
+-- Marts dimension: dim_date — conformed date spine, 2000-01-01 to 2035-12-31
+-- Co-authored with CoCo
+-- ---------------------------------------------------------------------------
+-- Domain: shared (date spine)
+-- Grain: one row per calendar date
+--
+-- Fully self-contained; no upstream source dependency. Includes NS11MM-specific
+-- flags: is_commemoration_day (September 11 anniversary).
+
 {{ config(materialized='table', tags=['daily', 'critical']) }}
 with date_spine as (
     select dateadd(day, seq4(), '2000-01-01'::date) as date_day
@@ -63,5 +67,57 @@ final as (
         holiday_name,
         case when holiday_name is not null then true else false end      as is_holiday
     from holiday_flags
+),
+
+-- =====================================================================
+-- Period-to-date (WTD/MTD/QTD/YTD) flags with same-day-last-year (SDLY)
+-- counterparts for the current year + prior 5 years.
+-- =====================================================================
+
+-- One row per comparison year. anchor_date is shifted -364 days per year
+-- (52 whole weeks) so it always lands on the same weekday as today.
+anchors as (
+    select
+        n                                          as years_ago,
+        dateadd(day, -364 * n, current_date())     as anchor_date
+    from ( values (0), (1), (2), (3), (4), (5) ) as v(n)
+),
+
+-- The four period-to-date windows [start .. anchor] for each comparison year.
+-- wtd_start mirrors this model's own first_day_of_week (Sunday start, dayofweek 0=Sun).
+windows as (
+    select
+        years_ago,
+        anchor_date,
+        dateadd(day, -1 * dayofweek(anchor_date), anchor_date) as wtd_start,
+        date_trunc('month',   anchor_date)::date              as mtd_start,
+        date_trunc('quarter', anchor_date)::date              as qtd_start,   -- calendar quarter
+        date_trunc('year',    anchor_date)::date              as ytd_start    -- calendar year (Jan 1)
+    from anchors
+),
+
+-- For each calendar day, which comparison year (if any) it falls into, per period.
+-- Windows never overlap across years, so max() extracts the single matching years_ago.
+ptd as (
+    select
+        f.date_key,
+        max(case when f.date_key between w.wtd_start and w.anchor_date then w.years_ago end) as wtd_years_ago,
+        max(case when f.date_key between w.mtd_start and w.anchor_date then w.years_ago end) as mtd_years_ago,
+        max(case when f.date_key between w.qtd_start and w.anchor_date then w.years_ago end) as qtd_years_ago,
+        max(case when f.date_key between w.ytd_start and w.anchor_date then w.years_ago end) as ytd_years_ago
+    from final f
+    cross join windows w
+    group by f.date_key
 )
-select * from final
+
+select
+    f.*,
+    iff(p.wtd_years_ago is not null, 'YES', 'NO')  as wtd_flag,
+    iff(p.mtd_years_ago is not null, 'YES', 'NO')  as mtd_flag,
+    iff(p.qtd_years_ago is not null, 'YES', 'NO')  as qtd_flag,
+    iff(p.ytd_years_ago is not null, 'YES', 'NO')  as ytd_flag,
+    -- COALESCE (not OR) so comparison year 0 is preserved; widest window first.
+    coalesce(p.ytd_years_ago, p.qtd_years_ago, p.mtd_years_ago, p.wtd_years_ago)
+                                                   as comparison_years_ago
+from final f
+left join ptd p on f.date_key = p.date_key
