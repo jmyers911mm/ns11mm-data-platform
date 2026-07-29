@@ -201,3 +201,54 @@ models:
       - name: cafe_don
         description: Cafe donations.
         data_type: number
+
+  - name: rpt_retail_powerbi
+    description: >
+      Power BI consumption layer over the RETAIL semantic view (MARTS.RETAIL).
+      One row per (REPORT_DATE, KEY_FACILITY). Thin, display-only projection per
+      ADR-004 — no business logic; metric definitions live in the semantic view.
+      Non-additive ratios are omitted and recomputed from summed components.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        tests: [not_null]
+      - name: key_facility
+        tests: [not_null]
+
+  - name: rpt_retail_budget_daily
+    description: >
+      Day × facility retail budget (goal), conformed from FCT_BUDGET_RETAIL_FORECASTS.
+      Column names mirror rpt_retail_powerbi so both unpivot identically in
+      rpt_retail_report_long. net_units and ecom_orders have no budget source (NULL).
+    config:
+      materialized: view
+
+  - name: rpt_retail_report_long
+    description: >
+      Tidy Retail Performance presentation, one row per (report_date, key_facility,
+      line_item_code) carrying actual + budget. Ratio lines carry numerator/denominator
+      (ratio-of-sums recomputed at display grain, ADR-004). Visitor-based ratios NULL
+      until Sensource; attendance is cross-domain (fct_daily_performance actual, forecast goal).
+    config:
+      materialized: view
+
+  - name: rpt_retail_category_long
+    description: >
+      Category page (page 2): one row per (report_date, key_facility, category_code)
+      with additive units/profit/sales/donations. Budget is category-level NULL today.
+    config:
+      materialized: view
+
+  - name: rpt_retail_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of retail facts (headline totals,
+      per-area splits, DoD/WoW/YoY, MTD/YTD, 7-day direction, top movers). Sole input
+      to the Cortex narrative — unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+
+  - name: rpt_retail_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source SQL
+      for the daily task in scripts/setup_retail_narrative.sql. Narrates only brief_json.

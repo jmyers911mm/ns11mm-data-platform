@@ -1,0 +1,35 @@
+line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
+ATTENDANCE,10,Attendance,10,Attendance,0,Number0,additive,Available,attendance,,,
+MUSEUM_STORE__CAPTURE_RATE,110,Museum Store Performance,20,Capture Rate,1,Percent1,ratio,Stub,museum_store,1003,visitor_count,attendance
+MUSEUM_STORE__VISITORS,120,Museum Store Performance,20,Visitors,1,Number0,additive,Stub,museum_store,1003,,
+MUSEUM_STORE__CUSTOMERS,130,Museum Store Performance,20,Customers,1,Number0,additive,Available,museum_store,1003,,
+MUSEUM_STORE__CONVERSION_RATE,140,Museum Store Performance,20,Conversion Rate,1,Percent1,ratio,Stub,museum_store,1003,transactions,visitor_count
+MUSEUM_STORE__AVG_DAILY_SALE,150,Museum Store Performance,20,Average Daily Sale,1,Currency2,ratio,Available,museum_store,1003,net_sales,transactions
+MUSEUM_STORE__GROSS_MERCH_SALES,160,Museum Store Performance,20,Gross Merchandise Sales,1,Currency0,additive,Available,museum_store,1003,,
+MUSEUM_STORE__GROSS_MARGIN_PROFIT,170,Museum Store Performance,20,Gross Margin Profit,1,Currency0,additive,Available,museum_store,1003,,
+MUSEUM_STORE__DONATION_ASK,180,Museum Store Performance,20,Donation Ask,1,Currency0,additive,Available,museum_store,1003,,
+MUSEUM_STORE__REV_PER_VISITOR,190,Museum Store Performance,20,Revenue / Museum Visitor,1,Currency2,ratio,Available,museum_store,1003,net_sales,attendance
+MEMORIAL_CARTS__CUSTOMERS,210,Memorial Carts,30,Customers,1,Number0,additive,Available,memorial_carts,1020,,
+MEMORIAL_CARTS__CONVERSION_RATE,220,Memorial Carts,30,Conversion Rate,1,Percent1,ratio,Stub,memorial_carts,1020,transactions,visitor_count
+MEMORIAL_CARTS__AVG_DAILY_SALE,230,Memorial Carts,30,Average Daily Sale,1,Currency2,ratio,Available,memorial_carts,1020,net_sales,transactions
+MEMORIAL_CARTS__GROSS_MERCH_SALES,240,Memorial Carts,30,Gross Merchandise Sales,1,Currency0,additive,Available,memorial_carts,1020,,
+MEMORIAL_CARTS__GROSS_MARGIN_PROFIT,250,Memorial Carts,30,Gross Margin Profit,1,Currency0,additive,Available,memorial_carts,1020,,
+MEMORIAL_CARTS__DONATIONS,260,Memorial Carts,30,Donations,1,Currency0,additive,Available,memorial_carts,1020,,
+MEMORIAL_CARTS__REV_PER_VISITOR,270,Memorial Carts,30,Revenue / Museum Visitor,1,Currency2,ratio,Available,memorial_carts,1020,net_sales,attendance
+MUSEUM_CAFE__SALES,310,Museum Cafe,40,Sales,1,Currency0,additive,Available,museum_cafe,4007,,
+MUSEUM_CAFE__PROFIT,320,Museum Cafe,40,Profit,1,Currency0,additive,Available,museum_cafe,4007,,
+MUSEUM_CAFE__CONVERSION_RATE,330,Museum Cafe,40,Conversion,1,Percent1,ratio,Stub,museum_cafe,4007,transactions,visitor_count
+MUSEUM_CAFE__TRANSACTIONS,340,Museum Cafe,40,Transactions,1,Number0,additive,Available,museum_cafe,4007,,
+MUSEUM_CAFE__AVG_SALE,350,Museum Cafe,40,Average Sale,1,Currency2,ratio,Available,museum_cafe,4007,net_sales,transactions
+MUSEUM_CAFE__DONATION_ASK,360,Museum Cafe,40,Donation Ask,1,Currency0,additive,Available,museum_cafe,4007,,
+MUSEUM_CAFE__REV_PER_VISITOR,370,Museum Cafe,40,Revenue / Museum Visitor,1,Currency2,ratio,Available,museum_cafe,4007,net_sales,attendance
+ECOMMERCE__SALES,410,E-commerce,50,Sales,1,Currency0,additive,Stub,ecommerce,1234,,
+ECOMMERCE__ORDERS,420,E-commerce,50,# of Orders,1,Number0,additive,Stub,ecommerce,1234,,
+ECOMMERCE__AVG_SALE,430,E-commerce,50,Average Sale,1,Currency2,ratio,Stub,ecommerce,1234,net_sales,ecom_orders
+ECOMMERCE__DONATIONS,440,E-commerce,50,Donations,1,Currency0,additive,Stub,ecommerce,1234,,
+ECOMMERCE__GROSS_PROFIT_PER_ORDER,450,E-commerce,50,Gross Profit / Order,1,Currency2,ratio,Stub,ecommerce,1234,net_profit,ecom_orders
+ECOMMERCE__GROSS_PROFIT,460,E-commerce,50,Gross Profit from E-Commerce,1,Currency0,additive,Stub,ecommerce,1234,,
+MUS_AG__PROFIT,510,Museum Audio Guide,60,Profit,1,Currency0,additive,Available,mus_ag,1060,,
+MUS_AG__UNITS_SOLD,520,Museum Audio Guide,60,Units Sold,1,Number0,additive,Available,mus_ag,1060,,
+MUS_AG__REV_PER_VISITOR,530,Museum Audio Guide,60,Revenue / Museum Visitor,1,Currency2,ratio,Available,mus_ag,1060,net_sales,attendance
+MUS_AG__CONVERSION_RATE,540,Museum Audio Guide,60,Conversion,1,Percent1,ratio,Available,mus_ag,1060,net_units,attendance

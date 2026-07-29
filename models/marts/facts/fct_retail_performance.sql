@@ -1,5 +1,4 @@
 -- Marts fact: retail performance (tidy, category grain)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per date_key x key_facility x category_code

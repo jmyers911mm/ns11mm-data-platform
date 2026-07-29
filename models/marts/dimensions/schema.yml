@@ -246,3 +246,12 @@ models:
         data_tests:
           - accepted_values:
               values: ['Available', 'Partial', 'Gap']
+
+  - name: dim_retail_line_item
+    description: "Retail Performance Report line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        tests: [unique, not_null]

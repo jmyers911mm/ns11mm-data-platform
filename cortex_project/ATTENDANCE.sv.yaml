@@ -48,6 +48,10 @@ tables:
         expr: SUM(TICKETS_SOLD)
         data_type: NUMBER
         description: Total tickets sold
+      - name: TOTAL_PASSES_BUDGET
+        expr: SUM(PASSES_BUDGET)
+        data_type: NUMBER
+        description: Total forecast passes (DSR forecast). Added 1.6.0 for the Daily Scan Report forecast/variance columns.
   - name: FCT_TICKET_DEMAND_FORECAST
     description: Ticket demand aggregated for forecasting and presale analysis
     base_table:
@@ -220,6 +224,62 @@ tables:
         expr: SUM(TICKETS_RESERVED)
         data_type: NUMBER
         description: Total tickets reserved
+  - name: FCT_TODAY_SALES_HOURLY
+    description: Intraday retail sales by hour x facility (Today's Sales Report). Additive sales/profit/units/transactions. Added 1.6.0.
+    base_table:
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      table: FCT_TODAY_SALES_HOURLY
+    dimensions:
+      - name: HOUR_OF_DAY
+        expr: HOUR_OF_DAY
+        data_type: NUMBER
+      - name: KEY_FACILITY
+        expr: KEY_FACILITY
+        data_type: NUMBER
+      - name: AREA_NAME
+        expr: AREA_NAME
+        data_type: VARCHAR
+    time_dimensions:
+      - name: DATE_KEY
+        expr: DATE_KEY
+        data_type: DATE
+      - name: DATE_VALUE
+        expr: DATE_VALUE
+        data_type: DATE
+    facts:
+      - name: SALES
+        expr: SALES
+        data_type: NUMBER
+      - name: PROFIT
+        expr: PROFIT
+        data_type: NUMBER
+      - name: UNITS
+        expr: UNITS
+        data_type: NUMBER
+      - name: COST
+        expr: COST
+        data_type: NUMBER
+      - name: TRANSACTIONS
+        expr: TRANSACTIONS
+        data_type: NUMBER
+    metrics:
+      - name: TOTAL_TODAY_SALES
+        expr: SUM(SALES)
+        data_type: NUMBER
+        description: Total intraday sales
+      - name: TOTAL_TODAY_PROFIT
+        expr: SUM(PROFIT)
+        data_type: NUMBER
+        description: Total intraday profit
+      - name: TOTAL_TODAY_UNITS
+        expr: SUM(UNITS)
+        data_type: NUMBER
+        description: Total intraday units sold
+      - name: TOTAL_TODAY_TRANSACTIONS
+        expr: SUM(TRANSACTIONS)
+        data_type: NUMBER
+        description: Total intraday transactions (ticket count)
   - name: DIM_DATE
     description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
     base_table:
@@ -230,6 +290,10 @@ tables:
       columns:
         - DATE_KEY
     dimensions:
+      - name: REPORT_DATE
+        expr: DATE_KEY
+        data_type: DATE
+        description: Regular (non-time) date dimension so a flat SEMANTIC_VIEW() projection can select the date. Added 1.6.0.
       - name: DAY_OF_WEEK
         expr: DAY_OF_WEEK
         data_type: NUMBER
@@ -326,3 +390,10 @@ relationships:
     relationship_columns:
       - left_column: SEGMENT_KEY
         right_column: SEGMENT_KEY
+  - name: TODAY_SALES_TO_DATE
+    left_table: FCT_TODAY_SALES_HOURLY
+    right_table: DIM_DATE
+    join_type: many_to_one
+    relationship_columns:
+      - left_column: DATE_KEY
+        right_column: DATE_KEY

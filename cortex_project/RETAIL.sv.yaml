@@ -1,5 +1,5 @@
 name: RETAIL
-description: Retail analytics model for museum store operations. Covers category-grain sales performance (net sales, profit, units, donations) and facility-grain daily aggregates (transactions, visitors, ecommerce orders). Supports per-store and per-category profitability analysis.
+description: Retail analytics model for museum store operations. Covers category-grain sales performance (net sales, profit, units, donations) and facility-grain daily aggregates (transactions, visitors, ecommerce orders, plus facility rollups of sales/profit/units/donations). Supports per-store and per-category profitability analysis, and is the natural-language / Cortex Analyst surface for the Retail Performance Report cluster.
 tables:
   - name: FCT_RETAIL_PERFORMANCE
     description: Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.
@@ -64,6 +64,14 @@ tables:
         expr: SUM(NET_PROFIT)
         data_type: NUMBER
         description: Total net profit
+      - name: TOTAL_NET_UNITS
+        expr: SUM(NET_UNITS)
+        data_type: NUMBER
+        description: Total units sold (category grain). Added 1.6.0 for the Retail Performance Report category page.
+      - name: TOTAL_COST_OF_GOODS
+        expr: SUM(COST_OF_GOODS)
+        data_type: NUMBER
+        description: Total COGS. Added 1.6.0.
       - name: TOTAL_DONATIONS
         expr: SUM(DONATIONS)
         data_type: NUMBER
@@ -73,7 +81,7 @@ tables:
         data_type: NUMBER
         description: Gross margin percentage (profit / sales)
   - name: FCT_RETAIL_DAILY
-    description: Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups.
+    description: Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups of sales/profit/units/donations. This is the single-fact projection the Retail Performance Power BI wrapper (RPT_RETAIL_POWERBI) reads.
     base_table:
       database: NS11MM_DW_DEV_JMYERS
       schema: MARTS
@@ -121,18 +129,40 @@ tables:
         expr: ECOM_ORDERS
         data_type: NUMBER
     metrics:
+      # --- Facility-grain additive rollups (added 1.6.0) --------------------
+      # These let RPT_RETAIL_POWERBI project one clean row per (date, facility)
+      # from a SINGLE fact, exactly like the DPR wrapper reads FCT_DAILY_PERFORMANCE.
+      # Names are namespaced (RETAIL_*) so they do not collide with the
+      # category-grain TOTAL_NET_SALES/TOTAL_NET_PROFIT above.
+      - name: TOTAL_RETAIL_NET_SALES
+        expr: SUM(NET_SALES)
+        data_type: NUMBER
+        description: Facility-grain net sales rollup
+      - name: TOTAL_RETAIL_NET_PROFIT
+        expr: SUM(NET_PROFIT)
+        data_type: NUMBER
+        description: Facility-grain net profit (gross margin profit) rollup
+      - name: TOTAL_RETAIL_NET_UNITS
+        expr: SUM(NET_UNITS)
+        data_type: NUMBER
+        description: Facility-grain units rollup
+      - name: TOTAL_RETAIL_DONATIONS
+        expr: SUM(DONATIONS)
+        data_type: NUMBER
+        description: Facility-grain donation-ask rollup
+      # --- Counts (pre-existing) -------------------------------------------
       - name: TOTAL_TRANSACTIONS
         expr: SUM(TRANSACTIONS)
         data_type: NUMBER
-        description: Total transaction count
+        description: Total transaction count (customers)
       - name: TOTAL_VISITORS
         expr: SUM(VISITOR_COUNT)
         data_type: NUMBER
-        description: Total visitor count to retail areas
+        description: Total visitor count to retail areas (Sensource stub until fed)
       - name: TOTAL_ECOM_ORDERS
         expr: SUM(ECOM_ORDERS)
         data_type: NUMBER
-        description: Total ecommerce orders
+        description: Total ecommerce orders (Shopify stub until fed)
       - name: REVENUE_PER_VISITOR
         expr: SUM(NET_SALES) / NULLIF(SUM(VISITOR_COUNT), 0)
         data_type: NUMBER
@@ -147,6 +177,10 @@ tables:
       columns:
         - DATE_KEY
     dimensions:
+      - name: REPORT_DATE
+        expr: DATE_KEY
+        data_type: DATE
+        description: Regular (non-time) date dimension so a flat SEMANTIC_VIEW() projection can select the date. Added 1.6.0.
       - name: DAY_OF_WEEK_NAME
         expr: DAY_OF_WEEK_NAME
         data_type: VARCHAR
