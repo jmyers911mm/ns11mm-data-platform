@@ -1,5 +1,4 @@
 # Shared utility to append table refresh details to a markdown log file.
-# Co-authored with CoCo
 """
 Append table-level refresh details to docs/REFRESH_LOG.md after each pipeline run.
 

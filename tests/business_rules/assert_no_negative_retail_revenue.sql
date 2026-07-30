@@ -1,5 +1,4 @@
 -- Test (business_rule): no negative net_sales or net_profit in retail facts
--- Co-authored with CoCo
 -- Severity: error — negative values indicate sign / aggregation defect in retail pipeline
 
 select 'fct_retail_performance' as source_table, date_key, key_facility, category_code as detail,

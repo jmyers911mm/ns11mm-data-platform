@@ -1,5 +1,4 @@
 -- Test (reconciliation): rpt avg_ticket_price = revenue / tickets_sold from the fact (day grain)
--- Co-authored with CoCo
 -- Severity: error — fails if the report formula diverges from the governed fact (define-once)
 with fact as (
     select date_key, total_admission_revenue, tickets_sold

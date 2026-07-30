@@ -1,5 +1,4 @@
 -- Marts dimension: dim_customer — customer dimension from Gateway ticketing
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing
 -- Grain: one row per customer_id (Gateway CUSTOMERID)

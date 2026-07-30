@@ -1,5 +1,4 @@
 -- Marts fact: DPR budget/forecast (one row per day)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
 -- Grain: one row per date_key

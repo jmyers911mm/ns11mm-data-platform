@@ -1,5 +1,4 @@
 -- Silver intermediate: service fees, audio guide/headset, memorial+museum tour
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: revenue / visitor services
 -- Grain: one row per date_key

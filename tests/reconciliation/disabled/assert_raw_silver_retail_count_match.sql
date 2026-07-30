@@ -1,6 +1,5 @@
 {{ config(enabled=false) }}
 -- Reconciliation: Silver retail count within 1% of raw CounterPoint seed source
--- Co-authored with CoCo
 
 with raw_count as (
     select count(*) as cnt

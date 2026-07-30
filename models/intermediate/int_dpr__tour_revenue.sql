@@ -1,5 +1,4 @@
 -- Silver intermediate: guided-tour, virtual-tour, field-trip, and program revenue
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / tours
 -- Grain: one row per date_key

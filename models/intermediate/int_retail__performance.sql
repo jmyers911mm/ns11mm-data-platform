@@ -1,5 +1,4 @@
 -- Silver intermediate: retail performance, tidy category grain
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per business_date x key_facility x category_code

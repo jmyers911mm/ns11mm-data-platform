@@ -1,19 +1,22 @@
--- models/marts/reports/rpt_retail_budget_daily.sql
+-- Marts report: budget-vs-actual daily serving — day x facility retail budget (goal)
+-- ---------------------------------------------------------------------------
+-- Domain: retail / budget
+-- Grain:  one row per report_date x key_facility
+--
 -- Day x facility BUDGET (goal) for the Retail Performance Report, conformed
--- from FCT_BUDGET_RETAIL_FORECASTS. Twin of rpt_dpr_budget_daily.
+-- from fct_budget_retail_forecasts. Twin of rpt_dpr_budget_daily. Column
+-- names are aligned to rpt_retail_powerbi (the actuals) so the two unpivot
+-- IDENTICALLY. Feeds rpt_retail_report_long (the report's "... Goal" and
+-- Variance rows) and rpt_retail_narrative_brief.
+-- NOTE: the forecast carries BOTH the additive components (visitors,
+-- customers, revenue, profit, donations, museum_attendance) AND the ratio
+-- goals the PDF prints as-given (capture_rate, conversion_rate, average_sale).
+-- Components are carried so goal ratios recompute from summed components at
+-- any period grain (matching the actual-side ratio-of-sums rule); the
+-- as-given goal ratios pass through too (..._goal_given) for verbatim lines.
+-- net_units and ecom_orders have no budget source -> emitted NULL.
 --
--- Column names are aligned to rpt_retail_powerbi (the actuals) so the two
--- unpivot IDENTICALLY in rpt_retail_report_long -- the report's "... Goal"
--- rows and the Variance rows come from this. One row per (report_date, key_facility).
---
--- The forecast seed carries BOTH the additive components (visitors, customers,
--- revenue, profit, donations, museum_attendance) AND the ratio goals the PDF
--- prints as-given (capture_rate, conversion_rate, average_sale). We carry the
--- components so the goal ratios recompute from summed components at any period
--- grain (matching the actual-side ratio-of-sums rule); the as-given goal ratios
--- are passed through too (…_goal_given) for lines the business wants shown verbatim.
---
--- net_units and ecom_orders have no budget source -> emitted NULL (intentional gap).
+-- ADR-004: all business logic in dbt, never Power BI.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
@@ -37,7 +40,7 @@ with fc as (
         conversion_rate                     as conversion_rate_goal_given,
         average_sale                        as avg_sale_goal_given
 
-    from {{ source('retail_budget', 'fct_budget_retail_forecasts') }}
+    from {{ ref('fct_budget_retail_forecasts') }}
 )
 
 select * from fc

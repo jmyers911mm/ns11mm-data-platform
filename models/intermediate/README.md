@@ -31,3 +31,10 @@ Business logic transformations that clean, enrich, and combine staging data into
 | `int_google_analytics` | Google Analytics 4 | GA4 pipeline connected |
 | `int_google_ads` | Google Ads | Google Ads pipeline connected |
 | `int_meta_ads` | Meta Ads | Meta Ads pipeline connected |
+
+## Naming note
+
+`int_pos_tickets`, `int_ticket_inventory`, and `int_ticket_scans` predate the
+`int_<domain>__<entity>` naming convention and are kept as-is to avoid churning
+downstream refs. New intermediate models must use the `int_<domain>__<entity>`
+form.

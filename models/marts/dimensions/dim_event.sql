@@ -1,5 +1,4 @@
 -- Marts dimension: dim_event — timed-entry events, tours, programs, and shows
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (timed entry)
 -- Grain: one row per event_id

@@ -1,4 +1,4 @@
--- Deterministic narrative brief: pre-computed Retail facts for the AI_COMPLETE prompt
+-- Marts report: deterministic narrative brief — pre-computed Retail facts for the AI_COMPLETE prompt
 -- ---------------------------------------------------------------------------
 -- Domain: retail / AI narrative
 -- Grain: one row per report_date
@@ -32,7 +32,8 @@ att as (
     group by 1
 ),
 
--- Per-date aggregate of the day x facility ACTUALS
+-- Per-date aggregate of the day x facility ACTUALS. Area splits key off
+-- dim_facility.facility_group (conformed name), not raw key_facility numbers.
 agg as (
     select
         w.report_date,
@@ -40,12 +41,13 @@ agg as (
         sum(w.net_sales)                                                           as total_gms_sales,
         sum(w.net_profit)                                                          as total_gm_profit,
         sum(w.donations)                                                           as total_donations,
-        sum(case when w.key_facility = 1003 then w.net_sales  end)                 as museum_store_sales,
-        sum(case when w.key_facility = 1020 then w.net_sales  end)                 as memorial_carts_sales,
-        sum(case when w.key_facility = 4007 then w.net_sales  end)                 as museum_cafe_sales,
-        sum(case when w.key_facility = 1234 then w.net_profit end)                 as ecommerce_gross_profit,
+        sum(case when df.facility_group = 'museum_store'   then w.net_sales  end)  as museum_store_sales,
+        sum(case when df.facility_group = 'memorial_carts' then w.net_sales  end)  as memorial_carts_sales,
+        sum(case when df.facility_group = 'museum_cafe'    then w.net_sales  end)  as museum_cafe_sales,
+        sum(case when df.facility_group = 'ecommerce'      then w.net_profit end)  as ecommerce_gross_profit,
         att.museum_attendance                                                      as museum_attendance
     from {{ ref('rpt_retail_powerbi') }} w
+    left join {{ ref('dim_facility') }} df on w.key_facility = df.key_facility
     left join att on w.report_date = att.report_date
     group by w.report_date, att.museum_attendance
 ),
@@ -57,12 +59,13 @@ bagg as (
         sum(b.net_sales)                                                           as total_gms_sales,
         sum(b.net_profit)                                                          as total_gm_profit,
         sum(b.donations)                                                           as total_donations,
-        sum(case when b.key_facility = 1003 then b.net_sales  end)                 as museum_store_sales,
-        sum(case when b.key_facility = 1020 then b.net_sales  end)                 as memorial_carts_sales,
-        sum(case when b.key_facility = 4007 then b.net_sales  end)                 as museum_cafe_sales,
-        sum(case when b.key_facility = 1234 then b.net_profit end)                 as ecommerce_gross_profit,
+        sum(case when df.facility_group = 'museum_store'   then b.net_sales  end)  as museum_store_sales,
+        sum(case when df.facility_group = 'memorial_carts' then b.net_sales  end)  as memorial_carts_sales,
+        sum(case when df.facility_group = 'museum_cafe'    then b.net_sales  end)  as museum_cafe_sales,
+        sum(case when df.facility_group = 'ecommerce'      then b.net_profit end)  as ecommerce_gross_profit,
         max(b.museum_attendance)                                                   as museum_attendance
     from {{ ref('rpt_retail_budget_daily') }} b
+    left join {{ ref('dim_facility') }} df on b.key_facility = df.key_facility
     group by b.report_date
 ),
 

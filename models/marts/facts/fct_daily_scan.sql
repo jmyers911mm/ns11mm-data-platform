@@ -1,5 +1,4 @@
 -- Marts fact: daily scan (passes scanned + tickets sold by market segment)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance / scanning
 -- Grain: one row per date_key x segment_key

@@ -1,4 +1,4 @@
--- Deterministic narrative brief: pre-computed DPR facts for AI_COMPLETE prompt
+-- Marts report: deterministic narrative brief — pre-computed DPR facts for the AI_COMPLETE prompt
 -- ---------------------------------------------------------------------------
 -- Domain: DPR / AI narrative
 -- Grain: one row per report_date

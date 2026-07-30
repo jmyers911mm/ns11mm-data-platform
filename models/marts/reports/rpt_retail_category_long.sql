@@ -1,13 +1,19 @@
--- models/marts/reports/rpt_retail_category_long.sql
--- Category page of the Retail Performance Report (page 2): one row per
--- (report_date, key_facility, category_code) with additive units / profit /
--- sales / donations. Power BI shows Total Units + Total Profit per category
+-- Marts report: long category-grain serving shape for the Retail Performance Report (page 2)
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per report_date x key_facility x category_code
+--
+-- Category page of the Retail Performance Report: additive units / profit /
+-- sales / donations per product category, projected from
+-- fct_retail_performance. Feeds the Power BI Retail Performance Report
+-- dataset (page 2), which shows Total Units + Total Profit per category
 -- (Flown Flag, Water, T-shirt, Hoodie, Hats, Keychains, Magnets, Drinkware,
 -- Totes, Rubber Bracelet, Food, Beverage, MAG, ...) with the same period
--- columns as page 1, so this stays additive and lets DAX roll up periods.
+-- columns as page 1 — additive-only so DAX rolls up periods.
+-- NOTE: budget is category-level NULL today (the retail forecast is
+-- facility-grain, not category-grain); the seam is left open.
 --
--- Additive-only (ADR-004). Budget is category-level NULL today (the retail
--- forecast is facility-grain, not category-grain); the seam is left open.
+-- ADR-004: all business logic in dbt, never Power BI.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 

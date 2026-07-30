@@ -1,5 +1,4 @@
 -- Marts dimension: dim_date — conformed date spine, 2000-01-01 to 2035-12-31
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: shared (date spine)
 -- Grain: one row per calendar date

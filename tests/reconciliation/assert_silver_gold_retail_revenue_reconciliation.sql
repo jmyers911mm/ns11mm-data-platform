@@ -1,5 +1,4 @@
 -- Test (reconciliation): Gold retail net_sales reconciles with silver within 0.1%
--- Co-authored with CoCo
 -- Severity: error — drift beyond tolerance means gold lost or double-counted retail revenue
 
 with silver_total as (

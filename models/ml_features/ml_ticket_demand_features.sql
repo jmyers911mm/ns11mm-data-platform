@@ -1,5 +1,4 @@
--- ML feature table: ticket demand features for Snowflake ML FORECAST
--- Co-authored with CoCo
+-- ML feature: ticket demand features for Snowflake ML FORECAST
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (ML)
 -- Grain: one row per entry_date (visit_date) + ticket_type

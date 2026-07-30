@@ -1,5 +1,4 @@
 -- Macro to create Snowflake ML FORECAST model for 90-day ticket demand prediction
--- Co-authored with CoCo
 
 {% macro create_ticket_demand_forecast(training_table=none, forecast_table=none) %}
 /*

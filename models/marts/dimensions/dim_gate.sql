@@ -1,5 +1,4 @@
 -- Marts dimension: dim_gate — gate / access-control-point dimension for scan attribution
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (attendance)
 -- Grain: one row per acp_unique_id (access control point)

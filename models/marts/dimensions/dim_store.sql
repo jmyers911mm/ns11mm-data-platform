@@ -1,5 +1,4 @@
 -- Marts dimension: dim_store — CounterPoint store dimension mapped to facility
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per store_id (CounterPoint register/store)

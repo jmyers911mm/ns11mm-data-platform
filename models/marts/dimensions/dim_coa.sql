@@ -1,5 +1,4 @@
 -- Marts dimension: dim_coa — Gateway chart of accounts for journal classification
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (finance mapping)
 -- Grain: one row per coa_id (chart of accounts entry)

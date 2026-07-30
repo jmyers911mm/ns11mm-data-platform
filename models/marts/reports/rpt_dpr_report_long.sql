@@ -1,14 +1,20 @@
--- models/marts/reports/rpt_dpr_report_long.sql
--- Tidy DPR presentation: one row per (report_date, line_item_code) carrying BOTH
--- actual and budget, with composites + the ratio resolved in SQL (ADR-004: no
--- business logic in Power BI). Power BI joins to dim_dpr_line_item for layout and
--- to dim_date for periods, and uses one display measure per scenario.
+-- Marts report: long/unpivoted DPR serving shape (actual + budget per line item)
+-- ---------------------------------------------------------------------------
+-- Domain: DPR
+-- Grain:  one row per report_date x line_item_code
 --
---   amount / numerator / denominator                 -> ACTUAL   (from rpt_dpr_powerbi)
---   budget_amount / budget_numerator / budget_denominator -> BUDGET (from rpt_dpr_budget_daily)
+-- Tidy DPR presentation: unpivots rpt_dpr_powerbi (actual) and
+-- rpt_dpr_budget_daily (budget) into one long shape carrying BOTH scenarios,
+-- with composites and the ratio resolved in SQL. Feeds the Power BI Daily
+-- Performance Report matrix, which joins dim_dpr_line_item for layout and
+-- dim_date for periods, and uses one display measure per scenario.
+--   amount / numerator / denominator                      -> ACTUAL
+--   budget_amount / budget_numerator / budget_denominator -> BUDGET
+-- NOTE: budget is intentionally NULL for the two donation composites,
+-- Professional Program Revenue, Total Estimated Revenue, and Virtual Tour
+-- Revenue (unmapped).
 --
--- Budget is intentionally NULL for the two donation composites, Professional
--- Program Revenue, Total Estimated Revenue, and Virtual Tour Revenue (unmapped).
+-- ADR-004: all business logic in dbt, never Power BI.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 

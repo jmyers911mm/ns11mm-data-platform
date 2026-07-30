@@ -1,5 +1,4 @@
 -- Marts report: Daily Scan Report
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance / scanning
 -- Grain: one row per date_key x segment_key, plus a daily total context column

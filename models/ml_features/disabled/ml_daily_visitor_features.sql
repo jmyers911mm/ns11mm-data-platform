@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   ml_daily_visitor_features
   Sources: fct_digital_ad_performance + fct_website_traffic + fct_daily_operations + fct_visitor_traffic + dim_date

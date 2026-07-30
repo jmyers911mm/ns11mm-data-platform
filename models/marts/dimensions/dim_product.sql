@@ -1,5 +1,4 @@
 -- Marts dimension: dim_product — retail product (SKU) dimension
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per item_no (CounterPoint retail SKU)

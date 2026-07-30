@@ -1,5 +1,4 @@
 -- Marts fact: ticket availability by entry date and ticket type
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing (capacity)
 -- Grain: one row per entry_date + ticket_type (availability_key)
@@ -10,12 +9,14 @@
 -- clustered by entry_date, ticket_type; tagged intraday / critical.
 -- NOTE: inherits the proxy-capacity caveat from int_ticket_inventory. Feeds
 -- ml_ticket_demand_features.
+-- NOTE: incremental with a 7-day lookback over int_ticket_inventory, whose
+-- capacity proxy uses a 90-day rolling window — late restatements older than
+-- 7 days require a --full-refresh; schedule one monthly.
 --
 -- ADR-004: all business logic lives upstream in dbt, not in Power BI.
 
 {{
     config(
-        enabled=true,
         materialized='incremental',
         unique_key='availability_key',
         incremental_strategy='merge',

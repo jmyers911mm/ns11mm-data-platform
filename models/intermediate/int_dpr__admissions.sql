@@ -1,5 +1,4 @@
 -- Silver intermediate: general-admission tickets sold, ticket revenue, attendance
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions
 -- Grain: one row per date_key

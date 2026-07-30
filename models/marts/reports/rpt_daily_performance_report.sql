@@ -1,5 +1,4 @@
 -- Marts report: Daily Performance Report (Power BI consumption layer)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
 -- Grain: one row per date_value
@@ -16,6 +15,10 @@
 -- fact_dpr_forecasts / fact_retail_forecasts) are staged; those columns are
 -- gated on the ADR-005 workshop and the Raiser's Edge / budget scope
 -- decision.
+-- MATERIALIZATION: table — overrides the reports-are-views default. This is
+-- the Power BI-facing surface the DPR imports from (and subscriptions query
+-- directly), so it is persisted as a stable daily snapshot rather than
+-- recomputing the window-heavy MTD/YTD roll-ups on every read.
 
 {{ config(materialized='table') }}
 

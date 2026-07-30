@@ -5,14 +5,14 @@ models:
     description: "Feature table for ticket demand forecasting with lag features and rolling averages"
     columns:
       - name: visit_date
-        tests:
+        data_tests:
           - not_null
       - name: ticket_type
-        tests:
+        data_tests:
           - not_null
       - name: daily_visitors
         description: "Target column for Snowflake ML FORECAST"
-        tests:
+        data_tests:
           - not_null
 
   - name: ml_visitor_forecast_training
@@ -20,10 +20,10 @@ models:
     columns:
       - name: ds
         description: "Timestamp column for forecasting (visit_date as timestamp_ntz)"
-        tests:
+        data_tests:
           - unique
           - not_null
       - name: y
         description: "Target: total daily visitors"
-        tests:
+        data_tests:
           - not_null

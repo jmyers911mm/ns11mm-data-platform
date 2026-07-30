@@ -1,5 +1,4 @@
 -- Rebuild ML_TICKET_DEMAND_FEATURES and run forecast model
--- Co-authored with CoCo
 
 /***
 -- Step 1: Rebuild fct_ticket_availability (incremental table is empty, force full refresh)

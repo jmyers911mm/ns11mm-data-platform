@@ -110,12 +110,12 @@ models:
       - name: net_sales
         description: "Sale minus return amount, non-donation lines."
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || key_facility || '-' || category_code"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility, category_code]
+          name: fct_retail_performance_grain_unique
           config:
             where: "category_code is not null"
-          name: fct_retail_performance_grain_unique
 
   - name: fct_retail_daily
     description: >
@@ -136,9 +136,9 @@ models:
       - name: key_facility
         description: "FK to seed_facility_area.key_facility."
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || key_facility"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
           name: fct_retail_daily_grain_unique
 
   - name: fct_daily_performance
@@ -195,10 +195,32 @@ models:
         data_tests: [not_null]
       - name: tickets_sold
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || segment_key"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, segment_key]
           name: fct_daily_scan_grain_unique
+
+  - name: fct_today_sales_hourly
+    description: >
+      Intraday retail fact from the same-day CounterPoint feed: one row per
+      date x hour_of_day x key_facility with additive transactions, units,
+      sales, cost, and profit. Backs the Today's Sales report via the
+      ATTENDANCE semantic view / rpt_today_sales_powerbi.
+    data_tests:
+      # Grain enforced by the in-model GROUP BY — error.
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, hour_of_day, key_facility]
+          name: fct_today_sales_hourly_grain_unique
+    columns:
+      - name: date_key
+        description: "FK to dim_date.date_key. Business date."
+        data_tests: [not_null]
+      - name: hour_of_day
+        description: "Hour of the business day (from the CounterPoint feed)."
+        data_tests: [not_null]
+      - name: key_facility
+        description: "Resolved 911dw facility key (-1 = unmapped store)."
+        data_tests: [not_null]
 
   # ─── Budget / Forecast facts ──────────────────────────────────────────────────
 
@@ -244,9 +266,9 @@ models:
               field: date_key
       - name: key_facility
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || key_facility"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
           name: fct_budget_admissions_forecasts_grain_unique
 
   - name: fct_budget_retail_forecasts
@@ -267,7 +289,7 @@ models:
               field: date_key
       - name: key_facility
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || key_facility"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
           name: fct_budget_retail_forecasts_grain_unique

@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   fct_campaign_attribution
   Sources: fct_ad_campaign_daily + bridge_session_customer + fct_ticket_sales + fct_retail_line_items

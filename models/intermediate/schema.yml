@@ -11,7 +11,11 @@ models:
         description: "PK. Natural key (journal detail line grain)."
         constraints:
           - type: primary_key
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          # Grain inherited from the Gateway journal source (not enforced by an
+          # in-model GROUP BY) — warn per the severity rule.
+          - unique: { config: { severity: warn } }
       - name: date_key
         description: "FK to dim_date.date_key. Recognized reporting date."
         data_tests: [not_null]
@@ -102,6 +106,22 @@ models:
       - name: mus_attendance_scanned
         description: Valid scans at museum-classified facilities (QA only).
         data_tests: [not_null]
+
+  - name: int_gateway__item_attributes
+    description: >
+      Shared Gateway vAttribute lookup: avg_id -> matrix code, recognize basis,
+      default customer, dynamic channel. Single home for the attribute lookup
+      previously re-selected by int_gateway__item_journal_lines,
+      int_gateway__ticket_journal_lines, and int_gateway__scan_lines. Raw
+      passthrough of stg_gateway__vattribute (no dedup or derivation).
+    columns:
+      - name: avg_id
+        description: "PK. Attribute value group id (grain inherited from vAttribute)."
+        data_tests:
+          # Passthrough — grain is inherited from the source, not enforced by an
+          # in-model GROUP BY/distinct — warn per the severity rule.
+          - not_null: { config: { severity: warn } }
+          - unique:   { config: { severity: warn } }
 
   - name: int_gateway__scan_lines
     description: >
@@ -214,9 +234,9 @@ models:
       Ticket availability/capacity, one row per entry_date + ticket_type_id.
       Feeds fct_ticket_availability and ml_ticket_demand_features.
     data_tests:
+      # Grain enforced by the in-model GROUP BY (entry_date, plu) — error.
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [entry_date, ticket_type_id]
-          config: { severity: warn }
     columns:
       - name: inventory_key
         description: "PK. Surrogate for the entry_date + ticket_type_id grain."
@@ -235,9 +255,9 @@ models:
   - name: int_retail__customers
     description: "Retail transaction counts per business_date x key_facility."
     data_tests:
+      # Grain enforced by the in-model GROUP BY — error.
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [date_key, key_facility]
-          config: { severity: warn }   # grouped grain — should hold; promote after a clean run
     columns:
       - name: date_key
         data_tests:
@@ -249,9 +269,11 @@ models:
   - name: int_retail__performance
     description: "Tidy category-grain retail performance (sales/profit/units/donations)."
     data_tests:
+      # Grain enforced by the in-model GROUP BY (date, facility, category) — error.
+      # key_facility added: the model grain is date x facility x category, so the
+      # previous [date_key, category_code] combination under-specified the grain.
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, category_code]
-          config: { severity: warn }   # grouped grain — should hold; promote after a clean run
+          combination_of_columns: [date_key, key_facility, category_code]
     columns:
       - name: date_key
         data_tests:
@@ -263,9 +285,9 @@ models:
   - name: int_retail__visitors
     description: "Visitor counts and ecom orders per business_date x key_facility."
     data_tests:
+      # Grain enforced in-model (grouped CTEs full-outer-joined on the grain keys) — error.
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [date_key, key_facility]
-          config: { severity: warn }   # grouped grain — should hold; promote after a clean run
     columns:
       - name: date_key
         data_tests:
@@ -295,7 +317,11 @@ models:
     columns:
       - name: date_key
         description: "PK. Calendar date (converted from YYYYMMDD integer)."
-        data_tests: [not_null, unique]
+        data_tests:
+          - not_null
+          # Grain inherited from the Excel-shaped budget seed (not enforced
+          # in-model) — warn per the severity rule.
+          - unique: { config: { severity: warn } }
 
   - name: int_budget__admissions_forecasts
     description: >
@@ -307,10 +333,13 @@ models:
         data_tests: [not_null]
       - name: key_facility
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || key_facility"
+    data_tests:
+      # Grain inherited from the Excel-shaped budget seed (not enforced
+      # in-model) — warn per the severity rule.
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
           name: int_budget_admissions_forecasts_grain_unique
+          config: { severity: warn }
 
   - name: int_budget__retail_forecasts
     description: >
@@ -322,7 +351,10 @@ models:
         data_tests: [not_null]
       - name: key_facility
         data_tests: [not_null]
-    tests:
-      - unique:
-          column_name: "date_key || '-' || key_facility"
+    data_tests:
+      # Grain inherited from the Excel-shaped budget seed (not enforced
+      # in-model) — warn per the severity rule.
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date_key, key_facility]
           name: int_budget_retail_forecasts_grain_unique
+          config: { severity: warn }

@@ -1,5 +1,4 @@
 -- Marts dimension: dim_tour_product — tour PLU -> DPR line-item classification
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / tours
 -- Grain: one row per PLU code

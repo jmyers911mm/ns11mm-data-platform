@@ -1,5 +1,4 @@
 -- Marts dimension: dim_access_code — admission-type classification for Gateway access codes
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing
 -- Grain: one row per access_code value

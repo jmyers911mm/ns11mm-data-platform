@@ -1,25 +1,19 @@
--- =====================================================================
--- DPR_PBI_DAILY  -  Power BI consumption view over the DPR semantic view
--- ---------------------------------------------------------------------
--- Power BI's native Snowflake connector CANNOT browse a Snowflake
--- SEMANTIC VIEW object directly (Microsoft has stated it will not support
--- third-party semantic layers). The supported pattern is to wrap the
--- SEMANTIC_VIEW() query in a normal view and point Power BI at the view.
+-- Marts report: thin SEMANTIC_VIEW() projection of the DPR semantic view for Power BI
+-- ---------------------------------------------------------------------------
+-- Domain: DPR
+-- Grain:  one row per report_date
 --
--- This keeps every metric DEFINITION inside the DPR semantic view
--- (ADR-004: no business logic in Power BI). The view is a thin, day-grain
--- projection - one row per REPORT_DATE - that Power BI imports and slices.
+-- Thin day-grain wrapper over the MARTS.DPR semantic view: Power BI's native
+-- Snowflake connector cannot browse a SEMANTIC VIEW object, so this wraps the
+-- SEMANTIC_VIEW() query in a normal view Power BI can import. Every metric
+-- DEFINITION stays in the semantic view. Feeds the Power BI Daily Performance
+-- Report dataset, rpt_dpr_report_long, and rpt_dpr_narrative_brief.
+-- NOTE: non-additive ratios (avg ticket price, per-cap) are intentionally NOT
+-- selected; DAX recomputes them from the summed components included here.
 --
--- Ratios (avg ticket price, per-cap) are intentionally NOT selected here:
--- they are non-additive and must be recomputed in DAX from summed
--- numerator/denominator at the display grain. Their components are included.
--- =====================================================================
+-- ADR-004: all business logic in dbt / the semantic view, never Power BI.
 
--- models/marts/reports/rpt_dpr_powerbi.sql
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
-
--- Power BI consumption layer over the DPR semantic view (ADR-004: display-only).
--- One row per REPORT_DATE. Ratios omitted (recomputed in DAX from components).
 
 select * from semantic_view(
     {{ source('dpr_semantic', 'DPR') }}

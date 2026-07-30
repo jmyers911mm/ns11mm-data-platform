@@ -1,20 +1,24 @@
--- models/marts/reports/rpt_retail_report_long.sql
--- Tidy Retail Performance presentation: one row per (report_date, line_item_code)
--- carrying BOTH actual and budget (goal), with the report's non-additive ratios
--- resolved as numerator/denominator components in SQL (ADR-004: no business logic
--- in Power BI). Power BI joins to dim_retail_line_item for section/layout and to
--- dim_date for the period columns (Current Day / SDLY / WTD / MTD / QTD / YTD),
--- and uses one display measure per scenario. Twin of rpt_dpr_report_long.
+-- Marts report: long/unpivoted Retail Performance serving shape (actual + budget per line item)
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per report_date x key_facility x line_item_code
 --
---   amount / numerator / denominator                          -> ACTUAL (rpt_retail_powerbi)
---   budget_amount / budget_numerator / budget_denominator     -> BUDGET (rpt_retail_budget_daily)
+-- Tidy Retail Performance presentation: unpivots rpt_retail_powerbi (actual)
+-- and rpt_retail_budget_daily (goal) into one long shape carrying BOTH
+-- scenarios, with the report's non-additive ratios resolved as
+-- numerator/denominator components in SQL. Twin of rpt_dpr_report_long. Feeds
+-- the Power BI Retail Performance Report matrix, which joins
+-- dim_retail_line_item for section/layout and dim_date for the period columns
+-- (Current Day / SDLY / WTD / MTD / QTD / YTD).
+-- NOTE: ratio rows carry numerator/denominator (never a pre-divided ratio) so
+-- Power BI re-computes ratio-of-sums at any period grain. Visitor-based ratios
+-- resolve to NULL until the Sensource feed lands (visitor_count stub = 0); the
+-- line-item seed marks those 'Stub'. Attendance (the Attendance row and the
+-- Revenue/Visitor denominators) is cross-domain: actual from
+-- fct_daily_performance (mus_attendance), goal from the retail forecast's
+-- museum_attendance.
 --
--- Ratio rows carry numerator/denominator (never a pre-divided ratio) so Power BI
--- re-computes ratio-of-sums at any period grain. Visitor-based ratios resolve to
--- NULL until the Sensource feed lands (visitor_count stub = 0); the line-item
--- seed marks those 'Stub'. Attendance (the report's Attendance row and the
--- Revenue/Visitor denominators) is cross-domain: actual from FCT_DAILY_PERFORMANCE
--- (mus_attendance), goal from the retail forecast's museum_attendance.
+-- ADR-004: all business logic in dbt, never Power BI.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
@@ -22,21 +26,23 @@
 {#- Area map. Each selling area lists its additive lines (code suffix -> -#}
 {#- wrapper column) and ratio lines (suffix -> numerator, denominator). -#}
 {#- 'attendance' as a num/den source resolves to the per-date attendance -#}
-{#- value (actual mus_attendance / budget museum_attendance).            -#}
+{#- value (actual mus_attendance / budget museum_attendance). Areas are  -#}
+{#- selected by dim_facility.facility_group (the conformed name), never  -#}
+{#- by raw key_facility numbers.                                         -#}
 {% set areas = [
-  {'prefix':'MUSEUM_STORE',  'fac':1003,
+  {'prefix':'MUSEUM_STORE',  'fg':'museum_store',
      'additive':[('GROSS_MERCH_SALES','net_sales'),('GROSS_MARGIN_PROFIT','net_profit'),('DONATION_ASK','donations'),('CUSTOMERS','transactions'),('VISITORS','visitor_count')],
      'ratios':[('CAPTURE_RATE','visitor_count','attendance'),('CONVERSION_RATE','transactions','visitor_count'),('AVG_DAILY_SALE','net_sales','transactions'),('REV_PER_VISITOR','net_sales','attendance')] },
-  {'prefix':'MEMORIAL_CARTS','fac':1020,
+  {'prefix':'MEMORIAL_CARTS','fg':'memorial_carts',
      'additive':[('GROSS_MERCH_SALES','net_sales'),('GROSS_MARGIN_PROFIT','net_profit'),('DONATIONS','donations'),('CUSTOMERS','transactions')],
      'ratios':[('CONVERSION_RATE','transactions','visitor_count'),('AVG_DAILY_SALE','net_sales','transactions'),('REV_PER_VISITOR','net_sales','attendance')] },
-  {'prefix':'MUSEUM_CAFE',   'fac':4007,
+  {'prefix':'MUSEUM_CAFE',   'fg':'museum_cafe',
      'additive':[('SALES','net_sales'),('PROFIT','net_profit'),('DONATION_ASK','donations'),('TRANSACTIONS','transactions')],
      'ratios':[('CONVERSION_RATE','transactions','visitor_count'),('AVG_SALE','net_sales','transactions'),('REV_PER_VISITOR','net_sales','attendance')] },
-  {'prefix':'ECOMMERCE',     'fac':1234,
+  {'prefix':'ECOMMERCE',     'fg':'ecommerce',
      'additive':[('SALES','net_sales'),('GROSS_PROFIT','net_profit'),('DONATIONS','donations'),('ORDERS','ecom_orders')],
      'ratios':[('AVG_SALE','net_sales','ecom_orders'),('GROSS_PROFIT_PER_ORDER','net_profit','ecom_orders')] },
-  {'prefix':'MUS_AG',        'fac':1060,
+  {'prefix':'MUS_AG',        'fg':'mus_ag',
      'additive':[('PROFIT','net_profit'),('UNITS_SOLD','net_units')],
      'ratios':[('REV_PER_VISITOR','net_sales','attendance'),('CONVERSION_RATE','net_units','attendance')] }
 ] %}
@@ -54,17 +60,19 @@ att_budget as (
     group by 1
 ),
 
--- Actuals per (date, facility) + the day's attendance
+-- Actuals per (date, facility) + the day's attendance + conformed facility name
 act as (
-    select w.*, aa.attendance
+    select w.*, aa.attendance, df.facility_group
     from {{ ref('rpt_retail_powerbi') }} w
     left join att_actual aa on w.report_date = aa.report_date
+    left join {{ ref('dim_facility') }} df on w.key_facility = df.key_facility
 ),
--- Budget/goal per (date, facility) + the day's attendance goal
+-- Budget/goal per (date, facility) + the day's attendance goal + conformed facility name
 bud as (
-    select b.*, ab.attendance
+    select b.*, ab.attendance, df.facility_group
     from {{ ref('rpt_retail_budget_daily') }} b
     left join att_budget ab on b.report_date = ab.report_date
+    left join {{ ref('dim_facility') }} df on b.key_facility = df.key_facility
 ),
 
 -- =========================================================== ACTUAL long
@@ -84,7 +92,7 @@ actual_long as (
            '{{ a.prefix }}__{{ suffix }}' as line_item_code,
            cast({{ col }} as number(38,4)) as amount,
            cast(null as number(38,4)), cast(null as number(38,4))
-    from act where key_facility = {{ a.fac }}
+    from act where facility_group = '{{ a.fg }}'
       {% endfor %}
       {# ratios: carry numerator/denominator, not a pre-divided value #}
       {% for suffix, num, den in a.ratios %}
@@ -94,7 +102,7 @@ actual_long as (
            cast(null as number(38,4)) as amount,
            cast({{ num }} as number(38,4)) as numerator,
            cast({{ den }} as number(38,4)) as denominator
-    from act where key_facility = {{ a.fac }}
+    from act where facility_group = '{{ a.fg }}'
       {% endfor %}
     {% endfor %}
 ),
@@ -114,7 +122,7 @@ budget_long as (
            '{{ a.prefix }}__{{ suffix }}' as line_item_code,
            cast({{ col }} as number(38,4)) as budget_amount,
            cast(null as number(38,4)), cast(null as number(38,4))
-    from bud where key_facility = {{ a.fac }}
+    from bud where facility_group = '{{ a.fg }}'
       {% endfor %}
       {% for suffix, num, den in a.ratios %}
     union all
@@ -123,7 +131,7 @@ budget_long as (
            cast(null as number(38,4)) as budget_amount,
            cast({{ num }} as number(38,4)) as budget_numerator,
            cast({{ den }} as number(38,4)) as budget_denominator
-    from bud where key_facility = {{ a.fac }}
+    from bud where facility_group = '{{ a.fg }}'
       {% endfor %}
     {% endfor %}
 )

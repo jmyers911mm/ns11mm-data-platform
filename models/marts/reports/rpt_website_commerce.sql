@@ -1,5 +1,4 @@
 -- Marts report: Website Commerce Report
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: ecommerce / fundraising
 -- Grain: one row per month x revenue_type x revenue_year

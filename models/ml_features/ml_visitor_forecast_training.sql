@@ -1,4 +1,4 @@
--- ML training table: visitor forecast training set for Snowflake ML FORECAST
+-- ML feature: visitor forecast training set for Snowflake ML FORECAST
 -- ---------------------------------------------------------------------------
 -- Domain: operations (ML)
 -- Grain:  one row per visit_date, where total_visitors > 0

@@ -1,13 +1,19 @@
--- models/marts/reports/rpt_dpr_budget_daily.sql
--- Day-grain BUDGET for the DPR, conformed from the three MARTS budget sources.
--- Column names are aligned to rpt_dpr_powerbi (the actuals) so the two unpivot
--- identically in rpt_dpr_report_long. Source-of-truth per the budget-integration
--- decision: DPR forecast table primary; attendance + guided tours from Admissions;
--- store / carts / cafe profit from Retail (facility-summed). One row per date.
+-- Marts report: budget-vs-actual daily serving — day-grain DPR budget
+-- ---------------------------------------------------------------------------
+-- Domain: DPR / budget
+-- Grain:  one row per report_date
 --
--- Intentionally NOT populated (left blank on budget, per decision):
---   the two donation composites, Professional Program Revenue, Total Estimated
---   Revenue (depends on the unmapped donations), and Virtual Tour Revenue.
+-- Day-grain BUDGET for the DPR, conformed from the three budget facts:
+-- fct_budget_dpr_forecasts (primary), fct_budget_admissions_forecasts
+-- (attendance + guided tours, facility-summed), and
+-- fct_budget_retail_forecasts (store / carts / cafe profit by selling area).
+-- Column names are aligned to rpt_dpr_powerbi (the actuals) so the two
+-- unpivot identically. Feeds rpt_dpr_report_long and rpt_dpr_narrative_brief.
+-- NOTE: intentionally NOT populated (left blank on budget, per decision):
+-- the two donation composites, Professional Program Revenue, Total Estimated
+-- Revenue (depends on the unmapped donations), and Virtual Tour Revenue.
+--
+-- ADR-004: all business logic in dbt, never Power BI.
 
 {{ config(materialized='view') }}
 
@@ -23,7 +29,7 @@ with dpr as (
         audio_tour_headsets            as audio_tour_headset,
         profit_from_ecom               as ecom_gross_profit,         -- budget fills an actuals gap
         youth_fam_tour_rev             as virtual_yf_tour_revenue
-    from {{ source('dpr_budget', 'fct_budget_dpr_forecasts') }}
+    from {{ ref('fct_budget_dpr_forecasts') }}
 ),
 
 adm as (
@@ -37,17 +43,20 @@ adm as (
         sum(mus_guided_tour_revenue)   as mus_guided_tour_revenue,
         sum(mem_guided_tours)          as memorial_guided_tours,
         sum(mem_guided_tour_revenue)   as mem_guided_tour_revenue
-    from {{ source('dpr_budget', 'fct_budget_admissions_forecasts') }}
+    from {{ ref('fct_budget_admissions_forecasts') }}
     group by 1
 ),
 
 ret as (
+    -- Selling areas resolved via dim_facility.facility_group (conformed name),
+    -- not raw key_facility numbers.
     select
-        date_value                                                        as report_date,
-        sum(case when key_facility = 1003 then profit_from_retail end)     as mus_store_gross_profit,
-        sum(case when key_facility = 1020 then profit_from_retail end)     as retail_carts_gross_profit,
-        sum(case when key_facility = 4007 then profit_from_retail end)     as cafe_profit
-    from {{ source('dpr_budget', 'fct_budget_retail_forecasts') }}
+        f.date_value                                                                   as report_date,
+        sum(case when df.facility_group = 'museum_store'   then f.profit_from_retail end) as mus_store_gross_profit,
+        sum(case when df.facility_group = 'memorial_carts' then f.profit_from_retail end) as retail_carts_gross_profit,
+        sum(case when df.facility_group = 'museum_cafe'    then f.profit_from_retail end) as cafe_profit
+    from {{ ref('fct_budget_retail_forecasts') }} f
+    left join {{ ref('dim_facility') }} df on f.key_facility = df.key_facility
     group by 1
 ),
 

@@ -1,18 +1,20 @@
--- =====================================================================
--- TODAY_SALES_POWERBI  -  Power BI consumption view over the ATTENDANCE
--- semantic view (FCT_TODAY_SALES_HOURLY). Twin of rpt_dpr_powerbi / rpt_retail_powerbi.
--- ---------------------------------------------------------------------
--- One row per (REPORT_DATE, HOUR_OF_DAY, KEY_FACILITY). Additive intraday
--- measures only; ratios (average sale, average qty, conversion, capture)
--- recompute from summed components in rpt_today_sales_report_long (ADR-004).
+-- Marts report: thin SEMANTIC_VIEW() projection of the ATTENDANCE semantic view for Power BI (Today's Sales)
+-- ---------------------------------------------------------------------------
+-- Domain: retail (intraday)
+-- Grain:  one row per report_date x hour_of_day x key_facility
 --
--- SOURCE STATUS: FCT_TODAY_SALES_HOURLY reads the same-day CounterPoint feed
--- (stg_counterpoint__todays_retail). Store visitors / attendance / totes and
--- the Memorial-Cart 1/2/3 split are not in the feed yet -> those lines are
--- Stub in the seed. See the build spec.
--- =====================================================================
+-- Thin intraday wrapper over the MARTS.ATTENDANCE semantic view's
+-- FCT_TODAY_SALES_HOURLY metrics (Power BI cannot browse a SEMANTIC VIEW
+-- object, so the SEMANTIC_VIEW() query is wrapped in a normal view). Additive
+-- measures only. Feeds the Power BI Today's Sales report dataset.
+-- NOTE: ratios (average sale, average qty, conversion, capture) recompute
+-- from summed components at the display grain.
+-- STATUS: FCT_TODAY_SALES_HOURLY reads the same-day CounterPoint feed
+-- (stg_counterpoint__todays_retail); store visitors / attendance / totes and
+-- the Memorial-Cart 1/2/3 split are not in the feed yet — Stub in the seed.
+--
+-- ADR-004: all business logic in dbt / the semantic view, never Power BI.
 
--- models/marts/reports/rpt_today_sales_powerbi.sql
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
 select * from semantic_view(

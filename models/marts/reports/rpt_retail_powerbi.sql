@@ -1,26 +1,19 @@
--- =====================================================================
--- RETAIL_POWERBI  -  Power BI consumption view over the RETAIL semantic view
--- ---------------------------------------------------------------------
--- Twin of rpt_dpr_powerbi, for the Retail Performance Report.
+-- Marts report: thin SEMANTIC_VIEW() projection of the RETAIL semantic view for Power BI
+-- ---------------------------------------------------------------------------
+-- Domain: retail
+-- Grain:  one row per report_date x key_facility
 --
--- Power BI's native Snowflake connector CANNOT browse a Snowflake
--- SEMANTIC VIEW object directly. The supported pattern is to wrap the
--- SEMANTIC_VIEW() query in a normal view and point Power BI at the view.
+-- Thin day x facility wrapper over the MARTS.RETAIL semantic view (Power BI
+-- cannot browse a SEMANTIC VIEW object, so the SEMANTIC_VIEW() query is
+-- wrapped in a normal view). Metric definitions stay in the semantic view;
+-- only ADDITIVE facility rollups are selected. Feeds the Power BI Retail
+-- Performance Report dataset, rpt_retail_report_long, and rpt_retail_narrative_brief.
+-- NOTE: the report's ratios (capture rate, conversion, average sale,
+-- revenue-per-visitor, profit margin) are non-additive and recompute at the
+-- display grain from summed components — see rpt_retail_report_long.
 --
--- Every metric DEFINITION stays inside the RETAIL semantic view
--- (ADR-004: no business logic in Power BI). This wrapper is a thin,
--- day x facility projection - one row per (REPORT_DATE, KEY_FACILITY) -
--- that Power BI imports and slices by selling area (Museum Store,
--- Memorial Carts, Museum Cafe, E-commerce, Audio Guide) and period.
---
--- Only ADDITIVE facility rollups are selected. The report's ratios
--- (capture rate, conversion, average sale, revenue-per-visitor, profit
--- margin) are non-additive and are recomputed at the display grain from
--- summed numerator/denominator components -- see rpt_retail_report_long
--- (in SQL, per ADR-004) and the DAX measures in the build spec.
--- =====================================================================
+-- ADR-004: all business logic in dbt / the semantic view, never Power BI.
 
--- models/marts/reports/rpt_retail_powerbi.sql
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
 select * from semantic_view(

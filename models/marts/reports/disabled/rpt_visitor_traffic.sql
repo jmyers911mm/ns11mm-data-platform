@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   rpt_visitor_traffic
   Sources: fct_visitor_traffic + dim_date + dim_gate + fct_ticket_sales

@@ -1,5 +1,4 @@
 -- Test (business_rule): no future-dated tickets in the pipeline
--- Co-authored with CoCo
 -- Severity: error — future dates indicate a source date-mapping defect
 
 select ticket_id, sold_at, ticket_date

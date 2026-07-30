@@ -1,5 +1,4 @@
 -- Silver intermediate: scan-based museum and memorial attendance
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance
 -- Grain: one row per date_key

@@ -1,5 +1,4 @@
 -- Marts fact: today's sales, hourly
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per date_key x hour_of_day x key_facility

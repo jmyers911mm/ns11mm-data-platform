@@ -1,5 +1,4 @@
 -- Marts dimension: dim_dpr_line_item — DPR report line-item metadata and display config
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
 -- Grain: one row per line_item_code

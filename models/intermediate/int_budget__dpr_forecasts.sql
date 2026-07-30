@@ -1,5 +1,4 @@
 -- Silver intermediate: cleanse and type-cast DPR budget/forecast seed
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
 -- Grain: one row per date_key

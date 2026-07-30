@@ -1,5 +1,4 @@
 -- Marts dimension: dim_ticket_type — ticket / pass / tour / merch item classification
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: admissions / ticketing
 -- Grain: one row per item_id (Gateway PLU/item catalog entry)

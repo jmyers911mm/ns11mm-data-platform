@@ -1,5 +1,4 @@
 -- Marts report: Attendance Report
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance
 -- Grain: one row per date_key

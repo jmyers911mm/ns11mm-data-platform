@@ -1,5 +1,4 @@
 -- Marts report: Retail Carts Analysis Report
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per date_key (Memorial Carts area)

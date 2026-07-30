@@ -1,5 +1,4 @@
 -- Silver intermediate: retail customer / transaction counts
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per business_date x key_facility

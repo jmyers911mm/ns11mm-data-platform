@@ -1,5 +1,4 @@
 -- Silver intermediate: gate scan lines with ticket market segment
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: attendance / scanning
 -- Grain: one row per usage (scan) event with its ticket's market category

@@ -1,5 +1,4 @@
--- AI-generated DPR narrative from pre-computed brief via Snowflake Cortex
--- Co-authored with CoCo
+-- Marts report: AI-generated DPR narrative from pre-computed brief via Snowflake Cortex
 -- ---------------------------------------------------------------------------
 -- Domain: DPR / AI narrative
 -- Grain: one row per report_date

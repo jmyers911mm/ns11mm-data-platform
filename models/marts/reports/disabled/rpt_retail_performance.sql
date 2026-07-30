@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   rpt_retail_performance
   Sources: fct_retail_line_items + dim_date + dim_product + dim_payment_method + dim_customer

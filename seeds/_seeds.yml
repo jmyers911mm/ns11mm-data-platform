@@ -49,7 +49,7 @@ seeds:
     config:
       # item_no is a string in the source (mix of numeric and alpha codes);
       # pin the type so dbt seed inference does not coerce it to a number and
-      # break the varchar join in silver_counterpoint__retail_lines.
+      # break the varchar join in int_counterpoint__retail_lines.
       column_types:
         item_no: varchar
         key_facility: integer
@@ -89,50 +89,6 @@ seeds:
       - name: facility_group
         description: "Stable snake_case facility identity (museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other). Downstream references this name, not the raw key_facility number."
         data_tests: [not_null]
-  - name: tmp_seed_sensource__visitors
-    description: "STUB: Sensource/Atrium visitor counts per facility per day. Empty until sensordata (ServerManager) is ingested. Populates conversion-rate and rev-per-visitor ratios."
-    config:
-      schema: raw_seed
-      tags: ['build_temp', 'stub']
-      column_types:
-        business_date: date
-        key_facility: integer
-        visitor_count: integer
-  - name: tmp_seed_shopify__orders
-    description: "STUB: Shopify ecommerce order counts/sales/donations per day. Empty until the Shopify pipeline lands (ADR-008)."
-    config:
-      schema: raw_seed
-      tags: ['build_temp', 'stub']
-      column_types:
-        business_date: date
-        order_count: integer
-        ecom_sales: float
-        ecom_donations: float
-  - name: tmp_seed_retail__budget
-    description: "STUB: retail budget/goal values per facility per day per metric. Empty until the budget source is staged (ADR-005)."
-    config:
-      schema: raw_seed
-      tags: ['build_temp', 'stub']
-      column_types:
-        business_date: date
-        key_facility: integer
-        metric_name: varchar
-        budget_value: float
-  - name: tmp_seed_sensource__attendance
-    description: "STUB: Sensource attendance by area (memorial only, store, store-Vesey). Empty until sensordata (ServerManager) is ingested."
-    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, area: varchar, attendance: integer } }
-  - name: tmp_seed_gateway__passes_by_hour
-    description: "STUB: hourly gate passes (legacy fact_passes_by_hour). Empty until the hourly passes feed lands."
-    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, hour_of_day: integer, facility: integer, passes: integer } }
-  - name: tmp_seed_cp__today_sales
-    description: "STUB: real-time same-day CounterPoint hourly sales (legacy fact_todays_retail_data). Empty until the intraday CP feed exists."
-    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, hour_of_day: integer, key_facility: integer, transactions: integer, sales: float, units: integer } }
-  - name: tmp_seed_ecom__recurring
-    description: "STUB: recurring online donation/membership revenue (Classy/Shopify). Empty until the ecom pipeline lands (ADR-008)."
-    config: { schema: raw_seed, tags: ['build_temp','stub'], column_types: { business_date: date, revenue_type: varchar, revenue_year: integer, amount: float } }
-  - name: tmp_seed_wifi__audience
-    description: "STUB + PII: WiFi captive-portal marketing audience (email, name). RESTRICTED. Empty until the WiFi feed is ingested; treat as PII when populated."
-    config: { schema: raw_seed, tags: ['build_temp','stub','pii','restricted'], column_types: { business_date: date, email_address: varchar, first_name: varchar, last_name: varchar } }
   - name: seed_service_plu
     description: >
       One row per Galaxy PLU mapping to a DPR visitor-services line. Enumerates
@@ -229,3 +185,48 @@ seeds:
       - name: customer_id
         description: Gateway default customer id to exclude.
         data_tests: [not_null, unique]
+
+  # ─── Serving-layer seeds (coverage added 2026-07-29) ───────────────────────
+  - name: retail_line_items
+    description: >
+      Report-layout catalog for the Retail Performance Report: one row per
+      printed line (section, label, sort order, indent, number format,
+      additive-vs-ratio, availability, facility mapping, and — for ratio
+      lines — numerator/denominator source measures). Report scaffolding, not
+      a business dimension. Consumed by dim_retail_line_item.
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_retail_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+
+  - name: seed_scan_market_segment
+    description: >
+      Daily Scan market-segment classification rules: one row per segment
+      (segment_key, display name, match_type + match_value pattern applied to
+      the scan line's category). Consumed by int_gateway__scan_lines and
+      fct_daily_scan.
+    columns:
+      - name: segment_key
+        description: Stable segment key (grain of this table).
+        data_tests: [not_null, unique]
+      - name: segment_name
+        description: Display name shown on the Daily Scan report.
+        data_tests: [not_null]
+
+  # ─── Legacy reference seeds — no active consumers ──────────────────────────
+  # Candidates for deletion once the disabled marketing/CRM models are decided.
+  - name: ref_customer_segments
+    description: "Legacy reference seed (customer segment labels). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+  - name: ref_ltv_tiers
+    description: "Legacy reference seed (customer LTV tier bands + colors). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+  - name: ref_marketing_channels
+    description: "Legacy reference seed (marketing channel catalog). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+  - name: ref_payment_methods
+    description: "Legacy reference seed (payment method catalog). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+  - name: ref_ticket_types
+    description: "Legacy reference seed (ticket type catalog with default prices). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."

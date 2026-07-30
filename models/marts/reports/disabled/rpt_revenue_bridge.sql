@@ -1,5 +1,4 @@
 -- Rename fiscal_year/fiscal_quarter to year/quarter for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   rpt_revenue_bridge
   Sources: fct_daily_operations + dim_date

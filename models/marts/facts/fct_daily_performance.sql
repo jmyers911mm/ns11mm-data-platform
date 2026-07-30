@@ -1,5 +1,4 @@
 -- Marts fact: daily performance (additive measures, one row per day)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR
 -- Grain: one row per date_key

@@ -1,5 +1,4 @@
 -- Silver intermediate: retail gross profit, MUS AG, and retail-sourced donations
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per business_date (aliased date_key)

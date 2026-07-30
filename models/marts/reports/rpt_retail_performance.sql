@@ -1,5 +1,4 @@
 -- Marts report: Retail Performance Report
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per date_key x key_facility (ratios), with a category

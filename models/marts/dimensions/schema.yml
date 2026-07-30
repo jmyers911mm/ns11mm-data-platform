@@ -254,4 +254,4 @@ models:
         description: "PK. Surrogate = line_item_code."
         constraints:
           - type: primary_key
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]

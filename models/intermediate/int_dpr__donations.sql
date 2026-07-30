@@ -1,5 +1,4 @@
 -- Silver intermediate: Gateway ticketing donations (issued) and box/exit donations
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: donations
 -- Grain: one row per date_key

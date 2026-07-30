@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   rpt_campaign_performance
   Sources: fct_campaign_performance + dim_campaign + dim_date

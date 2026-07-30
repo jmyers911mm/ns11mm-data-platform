@@ -1,4 +1,4 @@
--- AI-generated Retail Performance narrative from the pre-computed brief via Snowflake Cortex
+-- Marts report: AI-generated Retail Performance narrative from the pre-computed brief via Snowflake Cortex
 -- ---------------------------------------------------------------------------
 -- Domain: retail / AI narrative
 -- Grain: one row per report_date

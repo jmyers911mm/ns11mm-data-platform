@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   rpt_ticket_sales
   Sources: fct_ticket_sales + dim_date + dim_ticket_type + dim_payment_method + dim_gate + dim_customer

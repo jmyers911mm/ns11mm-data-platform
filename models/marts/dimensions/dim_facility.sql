@@ -1,5 +1,4 @@
 -- Marts dimension: dim_facility — conformed facility / selling-area dimension
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: shared reference
 -- Grain: one row per key_facility (911dw selling-area surrogate key)

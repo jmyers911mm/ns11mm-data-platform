@@ -1,18 +1,20 @@
--- =====================================================================
--- DAILY_SCAN_POWERBI  -  Power BI consumption view over the ATTENDANCE
--- semantic view (FCT_DAILY_SCAN). Twin of rpt_dpr_powerbi / rpt_retail_powerbi.
--- ---------------------------------------------------------------------
--- One row per (REPORT_DATE, SEGMENT_KEY). Additive measures only: actual
--- tickets sold, forecast (DSR budget), and passes scanned. The report's
--- shares (% used, % of market) and forecast variance % are non-additive and
--- recompute at the display grain from summed components -- see
--- rpt_daily_scan_report_long (SQL) / the existing rpt_daily_scan, per ADR-004.
+-- Marts report: thin SEMANTIC_VIEW() projection of the ATTENDANCE semantic view for Power BI (Daily Scan)
+-- ---------------------------------------------------------------------------
+-- Domain: attendance / scanning
+-- Grain:  one row per report_date x segment_key
 --
--- Forecast (PASSES_BUDGET) is the real DSR forecast joined in fct_daily_scan;
--- it is the "Forecast Tickets Sold" column on the report.
--- =====================================================================
+-- Thin wrapper over the MARTS.ATTENDANCE semantic view's FCT_DAILY_SCAN
+-- metrics (Power BI cannot browse a SEMANTIC VIEW object, so the
+-- SEMANTIC_VIEW() query is wrapped in a normal view). Additive measures only:
+-- actual tickets sold, forecast (DSR budget), and passes scanned. Feeds the
+-- Power BI Daily Scan report dataset.
+-- NOTE: the report's shares (% used, % of market) and forecast variance % are
+-- non-additive and recompute at the display grain from summed components.
+-- Forecast (PASSES_BUDGET) is the real DSR forecast joined in fct_daily_scan
+-- ("Forecast Tickets Sold" on the report).
+--
+-- ADR-004: all business logic in dbt / the semantic view, never Power BI.
 
--- models/marts/reports/rpt_daily_scan_powerbi.sql
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
 select * from semantic_view(

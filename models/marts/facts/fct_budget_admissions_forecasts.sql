@@ -1,5 +1,4 @@
 -- Marts fact: admissions/attendance budget by facility (one row per day x facility)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: budget
 -- Grain: one row per date_key x key_facility

@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   rpt_digital_marketing
   Sources: fct_digital_ad_performance + fct_website_traffic + dim_date

@@ -71,7 +71,9 @@ models:
         data_type: date
         data_tests:
           - not_null
-          - unique
+          # Grain inherited from the DPR semantic view (not enforced in this
+          # thin projection) — warn per the severity rule.
+          - unique: { config: { severity: warn } }
       - name: calendar_year
         description: Calendar year (Jan–Dec).
         data_type: number
@@ -206,9 +208,9 @@ models:
       materialized: view
     columns:
       - name: report_date
-        tests: [not_null]
+        data_tests: [not_null]
       - name: key_facility
-        tests: [not_null]
+        data_tests: [not_null]
 
   - name: rpt_retail_budget_daily
     description: >
@@ -246,3 +248,147 @@ models:
     description: >
       DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source SQL
       for the daily task in scripts/setup_retail_narrative.sql. Narrates only brief_json.
+
+  # ─── Coverage pass (2026-07-29): descriptions for the remaining active reports.
+  # Reports inherit their grain from upstream marts, so tests here are warn per
+  # the severity rule (grain enforced in-model -> error; inherited -> warn).
+
+  - name: rpt_dpr_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of DPR facts (actuals, budget,
+      DoD/WoW, MTD/YTD context, direction flags, top movers). Sole input to the
+      Cortex DPR narrative — unit-test this, not the LLM output. ADR-004.
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_dpr_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in scripts/setup_dpr_narrative.sql. Narrates only the
+      pre-computed brief_json from rpt_dpr_narrative_brief.
+
+  - name: rpt_daily_scan_powerbi
+    description: >
+      Thin SEMANTIC_VIEW() projection of the ATTENDANCE semantic view for Power BI
+      (Daily Scan). One row per report_date x segment_key; additive tickets sold,
+      passes scanned, and DSR forecast only — shares and variance % recompute at
+      display grain.
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_today_sales_powerbi
+    description: >
+      Thin SEMANTIC_VIEW() projection of the ATTENDANCE semantic view for Power BI
+      (Today's Sales). One row per report_date x hour_of_day x key_facility;
+      additive intraday sales, profit, units, and transactions.
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_performance_report
+    description: >
+      Power BI-facing Daily Performance Report surface: one row per date with
+      today / MTD / YTD roll-ups of fct_daily_performance additive measures plus
+      the non-additive ratios (avg ticket price, per-cap) computed at this grain.
+      Materialized as a table (import source / snapshot target).
+    columns:
+      - name: date_value
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_attendance
+    description: >
+      Attendance Report view: one row per date combining DPR memorial/museum
+      attendance from fct_daily_performance with Sensource plaza counts and
+      retail store visitor counts (Sensource inputs stubbed until sensordata lands).
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_attendance
+    description: >
+      Daily Attendance Report view: one row per date. Museum attendance from the
+      hourly-passes feed (stub), falling back to scan-based attendance from
+      fct_daily_performance so the report is non-empty today.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_scan
+    description: >
+      Daily Scan Report view: one row per date x market segment with passes
+      scanned, tickets sold, market-mix percentages computed at query grain
+      (window sums), and budget variance seams.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_memorial_museum_tracker_ytd
+    description: >
+      Memorial Museum Daily Tracker (YTD) view: one row per date with day values,
+      calendar-year YTD cumulative sums, YTD budget, and variance over
+      fct_daily_performance measures plus civic_programs (placeholder). Budget
+      columns NULL until the budget source is staged (ADR-005).
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_monthly_retail_kpi
+    description: >
+      Monthly Retail KPI view: one row per calendar month x selling area, rolling
+      up fct_retail_daily with ratio-of-sums KPIs recomputed at the month grain.
+      Visitor-based KPIs NULL until Sensource lands.
+
+  - name: rpt_retail_carts_analysis
+    description: >
+      Retail Carts Analysis view: one row per date for the Memorial Carts area,
+      with the legacy adjusted-memorial-visitor denominator driving capture rate
+      and per-cap ratios (NULL until Sensource lands). Additive sales, profit,
+      and customers are live.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_performance
+    description: >
+      Retail Performance Report view: one row per date x facility with the
+      report's non-additive ratios (conversion, rev-per-visitor, avg sale,
+      donation-per-visitor, profit margin) computed at query grain from
+      fct_retail_daily, plus MTD/YTD roll-ups on demand.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_website_commerce
+    description: >
+      Website Commerce Report view: one row per month x revenue type x revenue
+      year of recurring online donation and membership revenue from
+      stg_ecommerce__website_recurring.
+
+  - name: rpt_wifi_email_export
+    description: >
+      RESTRICTED / PII. Governed marketing email extract of the WiFi
+      captive-portal audience (one row per distinct email per capture date).
+      Carries direct identifiers; masked by the on-run-end policy hook and
+      excluded from the default marts grants — export happens via the governed
+      egress path only (see docs/architecture/DATA_CLASSIFICATION.md).
+    columns:
+      - name: email_address
+        description: "PII. Visitor email address captured at the WiFi portal (masked)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: first_name
+        description: "PII. Visitor first name (masked; empty string when absent)."
+      - name: last_name
+        description: "PII. Visitor last name (masked; empty string when absent)."

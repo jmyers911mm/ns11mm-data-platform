@@ -7,18 +7,6 @@ sources:
       - name: DPR
         description: DPR semantic view — 49 metrics over fct_daily_performance × dim_date.
 
-  - name: dpr_budget
-    database: "{{ target.database }}"
-    schema: MARTS
-    description: DPR budget/forecast tables (admissions, retail, and the conformed DPR shape).
-    tables:
-      - name: fct_budget_dpr_forecasts
-        description: Day-grain DPR-shaped budget (tickets, revenue, audio, ecom, cafe, early access, youth & family, donations).
-      - name: fct_budget_admissions_forecasts
-        description: Facility-grain admissions budget (attendance, tickets, guided tours, CityPASS).
-      - name: fct_budget_retail_forecasts
-        description: Facility-grain retail budget (profit, revenue, donations by facility 1003/1020/4007).
-
   # --- Attendance domain semantic view (Daily Scan + Today's Sales, 1.6.0) ---
   - name: attendance_semantic
     description: Native Snowflake SEMANTIC VIEW object for attendance/scanning (deployed from cortex_project/ATTENDANCE.sv.yaml as DDL — not dbt-built).
@@ -36,11 +24,3 @@ sources:
     tables:
       - name: RETAIL
         description: RETAIL semantic view over fct_retail_daily / fct_retail_performance × dim_date × seed_facility_area. Backs rpt_retail_powerbi.
-
-  - name: retail_budget
-    database: "{{ target.database }}"
-    schema: MARTS
-    description: Retail budget/forecast table (facility-grain goals), consumed by rpt_retail_budget_daily.
-    tables:
-      - name: fct_budget_retail_forecasts
-        description: Facility-grain retail budget (capture rate, visitors, customers, conversion, average sale, profit, revenue, donations, museum attendance) — one row per day × facility.

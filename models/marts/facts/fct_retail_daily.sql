@@ -1,5 +1,4 @@
 -- Marts fact: retail daily (facility grain, non-additive-across-category inputs)
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per date_key x key_facility

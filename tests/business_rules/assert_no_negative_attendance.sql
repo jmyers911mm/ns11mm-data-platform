@@ -1,5 +1,4 @@
 -- Test (business_rule): no negative attendance counts in DPR fact
--- Co-authored with CoCo
 -- Severity: error — negative attendance indicates upstream scan aggregation defect
 
 select date_key, mem_attendance, mus_attendance

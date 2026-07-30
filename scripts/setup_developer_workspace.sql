@@ -1,5 +1,4 @@
 -- NS11MM Data Platform — Developer Workspace Setup (parameterized)
--- Co-authored with CoCo
 -- Run once per new developer to provision their personal dev environment.
 -- Set the developer's Snowflake username below, then execute the entire script.
 

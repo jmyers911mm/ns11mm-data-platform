@@ -1,5 +1,4 @@
 -- Rename fiscal_year to year for simplified calendar dimensions
--- Co-authored with CoCo
 /*
   ml_dynamic_pricing_features
   Sources: fct_ticket_availability + fct_ticket_demand_benchmarks
