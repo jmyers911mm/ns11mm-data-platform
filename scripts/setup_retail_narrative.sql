@@ -10,7 +10,7 @@
 --   - Warehouse specified (task uses caller's warehouse)
 -- ---------------------------------------------------------------------------
 
-USE SCHEMA NS11MM_DW_DEV_JMYERS.MARTS;
+USE SCHEMA NS11MM_DW_DEV.MARTS;
 
 -- 1. Target table: one row per day, append-only
 CREATE TABLE IF NOT EXISTS MARTS.RETAIL_NARRATIVE (
@@ -54,7 +54,7 @@ GRANT SELECT ON VIEW MARTS.RETAIL_PBI_NARRATIVE TO ROLE POWERBI_ROLE;
 --   SCHEDULE = 'USING CRON 30 5 * * * America/New_York'
 
 CREATE OR REPLACE TASK MARTS.T_RETAIL_NARRATIVE
-    WAREHOUSE = COMPUTE_WH
+    WAREHOUSE = MONITORING_WH   -- tasks run on MONITORING_WH per SNOWFLAKE_SETTINGS.md
     SCHEDULE  = 'USING CRON 30 5 * * * America/New_York'
     COMMENT   = 'Generates AI analyst note for the Retail Performance Report from the narrative brief. Runs daily before PBI subscription.'
 AS

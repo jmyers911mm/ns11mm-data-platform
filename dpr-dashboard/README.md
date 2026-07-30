@@ -27,17 +27,17 @@ The `deployed/` version strips unsupported APIs:
 
 The deployed app lives at:
 ```
-NS11MM_DW_DEV_JMYERS.MARTS.DPR_DASHBOARD
+NS11MM_DW_DEV.MARTS.DPR_DASHBOARD
 ```
 
-Backed by stage: `@NS11MM_DW_DEV_JMYERS.MARTS.DPR_DASHBOARD_STAGE`
+Backed by stage: `@NS11MM_DW_DEV.MARTS.DPR_DASHBOARD_STAGE`
 
 ### To redeploy after changes:
 
 ```sql
 -- Push updated file to stage
 COPY FILES 
-  INTO @NS11MM_DW_DEV_JMYERS.MARTS.DPR_DASHBOARD_STAGE/
+  INTO @NS11MM_DW_DEV.MARTS.DPR_DASHBOARD_STAGE/
   FROM 'snow://workspace/USER$.PUBLIC."ns11mm-data-platform"/versions/live/dpr-dashboard/deployed/'
   FILES = ('streamlit_app.py');
 ```
@@ -45,12 +45,12 @@ COPY FILES
 ### To grant access to other roles:
 
 ```sql
-GRANT USAGE ON STREAMLIT NS11MM_DW_DEV_JMYERS.MARTS.DPR_DASHBOARD TO ROLE <ROLE_NAME>;
+GRANT USAGE ON STREAMLIT NS11MM_DW_DEV.MARTS.DPR_DASHBOARD TO ROLE <ROLE_NAME>;
 ```
 
 ## Data Source
 
-Both versions query `NS11MM_DW_DEV_JMYERS.MARTS.FCT_DAILY_PERFORMANCE` which is built by the dbt project.
+Both versions query `NS11MM_DW_DEV.MARTS.FCT_DAILY_PERFORMANCE` which is built by the dbt project.
 
 ## Features
 

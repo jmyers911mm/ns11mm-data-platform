@@ -19,19 +19,28 @@ Everyone who touches the data is responsible for handling it according to its cl
 
 ## Where PII lives (and where it doesn't)
 
-PII is concentrated in a small number of models. Know these before you build:
+PII is concentrated in a small number of **active** models. Know these before you build
+(this list must stay in sync with `macros/operations/apply_masking_policies.sql` and
+`apply_governance_tags.sql` — the macros enforce what this doc declares):
 
-- **`stg_salesforce_nps__contacts` / `silver_sf_crm`** — CRM contacts: names, emails, phones.
-- **`dim_customer`** — resolved customers, storing **arrays** of all known emails and phones (`EMAILS`, `PHONES`).
-- **`rpt_member_360` / `rpt_customer_ltv`** — member profiles with contact details.
-- **Intermediate models** that carry email/phone: `silver_pos_tickets`, `silver_pos_retail`, `silver_shopify`, `silver_sf_marketing_cloud`.
-- **`fct_ticket_sales`** — carries `customer_email` and `customer_phone` for identity resolution.
-**Masking policies** are automatically applied to all PII columns via `on-run-end` hooks:
+- **`rpt_wifi_email_export`** — RESTRICTED. WiFi captive-portal marketing extract:
+  `email_address`, `first_name`, `last_name`. Excluded from the default marts grants
+  (`grants: {select: []}` in its config) — POWERBI_ROLE / ML_ROLE do not receive it.
+- **`stg_wifi__audience`** — the staging feed behind it (same identifiers, plus device MACs).
+- **`stg_ecommerce__website_recurring`** — carries `email` for recurring web donors.
+- **`int_pos_tickets`** — carries `customer_email` (currently a stopgap derived from
+  `customer_id`, but classified as if real so nothing breaks when the real field lands).
+- **`dim_customer`** — resolved Gateway customers; carries `customer_name`.
+
+Models in `disabled/` that carry PII (`fct_ticket_sales`, `rpt_member_360`,
+`rpt_customer_ltv`, the `silver_sf_*` family) are re-classified here **before**
+re-enabling — add them to the masking/tagging macros in the same PR.
+
+**Masking policies** are applied to the columns above via the `on-run-end` hook
+(`apply_masking_policies`):
 - `MASK_NAME` — full redaction for non-privileged roles
 - `MASK_EMAIL` — shows only `***@domain.com`
-- `MASK_PHONE` — shows only last 4 digits
-
-**Row access policy** (`RAP_PII_ACCESS`) prevents `ML_ROLE` from seeing rows with PII values.
+- `MASK_PHONE` — shows only last 4 digits (no active model carries phone today)
 
 By design, **fact and report tables reference people by `customer_id`**, not by raw email/phone — so most analytics never touch PII directly. Keep it that way: join to identifiers only when the use case genuinely requires it.
 
@@ -43,7 +52,7 @@ By design, **fact and report tables reference people by `customer_id`**, not by 
 2. **Stay in the warehouse.** Don't export PII to local files, spreadsheets, or external tools. Don't put it in commit messages, PR descriptions, issues, logs, or screenshots.
 3. **Reference by `customer_id`.** When building downstream models, carry the resolved `customer_id`, not the email/phone, unless the email/phone is the actual deliverable (e.g., a marketing send list — which has its own controls).
 4. **Mask in shared contexts.** Sample data shown in docs, demos, or the Hub must be masked or synthetic.
-5. **The identity graph is sensitive.** `raw_customer_identifiers` and `dim_customer` map a person's multiple identities together — treat them as Restricted.
+5. **The identity graph is sensitive.** `dim_customer` maps a person's identities together — treat it as Restricted.
 6. **Bronze is immutable.** Raw source data (including PII) is never edited in place; corrections happen downstream. This preserves auditability.
 
 ---
@@ -51,7 +60,7 @@ By design, **fact and report tables reference people by `customer_id`**, not by 
 ## Access control in practice
 
 
-Access is provisioned through Snowflake RBAC roles (see [SNOWFLAKE_SETTINGS](../../SNOWFLAKE_SETTINGS.md)):
+Access is provisioned through Snowflake RBAC roles (see [SNOWFLAKE_SETTINGS](SNOWFLAKE_SETTINGS.md)):
 
 | Role | PII Access | Scope |
 |---|---|---|

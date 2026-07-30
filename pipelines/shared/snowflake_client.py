@@ -8,18 +8,22 @@ Provides:
 """
 
 import json
+import os
 import snowflake.connector
 from datetime import datetime, timezone
 from shared.keyvault import secret
 
 
 def get_connection():
+    # Environment is selectable via Function App settings; defaults are dev.
+    # Ingestion runs on SOURCES_WH (LOADER_ROLE) per docs/architecture/
+    # SNOWFLAKE_SETTINGS.md — COMPUTE_WH is reserved for ad-hoc use.
     return snowflake.connector.connect(
         account   = secret("SNOWFLAKE-ACCOUNT"),
         user      = secret("SNOWFLAKE-USER"),
         password  = secret("SNOWFLAKE-PASSWORD"),
-        warehouse = "COMPUTE_WH",
-        database  = "NS11MM_DW_DEV",
+        warehouse = os.environ.get("NS11MM_SNOWFLAKE_WAREHOUSE", "SOURCES_WH"),
+        database  = os.environ.get("NS11MM_SNOWFLAKE_DATABASE", "NS11MM_DW_DEV"),
         schema    = "RAW",
         role      = "LOADER_ROLE",
     )

@@ -4,29 +4,29 @@ artifacts:
     type: cortex_agent
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.JMYERS_TEST
+        object: NS11MM_DW_DEV.MARTS.JMYERS_TEST
   - path: ATTENDANCE.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.ATTENDANCE
+        object: NS11MM_DW_DEV.MARTS.ATTENDANCE
   - path: RETAIL.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.RETAIL
+        object: NS11MM_DW_DEV.MARTS.RETAIL
   - path: FUNDRAISING_ECOM.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.FUNDRAISING_ECOM
+        object: NS11MM_DW_DEV.MARTS.FUNDRAISING_ECOM
   - path: DPR.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.DPR
+        object: NS11MM_DW_DEV.MARTS.DPR
   - path: UNIFIED.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.UNIFIED
+        object: NS11MM_DW_DEV.MARTS.UNIFIED

@@ -6,10 +6,15 @@ Usage in any pipeline:
     value = secret("MY-SECRET-NAME")
 """
 
+import os
+
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
-KV_URL = "https://kv-ns11mm-dp-dev.vault.azure.net/"
+# Environment-selectable vault: set NS11MM_KEYVAULT_URL in the Function App
+# settings to point at the staging/prod vault (kv-ns11mm-dp-stg / -prod).
+# Defaults to dev so local runs keep working with no extra config.
+KV_URL = os.environ.get("NS11MM_KEYVAULT_URL", "https://kv-ns11mm-dp-dev.vault.azure.net/")
 
 _client = None
 

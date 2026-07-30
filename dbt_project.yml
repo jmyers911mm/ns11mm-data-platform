@@ -1,5 +1,5 @@
 name: 'ns11mm_data_platform'
-version: '7.0.0'
+version: '7.1.0'
 config-version: 2
 profile: 'ns11mm_data_platform'
 
@@ -62,9 +62,12 @@ models:
       +tags: ['daily', 'critical']
       +query_tag: 'dbt_ns11mm_gold'
       +copy_grants: true
-      +post-hook:
-        - "GRANT SELECT ON {{ this }} TO ROLE POWERBI_ROLE"
-        - "GRANT SELECT ON {{ this }} TO ROLE ML_ROLE"
+      # Read access via dbt's grants config (not post-hooks) so a model can
+      # OVERRIDE the default with its own grants: — required for RESTRICTED /
+      # PII models (rpt_wifi_email_export sets grants: {select: []}).
+      # Model-level `grants:` replaces this list; use `+grants:` to extend it.
+      +grants:
+        select: ['POWERBI_ROLE', 'ML_ROLE']
       dimensions:
         +materialized: table
         +group: gold_dimensions
@@ -84,8 +87,8 @@ models:
       +transient: true
       +group: ml_features
       +access: public
-      +post-hook:
-        - "GRANT SELECT ON {{ this }} TO ROLE ML_ROLE"
+      +grants:
+        select: ['ML_ROLE']
 
 seeds:
   ns11mm_data_platform:

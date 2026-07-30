@@ -6,7 +6,7 @@ description: Attendance analytics model for museum operations. Covers daily scan
 tables:
   - name: FCT_DAILY_SCAN
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_DAILY_SCAN
     primary_key:
@@ -55,7 +55,7 @@ tables:
   - name: FCT_TICKET_DEMAND_FORECAST
     description: Ticket demand aggregated for forecasting and presale analysis
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_TICKET_DEMAND_FORECAST
     dimensions:
@@ -160,7 +160,7 @@ tables:
   - name: FCT_TICKET_AVAILABILITY
     description: Real-time ticket capacity and utilization by date/window/type
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_TICKET_AVAILABILITY
     dimensions:
@@ -227,7 +227,7 @@ tables:
   - name: FCT_TODAY_SALES_HOURLY
     description: Intraday retail sales by hour x facility (Today's Sales Report). Additive sales/profit/units/transactions. Added 1.6.0.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_TODAY_SALES_HOURLY
     dimensions:
@@ -283,7 +283,7 @@ tables:
   - name: DIM_DATE
     description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_DATE
     primary_key:
@@ -353,7 +353,7 @@ tables:
   - name: SEED_SCAN_MARKET_SEGMENT
     description: Market segment reference for scan/attendance classification
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: SEED_SCAN_MARKET_SEGMENT
     primary_key:

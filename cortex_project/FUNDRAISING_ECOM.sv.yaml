@@ -4,7 +4,7 @@ tables:
   - name: DIM_CAMPAIGN
     description: Campaign dimension from Salesforce. Currently awaiting RAW connection.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_CAMPAIGN
     primary_key:
@@ -20,7 +20,7 @@ tables:
   - name: DIM_CUSTOMER
     description: Unified customer dimension using connected-component identity resolution. Currently awaiting RAW data connection.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_CUSTOMER
     primary_key:
@@ -36,7 +36,7 @@ tables:
   - name: DIM_FUND
     description: Blackbaud GL fund dimension. Currently awaiting Blackbaud RAW connection.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_FUND
     primary_key:
@@ -52,7 +52,7 @@ tables:
   - name: DIM_PAYMENT_METHOD
     description: Payment method reference dimension.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_PAYMENT_METHOD
     primary_key:
@@ -68,7 +68,7 @@ tables:
   - name: DIM_DATE
     description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_DATE
     primary_key:

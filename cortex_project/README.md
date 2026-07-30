@@ -7,12 +7,12 @@ specs. Managed by the `semantic_studio` tooling in Cortex Code.
 
 | File | Type | Deploy Target | Status |
 |---|---|---|---|
-| `DPR.sv.yaml` | Semantic View | `NS11MM_DW_DEV_JMYERS.MARTS.DPR` | Deployed |
-| `UNIFIED.sv.yaml` | Semantic View | `NS11MM_DW_DEV_JMYERS.MARTS.UNIFIED` | Ready |
-| `ATTENDANCE.sv.yaml` | Semantic View | `NS11MM_DW_DEV_JMYERS.MARTS.ATTENDANCE` | Ready |
-| `RETAIL.sv.yaml` | Semantic View | `NS11MM_DW_DEV_JMYERS.MARTS.RETAIL` | Ready |
-| `FUNDRAISING_ECOM.sv.yaml` | Semantic View | `NS11MM_DW_DEV_JMYERS.MARTS.FUNDRAISING_ECOM` | Scaffold |
-| `JMYERS_TEST.agent.yaml` | Cortex Agent | `NS11MM_DW_DEV_JMYERS.MARTS.JMYERS_TEST` | Deployed |
+| `DPR.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.DPR` | Deployed |
+| `UNIFIED.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.UNIFIED` | Ready |
+| `ATTENDANCE.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.ATTENDANCE` | Ready |
+| `RETAIL.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.RETAIL` | Ready |
+| `FUNDRAISING_ECOM.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.FUNDRAISING_ECOM` | Scaffold |
+| `JMYERS_TEST.agent.yaml` | Cortex Agent | `NS11MM_DW_DEV.MARTS.JMYERS_TEST` | Deployed |
 | `cortex-project.yaml` | Manifest | — | Tracks all artifacts |
 
 ## Deploy

@@ -8,7 +8,7 @@ tables:
       - daily numbers
     description: One row per calendar day of DPR additive measures.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_DAILY_PERFORMANCE
     dimensions:
@@ -356,7 +356,7 @@ tables:
       - date dimension
     description: Calendar date dimension with fiscal calendar (FY starts October) and the September 11 commemoration flag.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_DATE
     primary_key:

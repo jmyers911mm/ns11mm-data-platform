@@ -13,7 +13,7 @@ tables:
   - name: date
     description: Conformed calendar/date dimension. The single shared axis every live fact reconciles against.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: DIM_DATE
     primary_key:
@@ -79,7 +79,7 @@ tables:
   - name: dpr
     description: Ticketing / DPR additive day-grain fact. One row per calendar day.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_DAILY_PERFORMANCE
     primary_key:
@@ -167,7 +167,7 @@ tables:
   - name: retail_daily
     description: Retail facility-grain fact. One row per day per selling area. Base for retail ratios.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_RETAIL_DAILY
     primary_key:
@@ -228,7 +228,7 @@ tables:
   - name: retail_category
     description: Retail category-grain fact. One row per day per selling area per product category.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_RETAIL_PERFORMANCE
     primary_key:
@@ -261,7 +261,7 @@ tables:
   - name: daily_scan
     description: Gate-scan fact. One row per day per market segment. Scan component only.
     base_table:
-      database: NS11MM_DW_DEV_JMYERS
+      database: NS11MM_DW_DEV
       schema: MARTS
       table: FCT_DAILY_SCAN
     primary_key:
@@ -319,7 +319,7 @@ verified_queries:
     sql: |
       SELECT *
       FROM SEMANTIC_VIEW(
-          NS11MM_DW_DEV_JMYERS.MARTS.UNIFIED
+          NS11MM_DW_DEV.MARTS.UNIFIED
           DIMENSIONS date.is_weekend
           METRICS dpr.total_ticket_revenue, retail_daily.total_net_sales, daily_scan.scan_passes_scanned
       )
@@ -330,7 +330,7 @@ verified_queries:
     sql: |
       SELECT *
       FROM SEMANTIC_VIEW(
-          NS11MM_DW_DEV_JMYERS.MARTS.UNIFIED
+          NS11MM_DW_DEV.MARTS.UNIFIED
           DIMENSIONS date.calendar_month
           METRICS dpr.total_admission_revenue, retail_daily.total_net_sales, dpr.total_donations
       )
@@ -341,7 +341,7 @@ verified_queries:
     sql: |
       SELECT *
       FROM SEMANTIC_VIEW(
-          NS11MM_DW_DEV_JMYERS.MARTS.UNIFIED
+          NS11MM_DW_DEV.MARTS.UNIFIED
           DIMENSIONS daily_scan.market_segment
           METRICS daily_scan.scan_utilization
       )

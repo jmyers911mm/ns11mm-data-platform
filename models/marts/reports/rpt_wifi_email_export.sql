@@ -1,5 +1,4 @@
 -- Marts report: Blue State WiFi Email List Export [RESTRICTED / PII]
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: marketing
 -- Grain: one row per distinct email address per capture date
@@ -10,10 +9,11 @@
 -- RESTRICTED / PII per docs/architecture/DATA_CLASSIFICATION.md.
 --
 -- Governance (see DATA_CLASSIFICATION.md):
--- * tags pii/restricted -> the on-run-end masking hook applies column masking
--- policies to email_address / first_name / last_name automatically.
--- * least privilege: only marketing-export roles should be granted on this
--- model; POWERBI_ROLE / ML_ROLE must NOT receive it.
+-- * the on-run-end masking hook (apply_masking_policies) applies column
+-- masking to email_address / first_name / last_name on this view.
+-- * least privilege: grants: {select: []} below OVERRIDES the marts-level
+-- default grant, so POWERBI_ROLE / ML_ROLE do NOT receive this model.
+-- Marketing-export access is granted outside dbt by the egress process.
 -- * stays in the warehouse: the actual export to Blue State happens via a
 -- governed, audited egress path -- not by copying this to a local file.
 -- * Bronze immutable: source PII is never edited upstream.
@@ -23,7 +23,8 @@
 
 {{ config(
     materialized='view',
-    tags=['pii', 'restricted', 'marketing_export']
+    tags=['pii', 'restricted', 'marketing_export'],
+    grants={'select': []}
 ) }}
 
 with audience as (
