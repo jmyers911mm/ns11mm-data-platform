@@ -282,7 +282,7 @@ Any change to these files is a Tier 1 change:
 | `dbt_project.yml` | Controls all model materializations, hooks, and vars |
 | `profiles.yml` | Controls database/warehouse routing |
 | `macros/data_quality/check_source_group_readiness.sql` | Circuit breaker — can block all runs |
-| `macros/data_quality/check_source_freshness.sql` | Source SLA definitions |
+| `models/raw/sources.yml` (freshness blocks) | Source SLA definitions (`dbt source freshness`) |
 | `macros/generate_schema_name.sql` | Schema routing for all models |
 | `.github/workflows/dbt-ci.yml` | CI/CD pipeline definition |
 | `scripts/setup_developer_workspace.sql` | Access control and permissions |
