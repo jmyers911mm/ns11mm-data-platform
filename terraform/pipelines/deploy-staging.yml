@@ -1,36 +1,116 @@
 # NS11MM Data Platform — Terraform Deploy: staging
-# Manual trigger only
+# Manual trigger only. Plan runs in an agent job, approval runs in a server
+# (agentless) job via ManualValidation@0, apply runs in a subsequent agent job.
 
 trigger: none
 
-pool:
-  vmImage: ubuntu-latest
-
 variables:
-  TF_VAR_FILE: environments/staging.tfvars.json
-  ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
-  ARM_CLIENT_ID: $(ARM_CLIENT_ID)
-  ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
-  ARM_TENANT_ID: $(ARM_TENANT_ID)
+  # Variable group must contain:
+  #   ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_CLIENT_SECRET (secret), ARM_TENANT_ID
+  #   TEAMS_WEBHOOK_URL (secret), PIPELINE_SP_OBJECT_ID, ADMIN_OBJECT_ID
+  #   SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD (secret), SNOWFLAKE_ROLE
+  - group: ns11mm-terraform-staging
+  - name: TF_VAR_FILE
+    value: environments/staging.tfvars.json
+  - name: TF_STATE_KEY
+    value: ns11mm-data-platform-staging.tfstate
 
-steps:
-  - task: TerraformInstaller@1
-    inputs:
-      terraformVersion: '1.5.x'
-
-  - script: terraform init
-    workingDirectory: terraform/
-    displayName: Terraform Init
-
-  - script: terraform plan -var-file=$(TF_VAR_FILE) -out=tfplan
-    workingDirectory: terraform/
+stages:
+  - stage: Plan
     displayName: Terraform Plan
+    jobs:
+      - job: Plan
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.5.x'
 
-    - task: ManualValidation@0
-    displayName: Approve deployment to staging
-    inputs:
-      instructions: 'Review Terraform plan above before approving staging deployment'
+          - script: terraform init -backend-config="key=$(TF_STATE_KEY)"
+            workingDirectory: terraform/
+            displayName: Terraform Init
+            env:
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
 
-  - script: terraform apply tfplan
-    workingDirectory: terraform/
+          - script: terraform plan -var-file=$(TF_VAR_FILE) -out=tfplan
+            workingDirectory: terraform/
+            displayName: Terraform Plan
+            env:
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
+              SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+              SNOWFLAKE_USER: $(SNOWFLAKE_USER)
+              SNOWFLAKE_PASSWORD: $(SNOWFLAKE_PASSWORD)
+              SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE)
+              TF_VAR_teams_webhook_url: $(TEAMS_WEBHOOK_URL)
+              TF_VAR_pipeline_sp_object_id: $(PIPELINE_SP_OBJECT_ID)
+              TF_VAR_admin_object_id: $(ADMIN_OBJECT_ID)
+
+          - publish: terraform/tfplan
+            artifact: tfplan
+            displayName: Publish plan artifact
+
+  - stage: Approve
+    displayName: Manual approval
+    dependsOn: Plan
+    jobs:
+      - job: WaitForApproval
+        displayName: Approve deployment to staging
+        pool: server
+        timeoutInMinutes: 4320 # 3 days
+        steps:
+          - task: ManualValidation@0
+            timeoutInMinutes: 4320
+            inputs:
+              instructions: 'Review the Terraform plan from the Plan stage before approving the staging deployment.'
+              onTimeout: reject
+
+  - stage: Apply
     displayName: Terraform Apply
+    dependsOn: Approve
+    jobs:
+      - job: Apply
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.5.x'
+
+          - script: terraform init -backend-config="key=$(TF_STATE_KEY)"
+            workingDirectory: terraform/
+            displayName: Terraform Init
+            env:
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+          - download: current
+            artifact: tfplan
+            displayName: Download plan artifact
+
+          - script: cp $(Pipeline.Workspace)/tfplan/tfplan terraform/tfplan
+            displayName: Stage plan file
+
+          - script: terraform apply tfplan
+            workingDirectory: terraform/
+            displayName: Terraform Apply
+            env:
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
+              SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+              SNOWFLAKE_USER: $(SNOWFLAKE_USER)
+              SNOWFLAKE_PASSWORD: $(SNOWFLAKE_PASSWORD)
+              SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE)
+              TF_VAR_teams_webhook_url: $(TEAMS_WEBHOOK_URL)
+              TF_VAR_pipeline_sp_object_id: $(PIPELINE_SP_OBJECT_ID)
+              TF_VAR_admin_object_id: $(ADMIN_OBJECT_ID)

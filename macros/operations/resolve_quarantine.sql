@@ -5,7 +5,7 @@
 */
 
 {% set resolve_query %}
-    update NS11MM_DW_DEV.SILVER.QUARANTINE_LOG
+    update {{ target.database }}.INTERMEDIATE.QUARANTINE_LOG
     set resolved_at = current_timestamp(),
         resolved = true
     where source_model = '{{ model_name }}'

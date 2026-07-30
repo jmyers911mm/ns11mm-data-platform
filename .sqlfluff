@@ -1,0 +1,32 @@
+[sqlfluff]
+dialect = snowflake
+templater = jinja
+max_line_length = 0
+# Lint everything — stg_counterpoint__vitkthist.sql exceeds the default 20kB skip limit.
+large_file_skip_byte_limit = 0
+# Enforced: capitalisation (lowercase keywords/identifiers/functions/literals/
+# types per docs/architecture/SQL_STYLE_GUIDE.md), convention (minus CV11),
+# and jinja rules.
+# Excluded wholesale: layout, aliasing, structure, references, ambiguous —
+# too noisy against the existing (readable, reviewed) model formatting.
+# CV11 (casting style) excluded: Snowflake `::` and cast() are both in use.
+exclude_rules = layout, aliasing, structure, references, ambiguous, convention.casting_style
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = True
+load_macros_from_path = macros
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower

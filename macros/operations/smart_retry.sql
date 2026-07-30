@@ -6,7 +6,7 @@
 
 {% set failed_models_query %}
     select model_name, error_message, run_timestamp
-    from NS11MM_DW_DEV.SILVER.DBT_RUN_AUDIT_LOG
+    from {{ target.database }}.INTERMEDIATE.DBT_RUN_AUDIT_LOG
     where status = 'error'
       and run_timestamp >= dateadd('hour', -24, current_timestamp())
     order by run_timestamp desc

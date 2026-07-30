@@ -1,5 +1,5 @@
 {% macro quarantine_failed_rows(model_name, reason) %}
-    insert into {{ target.database }}.SILVER.QUARANTINE_LOG (
+    insert into {{ target.database }}.INTERMEDIATE.QUARANTINE_LOG (
         quarantine_timestamp,
         source_model,
         reason,

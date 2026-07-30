@@ -10,14 +10,14 @@
     from (
         select * from NS11MM_DW_DEV.{{ target.schema }}.{{ model_name }}
         minus
-        select * from NS11MM_DW_PROD.GOLD.{{ model_name }}
+        select * from NS11MM_DW_PROD.MARTS.{{ model_name }}
     )
 {% endset %}
 
 {% set lost_rows_query %}
     select 'LOST FROM PROD' as status, count(*) as row_count
     from (
-        select * from NS11MM_DW_PROD.GOLD.{{ model_name }}
+        select * from NS11MM_DW_PROD.MARTS.{{ model_name }}
         minus
         select * from NS11MM_DW_DEV.{{ target.schema }}.{{ model_name }}
     )

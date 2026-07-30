@@ -16,7 +16,12 @@ terraform {
     resource_group_name  = "rg-ns11mm-data-platform"
     storage_account_name = "stns11mmtfstate"
     container_name       = "tfstate"
-    key                  = "ns11mm-data-platform.tfstate"
+    # `key` is supplied per environment at init time so dev/staging/prod do
+    # not share one state file, e.g.:
+    #   terraform init -backend-config="key=ns11mm-data-platform-dev.tfstate"
+    # (see terraform/pipelines/deploy-*.yml). The value below is only a
+    # fallback for ad-hoc local init without -backend-config.
+    key = "ns11mm-data-platform.tfstate"
   }
 }
 

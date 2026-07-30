@@ -1,0 +1,9 @@
+# Disabled models are not part of the active build — do not lint.
+models/**/disabled/
+
+# Power BI wrappers over Snowflake SEMANTIC_VIEW() — sqlfluff's snowflake
+# dialect cannot parse the SEMANTIC_VIEW(... dimensions/metrics ...) syntax.
+models/marts/reports/rpt_daily_scan_powerbi.sql
+models/marts/reports/rpt_dpr_powerbi.sql
+models/marts/reports/rpt_retail_powerbi.sql
+models/marts/reports/rpt_today_sales_powerbi.sql

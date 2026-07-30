@@ -1,6 +1,3 @@
-# Budget workbooks land as CSV loads into the SEEDS schema; the int_budget__*
-# models read this source directly (documented exception to the stg_ pattern —
-# Excel-shaped input is conformed in one step).
 sources:
   - name: budget_seeds
     description: Budget and forecast seed tables loaded from Excel exports.
