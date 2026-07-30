@@ -371,7 +371,17 @@ If a Tier 1 change is needed urgently (pipeline is down, data is stale):
 
 ### profiles.yml Targets and Roles
 
-Targets are defined in [`profiles.yml.template`](profiles.yml.template) (copy it to `~/.dbt/profiles.yml`):
+There are two profile files, for the two ways dbt runs:
+
+- **`profiles.yml` (repo root, committed)** — the **credential-free** profile used by
+  dbt Projects on Snowflake (`EXECUTE DBT PROJECT` / Workspaces). It routes
+  role/warehouse/database/schema only; execution uses your Snowflake session identity.
+  Never add account/user/password/keys to it.
+- **`profiles.yml.template` → `~/.dbt/profiles.yml`** — for local dbt and GitHub Actions
+  CI, which need account/user/auth (from env vars). CI pins `DBT_PROFILES_DIR` to
+  `~/.dbt` so the root file never shadows it.
+
+Targets defined in [`profiles.yml.template`](profiles.yml.template) (copy it to `~/.dbt/profiles.yml`):
 
 ```yaml
 dev:          # Personal sandbox — TRANSFORMER_ROLE
