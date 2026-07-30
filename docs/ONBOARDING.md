@@ -61,7 +61,10 @@ Copy the repo's [`profiles.yml.template`](../profiles.yml.template) to `C:\Users
 Copy-Item profiles.yml.template $env:USERPROFILE\.dbt\profiles.yml
 ```
 
-`profiles.yml` is gitignored and must never be committed — the repo only carries the template. The template reads your identity from environment variables rather than hardcoding it:
+This home-folder profile is only for running dbt from your own machine. (The repo root
+also carries a committed `profiles.yml` — that one is the **credential-free** profile used
+by dbt Projects on Snowflake and contains no identity; never add account/user/password to
+it.) The template reads your identity from environment variables rather than hardcoding it:
 
 | Env var | Value |
 |---|---|
