@@ -7,3 +7,10 @@ __pycache__/
 .DS_Store
 SCRATCHPAD.sql
 .temp/
+
+# Never commit connection profiles or credentials.
+# Use profiles.yml.template -> ~/.dbt/profiles.yml (see docs/ONBOARDING.md).
+profiles.yml
+!profiles.yml.template
+*.pem
+*.p8
