@@ -33,7 +33,7 @@ connectivity.
 | Mart facts (`models/marts/facts/`) | **8** | 28 | + report estate: `fct_retail_performance`, `fct_retail_daily`, `fct_daily_scan`, `fct_today_sales_hourly` (stub) |
 | Mart reports (`models/marts/reports/`) | **10** | 19 | DPR + 9 migrated Pentaho reports (5 live, 4 stub-wired) |
 | ML features (`models/ml_features/`) | **2** | 14 | `ml_ticket_demand_features`, `ml_visitor_forecast_training` |
-| Semantic views (`semantic_models/`) | **4** | 4 | `MARTS.DPR`, `MARTS.RETAIL`, `MARTS.ATTENDANCE`, `MARTS.FUNDRAISING_ECOM` |
+| Semantic views (`cortex_project/`) | **4** | 5 | `MARTS.DPR`, `MARTS.RETAIL`, `MARTS.ATTENDANCE`, `MARTS.UNIFIED` (+ `FUNDRAISING_ECOM` scaffold in `disabled/`) |
 
 **Planned / disabled** (present in the repo, `enabled=false`): all marketing, digital
 (GA4/Google Ads/Meta Ads), CRM/customer-360, membership, fundraising/donor, GL, website,
@@ -116,7 +116,7 @@ Cortex agent, ML forecasting, the verified-query library) are marked **[PLANNED]
 │                       SEMANTIC VIEWS (Cortex Analyst / PBI)               │
 │              ┌──────────────────────────────────────────────────┐         │
 │              │ MARTS.DPR · MARTS.RETAIL · MARTS.ATTENDANCE ·     │  ← live │
-│              │ MARTS.FUNDRAISING_ECOM (stub-fed)                 │         │
+│              │ MARTS.UNIFIED (cross-domain)                      │         │
 │              └──────────────────────────────────────────────────┘         │
 │                                                                            │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -130,7 +130,7 @@ Cortex agent, ML forecasting, the verified-query library) are marked **[PLANNED]
 - **Metric definition gate** (ADR-005): a metric is defined and approved before any mart is built on it
 - **`try_to_timestamp`** on raw date columns; silver models filter `key_date IS NULL` to drop unparseable literals
 - **Commemoration window** (Sep 6–16) carried as `is_commemoration_day` and treated as a known structural exception
-- **Fiscal calendar** is defined in `dim_date` (`fiscal_year` / `fiscal_month`); confirm the fiscal start month before publishing fiscal metrics
+- **Calendar-based reporting** today: `dim_date` is a calendar spine with no fiscal columns yet; the fiscal calendar (proposed FY start October) is an open ADR-005 item pending Data & AI Committee definition
 - **[PLANNED] Identity resolution**, **role-playing dates**, and **SCD2 snapshots** land with the CRM/POS-customer domains
 
 ---
@@ -179,7 +179,7 @@ ns11mm-data-platform/
 │   ├── reconciliation/        # Cross-layer count/total tests
 │   └── referential_integrity/ # FK / seed-alignment tests
 ├── seeds/                     # Reference + DPR mapping seeds (8 CSVs)
-├── semantic_models/           # DPR semantic view (SQL DDL + Cortex YAML)
+├── cortex_project/            # Cortex semantic views + agents (.sv.yaml source of truth)
 ├── pipelines/                 # Per-source ingestion (scaffolded)
 ├── snapshots/                 # SCD2 snapshots (planned domains)
 └── terraform/                 # Infrastructure-as-Code
@@ -271,26 +271,28 @@ section. They are not re-listed here to avoid drift.
 ## Semantic Views
 
 **Four domain-grouped semantic views** for Cortex Analyst and the Power BI
-Semantic Views connector -- one per business domain, each spanning its facts so
-every report (and its drill-down dimensions) is chattable. Defined in
-`semantic_models/`:
+Semantic Views connector -- one per business domain (plus a cross-domain
+surface), each spanning its facts so every report (and its drill-down
+dimensions) is chattable. Defined in `cortex_project/`:
 
 | View | Domain | Facts | Status |
 |---|---|---|---|
 | `MARTS.DPR` | Daily Performance Report | `fct_daily_performance` × `dim_date` | Live |
 | `MARTS.RETAIL` | Retail (Performance, Carts, Monthly KPI) | `fct_retail_daily` + `fct_retail_performance` | Live |
 | `MARTS.ATTENDANCE` | Scanning + attendance + today's sales | `fct_daily_scan` + attendance + `fct_today_sales_hourly` | Live / partial-stub |
-| `MARTS.FUNDRAISING_ECOM` | Website Commerce | `rpt_website_commerce` | Stub-fed |
+| `MARTS.UNIFIED` | Cross-domain reconciliation | DPR + retail + scan facts × conformed `dim_date` | Ready |
+| `MARTS.FUNDRAISING_ECOM` | Website Commerce | (base dims disabled) | Scaffold in `cortex_project/disabled/` |
 
-Each has a `<domain>.yaml` (Cortex Analyst model with verified queries + custom
-instructions) and a native `create_<domain>_semantic_view.sql` DDL twin
-(`create_dpr_semantic_view.sql` exists; retail/attendance/ecom twins generate
-from their YAML). Design rationale (additive SUM metrics + ratio-of-sums,
-one-model-per-domain, stub guardrails) is in
-[`semantic_models/README.md`](semantic_models/README.md).
+Each has a `<DOMAIN>.sv.yaml` (Cortex Analyst model with verified queries +
+custom instructions) — the single authored source of truth — and a generated
+native DDL twin `scripts/deploy_semantic_view_<domain>.sql`, rendered by
+`scripts/generate_semantic_view_ddl.py` (never hand-edited; a pre-commit hook
+runs `--check` for drift). Design rationale (additive SUM metrics +
+ratio-of-sums, one-model-per-domain, stub guardrails) is in
+[`docs/architecture/BUILD_DIMS_METS.md`](docs/architecture/BUILD_DIMS_METS.md).
 
-Stub-fed surfaces (`fundraising_ecom`, today's-sales) instruct the agent to
-report empty results as "feed not yet connected" rather than "zero".
+Stub-fed surfaces (today's-sales) instruct the agent to report empty results
+as "feed not yet connected" rather than "zero".
 
 > **[PLANNED]** The marketing, donor-retention, and museum-operations semantic
 > views, the Cortex agent, and the verified-query library described in earlier

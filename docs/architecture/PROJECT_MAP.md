@@ -110,7 +110,7 @@ Everything below is relative to the repo root. Anything not listed here is eithe
 | `tests/referential_integrity/` | 12 singular tests proving FKs and seed alignment hold | reviewer by topic |
 | `snapshots/` | SCD2 snapshots (planned; land with the CRM/customer domain) | infra |
 | `seeds/` | 8 CSVs: `ref_*` reference tables + `seed_*` DPR mapping seeds (tour PLU, retail facility) | infra |
-| `semantic_models/` | The live DPR semantic view: `create_dpr_semantic_view.sql` + `dpr.yaml` | infra |
+| `cortex_project/` | Cortex semantic views (`*.sv.yaml`, source of truth) + agent specs; DDL twins generate to `scripts/deploy_semantic_view_*.sql` | infra |
 | `terraform/` | Infrastructure-as-code: warehouses, Key Vault, monitor alerts, static web app, deploy pipelines | infra (Tier 1) |
 | `.github/workflows/dbt-ci.yml` | The CI pipeline that runs on every PR (Slim CI) | infra (Tier 1) |
 | `CODEOWNERS` | Maps paths → required reviewers; enforces the change-gate policy | `@jwmyers82` |

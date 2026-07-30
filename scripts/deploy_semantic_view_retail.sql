@@ -1,12 +1,15 @@
--- Redeploy NS11MM_DW_DEV.MARTS.RETAIL with the REPORT_DATE regular dimension (1.6.0).
--- Generated from cortex_project/RETAIL.sv.yaml. Run as the MARTS owner role.
--- Equivalent to redeploying the .sv.yaml via the Cortex project; use whichever path you have.
+-- GENERATED FILE -- do not edit by hand.
+-- Source of truth: cortex_project/RETAIL.sv.yaml
+-- Regenerate: python3 scripts/generate_semantic_view_ddl.py
+-- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the
+-- Cortex project; use whichever path you have. Custom instructions and verified
+-- queries in the YAML deploy via the Cortex project path, not this DDL.
 CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.RETAIL
   TABLES (
-    FCT_RETAIL_PERFORMANCE AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_PERFORMANCE,
-    FCT_RETAIL_DAILY AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_DAILY,
-    DIM_DATE AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY),
-    SEED_FACILITY_AREA AS NS11MM_DW_DEV.SEEDS.SEED_FACILITY_AREA PRIMARY KEY (KEY_FACILITY)
+    FCT_RETAIL_PERFORMANCE AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_PERFORMANCE COMMENT = 'Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.',
+    FCT_RETAIL_DAILY AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_DAILY COMMENT = 'Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups of sales/profit/units/donations. This is the single-fact projection the Retail Performance Power BI wrapper (RPT_RETAIL_POWERBI) reads.',
+    DIM_DATE AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)',
+    SEED_FACILITY_AREA AS NS11MM_DW_DEV.SEEDS.SEED_FACILITY_AREA PRIMARY KEY (KEY_FACILITY) COMMENT = 'Retail selling-area facility reference'
   )
   RELATIONSHIPS (
     RETAIL_PERF_TO_DATE AS FCT_RETAIL_PERFORMANCE (DATE_KEY) REFERENCES DIM_DATE (DATE_KEY),
@@ -15,7 +18,7 @@ CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.RETAIL
     RETAIL_DAILY_TO_FACILITY AS FCT_RETAIL_DAILY (KEY_FACILITY) REFERENCES SEED_FACILITY_AREA (KEY_FACILITY)
   )
   FACTS (
-    FCT_RETAIL_PERFORMANCE.NET_SALES AS NET_SALES,
+    FCT_RETAIL_PERFORMANCE.NET_SALES AS NET_SALES COMMENT = 'Sale minus return amount, non-donation lines',
     FCT_RETAIL_PERFORMANCE.NET_PROFIT AS NET_PROFIT,
     FCT_RETAIL_PERFORMANCE.NET_UNITS AS NET_UNITS,
     FCT_RETAIL_PERFORMANCE.COST_OF_GOODS AS COST_OF_GOODS,
@@ -63,7 +66,7 @@ CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.RETAIL
     FCT_RETAIL_PERFORMANCE.TOTAL_NET_PROFIT AS SUM(NET_PROFIT) COMMENT = 'Total net profit',
     FCT_RETAIL_PERFORMANCE.TOTAL_NET_UNITS AS SUM(NET_UNITS) COMMENT = 'Total units sold (category grain). Added 1.6.0 for the Retail Performance Report category page.',
     FCT_RETAIL_PERFORMANCE.TOTAL_COST_OF_GOODS AS SUM(COST_OF_GOODS) COMMENT = 'Total COGS. Added 1.6.0.',
-    FCT_RETAIL_PERFORMANCE.TOTAL_DONATIONS AS SUM(DONATIONS) COMMENT = 'Total retail donations',
+    FCT_RETAIL_PERFORMANCE.TOTAL_RETAIL_DONATIONS AS SUM(DONATIONS) WITH SYNONYMS = ('retail donations', 'register donations', 'round-up donations') COMMENT = 'Total retail donations collected at the register (category grain). Distinct from the DPR view''s TOTAL_DONATIONS (all donation lines).',
     FCT_RETAIL_PERFORMANCE.GROSS_MARGIN_PCT AS SUM(NET_PROFIT) / NULLIF(SUM(NET_SALES), 0) COMMENT = 'Gross margin percentage (profit / sales)',
     FCT_RETAIL_DAILY.TOTAL_RETAIL_NET_SALES AS SUM(NET_SALES) COMMENT = 'Facility-grain net sales rollup',
     FCT_RETAIL_DAILY.TOTAL_RETAIL_NET_PROFIT AS SUM(NET_PROFIT) COMMENT = 'Facility-grain net profit (gross margin profit) rollup',

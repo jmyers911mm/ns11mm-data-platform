@@ -26,7 +26,7 @@ select * from semantic_view(
         fct_daily_scan.is_commemoration_day  as is_commemoration_day
 
     metrics
-        fct_daily_scan.total_tickets_sold    as tickets_sold,
+        fct_daily_scan.total_tickets_scanned as tickets_sold,
         fct_daily_scan.total_passes_scanned  as passes_scanned,
         fct_daily_scan.total_passes_budget   as forecast_tickets_sold
 )

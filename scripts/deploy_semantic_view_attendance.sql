@@ -1,14 +1,17 @@
--- Redeploy NS11MM_DW_DEV.MARTS.ATTENDANCE with the REPORT_DATE regular dimension (1.6.0).
--- Generated from cortex_project/ATTENDANCE.sv.yaml. Run as the MARTS owner role.
--- Equivalent to redeploying the .sv.yaml via the Cortex project; use whichever path you have.
+-- GENERATED FILE -- do not edit by hand.
+-- Source of truth: cortex_project/ATTENDANCE.sv.yaml
+-- Regenerate: python3 scripts/generate_semantic_view_ddl.py
+-- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the
+-- Cortex project; use whichever path you have. Custom instructions and verified
+-- queries in the YAML deploy via the Cortex project path, not this DDL.
 CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.ATTENDANCE
   TABLES (
     FCT_DAILY_SCAN AS NS11MM_DW_DEV.MARTS.FCT_DAILY_SCAN PRIMARY KEY (DATE_KEY),
-    FCT_TICKET_DEMAND_FORECAST AS NS11MM_DW_DEV.MARTS.FCT_TICKET_DEMAND_FORECAST,
-    FCT_TICKET_AVAILABILITY AS NS11MM_DW_DEV.MARTS.FCT_TICKET_AVAILABILITY,
-    FCT_TODAY_SALES_HOURLY AS NS11MM_DW_DEV.MARTS.FCT_TODAY_SALES_HOURLY,
-    DIM_DATE AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY),
-    SEED_SCAN_MARKET_SEGMENT AS NS11MM_DW_DEV.SEEDS.SEED_SCAN_MARKET_SEGMENT PRIMARY KEY (SEGMENT_KEY)
+    FCT_TICKET_DEMAND_FORECAST AS NS11MM_DW_DEV.MARTS.FCT_TICKET_DEMAND_FORECAST COMMENT = 'Ticket demand aggregated for forecasting and presale analysis',
+    FCT_TICKET_AVAILABILITY AS NS11MM_DW_DEV.MARTS.FCT_TICKET_AVAILABILITY COMMENT = 'Real-time ticket capacity and utilization by date/window/type',
+    FCT_TODAY_SALES_HOURLY AS NS11MM_DW_DEV.MARTS.FCT_TODAY_SALES_HOURLY COMMENT = 'Intraday retail sales by hour x facility (Today''s Sales Report). Additive sales/profit/units/transactions. Added 1.6.0.',
+    DIM_DATE AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)',
+    SEED_SCAN_MARKET_SEGMENT AS NS11MM_DW_DEV.SEEDS.SEED_SCAN_MARKET_SEGMENT PRIMARY KEY (SEGMENT_KEY) COMMENT = 'Market segment reference for scan/attendance classification'
   )
   RELATIONSHIPS (
     SCAN_TO_DATE AS FCT_DAILY_SCAN (DATE_KEY) REFERENCES DIM_DATE (DATE_KEY),
@@ -38,7 +41,7 @@ CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.ATTENDANCE
     FCT_TICKET_AVAILABILITY.TICKET_CAPACITY AS TICKET_CAPACITY,
     FCT_TICKET_AVAILABILITY.TICKETS_RESERVED AS TICKETS_RESERVED,
     FCT_TICKET_AVAILABILITY.TICKETS_AVAILABLE AS TICKETS_AVAILABLE,
-    FCT_TICKET_AVAILABILITY.UTILIZATION_PCT AS UTILIZATION_PCT,
+    FCT_TICKET_AVAILABILITY.UTILIZATION_PCT AS UTILIZATION_PCT COMMENT = 'Percentage of capacity reserved (0-100)',
     FCT_TODAY_SALES_HOURLY.SALES AS SALES,
     FCT_TODAY_SALES_HOURLY.PROFIT AS PROFIT,
     FCT_TODAY_SALES_HOURLY.UNITS AS UNITS,
@@ -106,9 +109,9 @@ CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.ATTENDANCE
   )
   METRICS (
     FCT_DAILY_SCAN.TOTAL_PASSES_SCANNED AS SUM(PASSES_SCANNED) COMMENT = 'Total passes scanned (attendance count)',
-    FCT_DAILY_SCAN.TOTAL_TICKETS_SOLD AS SUM(TICKETS_SOLD) COMMENT = 'Total tickets sold',
+    FCT_DAILY_SCAN.TOTAL_TICKETS_SCANNED AS SUM(TICKETS_SOLD) WITH SYNONYMS = ('tickets scanned', 'scans', 'gate scans') COMMENT = 'Scan-side ticket count from the daily gate-scan fact (by segment). Reconcile against DPR TOTAL_TICKETS_SOLD, the canonical tickets-sold measure.',
     FCT_DAILY_SCAN.TOTAL_PASSES_BUDGET AS SUM(PASSES_BUDGET) COMMENT = 'Total forecast passes (DSR forecast). Added 1.6.0 for the Daily Scan Report forecast/variance columns.',
-    FCT_TICKET_DEMAND_FORECAST.TOTAL_TICKET_REVENUE AS SUM(TOTAL_REVENUE) COMMENT = 'Total ticket revenue',
+    FCT_TICKET_DEMAND_FORECAST.TOTAL_FORECAST_TICKET_REVENUE AS SUM(TOTAL_REVENUE) WITH SYNONYMS = ('forecast ticket revenue', 'expected ticket revenue') COMMENT = 'Total forecast-side ticket order revenue (demand/presale analysis). For actual admission revenue use the DPR view''s TOTAL_TICKET_REVENUE.',
     FCT_TICKET_DEMAND_FORECAST.TOTAL_TICKETS_QUANTITY AS SUM(TOTAL_QUANTITY) COMMENT = 'Total ticket quantity sold',
     FCT_TICKET_AVAILABILITY.TOTAL_CAPACITY AS SUM(TICKET_CAPACITY) COMMENT = 'Total ticket capacity across all types',
     FCT_TICKET_AVAILABILITY.TOTAL_RESERVED AS SUM(TICKETS_RESERVED) COMMENT = 'Total tickets reserved',

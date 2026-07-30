@@ -1,5 +1,4 @@
 -- Marts report: Memorial Museum Daily Tracker - YTD
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: DPR / cross-domain
 -- Grain: one row per date_key
@@ -8,7 +7,9 @@
 -- is a YTD actuals-vs-budget variance tracker built almost entirely on
 -- fct_daily_performance measures (attendance, tour/pass/ticket revenue, retail
 -- profit, and every donation line) plus civic_programs. It surfaces the day
--- value, the fiscal-YTD cumulative, the YTD budget, and the variance.
+-- value, the calendar-year YTD cumulative, the YTD budget, and the variance.
+-- NOTE: YTD partitions by calendar year_number. A fiscal-year variant is
+-- pending the ADR-005 fiscal-calendar definition (owner: Data & AI Committee).
 --
 -- YTD is computed on demand with a windowed cumulative sum partitioned by
 -- year (never materialized per period), mirroring the DPR rpt_ pattern.

@@ -1,0 +1,22 @@
+models:
+  orchestration: "auto"
+
+orchestration:
+  budget:
+    seconds: 300
+
+instructions:
+  sample_questions: []
+
+tools:
+  - tool_spec:
+      type: "cortex_analyst_text_to_sql"
+      name: "dpr_analyst"
+      description: "Query daily performance metrics including admissions, revenue, attendance, audio tours, museum store, and donations data"
+
+tool_resources:
+  dpr_analyst:
+    execution_environment:
+      type: "warehouse"
+      warehouse: "COMPUTE_WH"
+    semantic_view: "NS11MM_DW_DEV.MARTS.DPR"

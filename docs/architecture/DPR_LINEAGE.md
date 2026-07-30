@@ -224,10 +224,11 @@ Aggregation grain everywhere: **one row per `key_date`**, all measures additive 
   computed on demand at query time, ratios (`avg_ticket_price`,
   `mus_store_rev_per_visitor`) as ratio-of-sums at the query grain (never averaged
   across days), display ordering. No new business logic.
-- **`MARTS.DPR` semantic view** — generated from `semantic_models/dpr.yaml` (MetricFlow):
-  49 metrics over `fct_daily_performance` × `dim_date`, full fiscal-calendar dimension set
-  (FY starts October). Serves Cortex Analyst natural-language queries and is the single
-  semantic contract for Power BI (display-only per ADR-004).
+- **`MARTS.DPR` semantic view** — authored in `cortex_project/DPR.sv.yaml` (DDL generated
+  by `scripts/generate_semantic_view_ddl.py`): 49 metrics over `fct_daily_performance` ×
+  `dim_date`, with the calendar dimension set (calendar-only today; fiscal calendar
+  pending Data & AI Committee definition). Serves Cortex Analyst natural-language queries
+  and is the single semantic contract for Power BI (display-only per ADR-004).
 
 ---
 
@@ -252,4 +253,4 @@ legacy Pentaho transform each one replaces.
 | Staging | `ticketdate` ~95% unparseable by design — never key on it without the `end_of_life_date` fallback |
 | Intermediate | `ga_flag` tour-with-GA branch dead until `disbursement_id` is fixed; unissued population (present in `orderlines`, 5,703 units / $1.9M) not yet modeled — pending ADR-005 |
 | Marts | `tickets_sold`/`ticket_revenue` are the issued-GA definition (unissued/CityPASS/bulk/child-subtraction pending ADR-005); `mus_attendance` is a GA-ticket proxy, not scans |
-| Semantic | `create_dpr_semantic_view.sql` (native DDL twin) pending regeneration to match the rebuilt `dpr.yaml` |
+| Semantic | Native DDL twin `scripts/deploy_semantic_view_dpr.sql` is generated from `cortex_project/DPR.sv.yaml` by `scripts/generate_semantic_view_ddl.py` (drift-guarded by the pre-commit hook) |

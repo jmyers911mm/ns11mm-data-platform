@@ -72,10 +72,14 @@ tables:
         expr: SUM(COST_OF_GOODS)
         data_type: NUMBER
         description: Total COGS. Added 1.6.0.
-      - name: TOTAL_DONATIONS
+      - name: TOTAL_RETAIL_DONATIONS
+        synonyms:
+          - retail donations
+          - register donations
+          - round-up donations
         expr: SUM(DONATIONS)
         data_type: NUMBER
-        description: Total retail donations
+        description: Total retail donations collected at the register (category grain). Distinct from the DPR view's TOTAL_DONATIONS (all donation lines).
       - name: GROSS_MARGIN_PCT
         expr: SUM(NET_PROFIT) / NULLIF(SUM(NET_SALES), 0)
         data_type: NUMBER
@@ -168,7 +172,7 @@ tables:
         data_type: NUMBER
         description: Net sales per visitor
   - name: DIM_DATE
-    description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
+    description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
       database: NS11MM_DW_DEV
       schema: MARTS
@@ -193,12 +197,6 @@ tables:
       - name: YEAR_NUMBER
         expr: YEAR_NUMBER
         data_type: NUMBER
-      - name: FISCAL_YEAR
-        expr: FISCAL_YEAR
-        data_type: NUMBER
-      - name: FISCAL_MONTH
-        expr: FISCAL_MONTH
-        data_type: NUMBER
       - name: IS_WEEKEND
         expr: IS_WEEKEND
         data_type: BOOLEAN
@@ -217,7 +215,7 @@ tables:
     description: Retail selling-area facility reference
     base_table:
       database: NS11MM_DW_DEV
-      schema: MARTS
+      schema: SEEDS
       table: SEED_FACILITY_AREA
     primary_key:
       columns:

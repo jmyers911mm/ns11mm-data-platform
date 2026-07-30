@@ -1,6 +1,6 @@
 sources:
   - name: dpr_semantic
-    description: Native Snowflake SEMANTIC VIEW objects (generated from semantic_models/, deployed as DDL — not dbt-built).
+    description: Native Snowflake SEMANTIC VIEW objects (deployed from cortex_project/DPR.sv.yaml as DDL — not dbt-built).
     database: "{{ target.database }}"
     schema: MARTS
     tables:

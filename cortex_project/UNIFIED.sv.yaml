@@ -25,12 +25,12 @@ tables:
         expr: DATE_DAY
         data_type: DATE
       - name: year
-        synonyms: ["year", "FY", "fiscal year"]
-        description: Calendar year (from dim_date year_number).
+        synonyms: ["year", "calendar year"]
+        description: Calendar year (from dim_date year_number). No fiscal calendar yet — pending Data & AI Committee definition.
         expr: YEAR_NUMBER
         data_type: NUMBER
       - name: month
-        synonyms: ["month", "fiscal month", "fiscal period"]
+        synonyms: ["month", "month number"]
         description: Month of year (1-12).
         expr: MONTH_OF_YEAR
         data_type: NUMBER
@@ -158,10 +158,10 @@ tables:
       - name: avg_ticket_price
         synonyms: ["average ticket price", "avg admission price"]
         description: "Non-additive: admission revenue / tickets sold, recomputed at the query grain."
-        expr: (SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)) / NULLIF(SUM(TICKETS_SOLD), 0)
-      - name: mus_store_rev_per_visitor
-        synonyms: ["museum store revenue per visitor", "store per cap"]
-        description: "Non-additive: Museum Store gross profit / museum visitors, recomputed at the query grain."
+        expr: SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)
+      - name: mus_store_profit_per_visitor
+        synonyms: ["store profit per visitor", "per-cap store profit", "store per cap"]
+        description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) / museum visitors, recomputed at the query grain."
         expr: SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)
 
   - name: retail_daily
@@ -314,7 +314,7 @@ relationships:
 
 verified_queries:
   - name: cross_domain_weekend_snapshot
-    question: On weekends this fiscal year, what were ticket revenue, museum store net sales, and passes scanned?
+    question: On weekends this year, what were ticket revenue, museum store net sales, and passes scanned?
     use_as_onboarding_question: true
     sql: |
       SELECT *
@@ -364,7 +364,7 @@ module_custom_instructions:
   question_categorization: |-
     Use this model for questions that span ticketing, retail and/or scanning
     together, or when the domain is ambiguous; the per-domain models
-    (dpr/retail/attendance/fundraising_ecom) are better for deep single-domain
+    (dpr/retail/attendance) are better for deep single-domain
     drill-down. Two ticket-sold measures exist and may differ:
     dpr.total_tickets_sold is the Gateway DPR count; daily_scan.scan_tickets_sold
     is the scan-side count by segment -- use the scan measure for
@@ -375,8 +375,8 @@ module_custom_instructions:
     Out of scope, decline gracefully: budget / forecast / variance (not staged);
     full Sensource turnstile-blended attendance (only the scan component is
     available); membership and ecommerce gross profit; monthly online/website
-    recurring revenue and same-day hourly sales (see the fundraising_ecom and
-    attendance domain models). Visitor-based retail ratios (conversion_rate,
+    recurring revenue (fundraising/ecom domain model not yet deployed) and
+    same-day hourly sales (see the attendance domain model). Visitor-based retail ratios (conversion_rate,
     rev_per_visitor) and ecom orders rest on stubbed feeds -- flag as provisional
     until Sensource/Shopify land; flag market-segment splits as provisional
     pending channel-mapping validation.

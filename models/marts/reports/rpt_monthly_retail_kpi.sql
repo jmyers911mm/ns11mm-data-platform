@@ -1,5 +1,4 @@
 -- Marts report: Monthly Retail KPI
--- Co-authored with CoCo
 -- ---------------------------------------------------------------------------
 -- Domain: retail
 -- Grain: one row per month x selling area
@@ -9,6 +8,8 @@
 -- transactions, avg sale, conversion rate, rev-per-visitor, capture rate).
 -- Ratios are recomputed at the month grain (ratio-of-sums), never averaged
 -- from the daily grain. Visitor-based KPIs are NULL until Sensource lands.
+-- NOTE: months are calendar months. A fiscal-month variant is pending the
+-- ADR-005 fiscal-calendar definition (owner: Data & AI Committee).
 -- ADR-004: no logic in Power BI.
 
 {{ config(materialized='view') }}

@@ -1,10 +1,10 @@
 version: 1
 artifacts:
-  - path: JMYERS_TEST.agent.yaml
+  - path: DPR_ANALYST.agent.yaml
     type: cortex_agent
     targets:
       default:
-        object: NS11MM_DW_DEV.MARTS.JMYERS_TEST
+        object: NS11MM_DW_DEV.MARTS.DPR_ANALYST
   - path: ATTENDANCE.sv.yaml
     type: semantic_view
     targets:
@@ -15,11 +15,6 @@ artifacts:
     targets:
       default:
         object: NS11MM_DW_DEV.MARTS.RETAIL
-  - path: FUNDRAISING_ECOM.sv.yaml
-    type: semantic_view
-    targets:
-      default:
-        object: NS11MM_DW_DEV.MARTS.FUNDRAISING_ECOM
   - path: DPR.sv.yaml
     type: semantic_view
     targets:

@@ -44,10 +44,14 @@ tables:
         expr: SUM(PASSES_SCANNED)
         data_type: NUMBER
         description: Total passes scanned (attendance count)
-      - name: TOTAL_TICKETS_SOLD
+      - name: TOTAL_TICKETS_SCANNED
+        synonyms:
+          - tickets scanned
+          - scans
+          - gate scans
         expr: SUM(TICKETS_SOLD)
         data_type: NUMBER
-        description: Total tickets sold
+        description: Scan-side ticket count from the daily gate-scan fact (by segment). Reconcile against DPR TOTAL_TICKETS_SOLD, the canonical tickets-sold measure.
       - name: TOTAL_PASSES_BUDGET
         expr: SUM(PASSES_BUDGET)
         data_type: NUMBER
@@ -149,10 +153,13 @@ tables:
         expr: PRESALE_PCT
         data_type: FLOAT
     metrics:
-      - name: TOTAL_TICKET_REVENUE
+      - name: TOTAL_FORECAST_TICKET_REVENUE
+        synonyms:
+          - forecast ticket revenue
+          - expected ticket revenue
         expr: SUM(TOTAL_REVENUE)
         data_type: NUMBER
-        description: Total ticket revenue
+        description: Total forecast-side ticket order revenue (demand/presale analysis). For actual admission revenue use the DPR view's TOTAL_TICKET_REVENUE.
       - name: TOTAL_TICKETS_QUANTITY
         expr: SUM(TOTAL_QUANTITY)
         data_type: NUMBER
@@ -179,8 +186,8 @@ tables:
       - name: MONTH_NAME
         expr: MONTH_NAME
         data_type: VARCHAR
-      - name: FISCAL_YEAR
-        expr: FISCAL_YEAR
+      - name: YEAR_NUMBER
+        expr: YEAR
         data_type: NUMBER
       - name: TICKET_TYPE
         expr: TICKET_TYPE
@@ -281,7 +288,7 @@ tables:
         data_type: NUMBER
         description: Total intraday transactions (ticket count)
   - name: DIM_DATE
-    description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
+    description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
       database: NS11MM_DW_DEV
       schema: MARTS
@@ -321,12 +328,6 @@ tables:
       - name: YEAR_NUMBER
         expr: YEAR_NUMBER
         data_type: NUMBER
-      - name: FISCAL_YEAR
-        expr: FISCAL_YEAR
-        data_type: NUMBER
-      - name: FISCAL_MONTH
-        expr: FISCAL_MONTH
-        data_type: NUMBER
       - name: IS_WEEKEND
         expr: IS_WEEKEND
         data_type: BOOLEAN
@@ -354,7 +355,7 @@ tables:
     description: Market segment reference for scan/attendance classification
     base_table:
       database: NS11MM_DW_DEV
-      schema: MARTS
+      schema: SEEDS
       table: SEED_SCAN_MARKET_SEGMENT
     primary_key:
       columns:

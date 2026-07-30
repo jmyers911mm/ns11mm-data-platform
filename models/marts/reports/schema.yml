@@ -90,12 +90,6 @@ models:
       - name: day_name
         description: Abbreviated day-of-week name.
         data_type: varchar
-      - name: fiscal_year
-        description: Fiscal year (starts October; Oct–Dec roll into the next FY).
-        data_type: number
-      - name: fiscal_month
-        description: Fiscal month number (October = 1 … September = 12).
-        data_type: number
       - name: is_weekend
         description: TRUE on Saturday and Sunday.
         data_type: boolean

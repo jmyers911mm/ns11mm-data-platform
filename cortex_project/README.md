@@ -11,8 +11,8 @@ specs. Managed by the `semantic_studio` tooling in Cortex Code.
 | `UNIFIED.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.UNIFIED` | Ready |
 | `ATTENDANCE.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.ATTENDANCE` | Ready |
 | `RETAIL.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.RETAIL` | Ready |
-| `FUNDRAISING_ECOM.sv.yaml` | Semantic View | `NS11MM_DW_DEV.MARTS.FUNDRAISING_ECOM` | Scaffold |
-| `JMYERS_TEST.agent.yaml` | Cortex Agent | `NS11MM_DW_DEV.MARTS.JMYERS_TEST` | Deployed |
+| `disabled/FUNDRAISING_ECOM.sv.yaml` | Semantic View | — | Scaffold in `disabled/` — all four base dims are disabled dbt models; awaiting the fundraising dims. Not in the manifest; cannot deploy. |
+| `DPR_ANALYST.agent.yaml` | Cortex Agent | `NS11MM_DW_DEV.MARTS.DPR_ANALYST` | Deployed |
 | `cortex-project.yaml` | Manifest | — | Tracks all artifacts |
 
 ## Deploy
@@ -40,7 +40,8 @@ GRANT USAGE ON SEMANTIC VIEW MARTS.<VIEW_NAME> TO ROLE <role>;
 cortex_project/
 ├── cortex-project.yaml          # manifest (auto-maintained)
 ├── *.sv.yaml                    # semantic view specs
-└── *.agent.yaml                 # agent specs
+├── *.agent.yaml                 # agent specs
+└── disabled/                    # scaffolds whose base tables are not yet built
 ```
 
 - **Semantic views** define tables, dimensions, metrics, relationships, verified
@@ -55,4 +56,8 @@ cortex_project/
 - One `.agent.yaml` per deployed agent
 - Governance metadata (MET-### IDs, owners, SLA tiers) lives in dbt exposure
   `meta:` blocks, not in the semantic view YAML
-- Design documentation lives in `semantic_models/README.md`
+- The `.sv.yaml` files are the single authored source of truth. The
+  `scripts/deploy_semantic_view_*.sql` DDL files are generated from them by
+  `scripts/generate_semantic_view_ddl.py` — never hand-edit the SQL
+  (a pre-commit hook runs `--check` to catch drift)
+- Design documentation lives in `docs/architecture/BUILD_DIMS_METS.md`

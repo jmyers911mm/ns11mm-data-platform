@@ -265,6 +265,11 @@ Before opening a pull request, verify:
 - [ ] If changing silver/staging, all downstream tests still pass: `dbt test`
 - [ ] If adding a new source, updated circuit breaker + rerun_from_source
 - [ ] `dbt run-operation validate_before_deploy` shows no FAIL results
+- [ ] If touching `cortex_project/*.sv.yaml`: regenerate the semantic-view DDL
+      (`python3 scripts/generate_semantic_view_ddl.py`) and stage the updated
+      `scripts/deploy_semantic_view_*.sql`. The `.sv.yaml` is the source of truth;
+      never hand-edit the generated SQL. Enforced by `.githooks/pre-commit` —
+      enable once with `git config core.hooksPath .githooks`
 - [ ] If Tier 1 change: change gate approval obtained (see below)
 
 ---
@@ -380,9 +385,9 @@ If production needs an urgent fix and Jeremy is unavailable:
 ## Verified Query (VQR) Workflow
 
 > **[PLANNED]** The `analyses/verified_queries/` library was removed in release 1.3.1 because
-> it referenced disabled models, and there is no Cortex Agent yet. This workflow returns when
-> the verified-query library is re-established against enabled marts. Until then, verified
-> queries for the live DPR scope live inline in `semantic_models/dpr.yaml`.
+> it referenced disabled models. This workflow returns when the verified-query library is
+> re-established against enabled marts. Until then, verified queries live inline in the
+> semantic view specs in `cortex_project/*.sv.yaml` (e.g. `UNIFIED.sv.yaml`).
 
 Verified queries live in `analyses/verified_queries/` organized by business domain. They are the source of truth for what the Cortex Agent knows how to answer accurately.
 

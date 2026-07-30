@@ -66,7 +66,7 @@ tables:
         expr: STATUS
         data_type: VARCHAR
   - name: DIM_DATE
-    description: Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag
+    description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
       database: NS11MM_DW_DEV
       schema: MARTS
@@ -86,12 +86,6 @@ tables:
         data_type: NUMBER
       - name: YEAR_NUMBER
         expr: YEAR_NUMBER
-        data_type: NUMBER
-      - name: FISCAL_YEAR
-        expr: FISCAL_YEAR
-        data_type: NUMBER
-      - name: FISCAL_MONTH
-        expr: FISCAL_MONTH
         data_type: NUMBER
       - name: IS_WEEKEND
         expr: IS_WEEKEND

@@ -4,7 +4,7 @@ version: 2
 # Pentaho migration reports, documented as dbt exposures.
 # Native dbt fields: name, label, type, maturity, description, depends_on, owner, tags.
 # Governance/registry fields live under meta: (valid dbt; read by the Hub Report Registry).
-# meta.metrics reference certified metrics by ID (MET-###) from the semantic_models/ YAMLs.
+# meta.metrics reference certified metrics by ID (MET-###) from the cortex_project/ .sv.yaml specs.
 # NOTE: each depends_on ref() must point to an ENABLED dbt model or `dbt parse` fails.
 #       Reports are pinned to their live base fact; the full target model is in meta.target_model.
 # ─────────────────────────────────────────────────────────────────────────────

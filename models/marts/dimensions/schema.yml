@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: dim_date
-    description: "Date dimension spanning 2000-2035 with NS11MM fiscal calendar and commemoration day flag"
+    description: "Date dimension spanning 2000-2035 with commemoration day flag. Calendar-only today — fiscal columns pending Data & AI Committee sign-off on the fiscal-calendar definition (ADR-005)."
     columns:
       - name: date_key
         description: "PK. Natural key (calendar date)."

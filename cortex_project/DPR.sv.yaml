@@ -26,14 +26,14 @@ tables:
           - average ticket price
           - avg admission price
         description: "Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days)."
-        expr: "TOTAL_ADMISSION_REVENUE / NULLIF(SUM(TICKETS_SOLD), 0)"
+        expr: "SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)"
         access_modifier: public_access
-      - name: MUS_STORE_REV_PER_VISITOR
+      - name: MUS_STORE_PROFIT_PER_VISITOR
         synonyms:
-          - museum store revenue per visitor
+          - store profit per visitor
+          - per-cap store profit
           - store per cap
-          - per capita store profit
-        description: "Non-additive: Museum Store gross profit per museum visitor, recomputed at the query grain."
+        description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain."
         expr: "SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)"
         access_modifier: public_access
       - name: TOTAL_ADMISSION_REVENUE
@@ -354,7 +354,7 @@ tables:
     synonyms:
       - calendar
       - date dimension
-    description: Calendar date dimension with fiscal calendar (FY starts October) and the September 11 commemoration flag.
+    description: Calendar date spine with the September 11 commemoration flag. Calendar attributes only — no fiscal columns yet; the fiscal calendar is pending Data & AI Committee definition.
     base_table:
       database: NS11MM_DW_DEV
       schema: MARTS
