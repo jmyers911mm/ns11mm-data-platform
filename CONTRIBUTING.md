@@ -33,10 +33,10 @@ snow connection test --connection museum    # approve DUO notification
 git clone https://github.com/ns11mm/ns11mm-data-platform.git
 cd ns11mm-data-platform
 
-# 4. Set up Python + dbt (first time only)
-py -3.12 -m venv .venv
+# 4. Set up Python + dbt (first time only — Python 3.11, matching CI)
+py -3.11 -m venv .venv
 & .venv\Scripts\Activate.ps1
-pip install dbt-core dbt-snowflake
+pip install dbt-snowflake==1.9.*
 
 # 5. Pull latest from main
 git pull origin main
@@ -124,7 +124,7 @@ VS Code (local)  →  GitHub PR  →  NS11MM_DW_DEV_JMYERS  →  NS11MM_DW_DEV  
 | 2 | Build in your personal sandbox | `TRANSFORMER_ROLE` | `dbt build` |
 | 3 | Validate locally | `TRANSFORMER_ROLE` | `dbt run-operation validate_before_deploy` |
 | 4 | Push & open PR | — | `git push` → open PR on GitHub |
-| 5 | CI validates automatically | — | GitHub Actions: parse + compile + lint |
+| 5 | CI validates automatically | — | GitHub Actions (`.github/workflows/dbt-ci.yml`): sqlfluff lint (enforced) + slim `dbt build` in `NS11MM_DW_DEV_CI` (`state:modified+` deferred to the latest main manifest; full build if no manifest yet) |
 | 6 | Merge to main | — | Approve PR + merge |
 | 7 | Promote to shared dev | `DEPLOY_DEV_ROLE` | `dbt build --target dev_shared` |
 | 8 | Validate shared dev | `DEPLOY_DEV_ROLE` | Compare row counts DEV_JMYERS vs DEV |
@@ -134,30 +134,39 @@ VS Code (local)  →  GitHub PR  →  NS11MM_DW_DEV_JMYERS  →  NS11MM_DW_DEV  
 ### Validation between tiers
 ```sql
 -- Compare personal dev vs shared dev
-SELECT 'JMYERS' as env, COUNT(*) as rows FROM NS11MM_DW_DEV_JMYERS.MARTS.FCT_TICKET_SALES
+SELECT 'JMYERS' as env, COUNT(*) as rows FROM NS11MM_DW_DEV_JMYERS.MARTS.FCT_DAILY_PERFORMANCE
 UNION ALL
-SELECT 'SHARED_DEV', COUNT(*) FROM NS11MM_DW_DEV.MARTS.FCT_TICKET_SALES;
+SELECT 'SHARED_DEV', COUNT(*) FROM NS11MM_DW_DEV.MARTS.FCT_DAILY_PERFORMANCE;
 
 -- Compare shared dev vs production
-SELECT 'DEV' as env, COUNT(*) as rows FROM NS11MM_DW_DEV.MARTS.FCT_TICKET_SALES
+SELECT 'DEV' as env, COUNT(*) as rows FROM NS11MM_DW_DEV.MARTS.FCT_DAILY_PERFORMANCE
 UNION ALL
-SELECT 'PROD', COUNT(*) FROM NS11MM_DW_PROD.MARTS.FCT_TICKET_SALES;
+SELECT 'PROD', COUNT(*) FROM NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE;
 ```
 ### Rollback
 
 If something goes wrong in production:
 
 ```sql
--- Option 1: Time Travel (up to 14 days)
-CREATE OR REPLACE TABLE NS11MM_DW_PROD.MARTS.FCT_TICKET_SALES
-  CLONE NS11MM_DW_PROD.MARTS.FCT_TICKET_SALES AT (OFFSET => -3600);
+-- Option 1: Time Travel (retention on this platform is 7 days)
+-- A table cannot be cloned from its own replaced state in one step:
+-- clone the pre-incident state into a _RESTORE table, then swap.
+CREATE TABLE NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE_RESTORE
+  CLONE NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE
+  AT (TIMESTAMP => '2026-07-28 06:00:00 -0400'::timestamp_tz);  -- pre-incident time
+  -- (or AT (OFFSET => -3600) for "one hour ago")
+
+ALTER TABLE NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE
+  SWAP WITH NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE_RESTORE;
+
+DROP TABLE NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE_RESTORE;  -- now holds the bad state
 
 -- Option 2: Restore from weekly backup clone (Sundays 2 AM)
-CREATE OR REPLACE TABLE NS11MM_DW_PROD.MARTS.FCT_TICKET_SALES
-  CLONE NS11MM_DW_PROD_BACKUP.MARTS.FCT_TICKET_SALES;
+CREATE OR REPLACE TABLE NS11MM_DW_PROD.MARTS.FCT_DAILY_PERFORMANCE
+  CLONE NS11MM_DW_PROD_BACKUP.MARTS.FCT_DAILY_PERFORMANCE;
 
 -- Option 3: Rebuild from shared dev
-dbt run --target prod --select fct_ticket_sales
+dbt run --target prod --select fct_daily_performance
 ```
 
 ### Automated daily build
@@ -183,13 +192,16 @@ dbt build --target prod --full-refresh --select changed_model+
 
 ### Model Groups
 
-| Group | Owner | Models | Responsibility |
-|-------|-------|--------|----------------|
-| `daily_operations` | Museum Analytics Team | stg_pos_tickets → silver_pos_tickets → fct_daily_operations → fct_monthly_operations, fct_visitor_traffic, dim_gate, dim_date | Ticket sales, gate scans, retail ops |
-| `member_engagement` | Membership & Development | stg_sf_crm → silver_sf_crm → fct_member_360 → dim_member | CRM data, member profiles, engagement |
-| `donor_retention` | Membership & Development | fct_donor_retention → fct_donor_cohort_survival → ml_donor_churn_features | Cohort analysis, churn prediction |
-| `campaign_analytics` | Marketing Team | stg_sf_marketing_cloud → silver_sf_marketing_cloud → fct_campaign_performance → dim_campaign | Email campaigns |
-| `visitor_forecasting` | Data Science Team | ml_daily_visitor_features, ml_member_churn_features | ML feature tables |
+Groups are defined in `models/groups.yml`. There are six:
+
+| Group | Owner | Layer / folder | Responsibility |
+|-------|-------|----------------|----------------|
+| `staging` | Kalea Ramsey (kramsey@911memorial.org) | `models/raw/` (`stg_*` views) | Source-conformed staging views over RAW |
+| `silver` | Kalea Ramsey (kramsey@911memorial.org) | `models/intermediate/` (`int_*`) | Cleansed / conformed intermediate models |
+| `gold_dimensions` | Jeremy Myers (jmyers@911memorial.org) | `models/marts/dimensions/` (`dim_*`) | Conformed dimensions |
+| `gold_facts` | Jeremy Myers (jmyers@911memorial.org) | `models/marts/facts/` (`fct_*`) | Business facts |
+| `gold_reports` | Jeremy Myers (jmyers@911memorial.org) | `models/marts/reports/` (`rpt_*`) | Report / serving models |
+| `ml_features` | Jeremy Myers (jmyers@911memorial.org) | `models/ml_features/` (`ml_*`) | ML feature tables |
 
 ### Rules of Engagement
 
@@ -200,17 +212,16 @@ dbt build --target prod --full-refresh --select changed_model+
 
 ### Who reviews what
 
+PR review routing is enforced by [`.github/CODEOWNERS`](.github/CODEOWNERS):
+
 | Changed file | Required reviewer |
 |-------------|-------------------|
-| `models/raw/*` | JMYERS (infra owner) |
-| `models/intermediate/*` | JMYERS (infra owner) |
-| `models/marts/facts/fct_donor_*` | Membership team lead |
-| `models/marts/facts/fct_daily_*` | Analytics team lead |
-| `models/marts/facts/fct_campaign_*` | Marketing team lead |
-| `models/ml_features/*` | Data Science team lead |
-| `macros/*` | JMYERS (infra owner) |
-| `dbt_project.yml` | JMYERS (infra owner) |
-| `profiles.yml` | JMYERS (infra owner) |
+| `models/raw/*`, `models/intermediate/*` | Jeremy or Kalea (co-owners) |
+| `models/marts/*`, `models/ml_features/*` | Jeremy |
+| `cortex_project/*` | Jeremy |
+| `macros/*`, `pipelines/*`, `terraform/*` | Jeremy |
+| `dbt_project.yml`, `packages.yml`, `profiles.yml.template` | Jeremy |
+| `.github/*` (incl. CI workflow and CODEOWNERS) | Jeremy |
 
 ---
 
@@ -244,8 +255,8 @@ dbt build --target dev_shared
 ```bash
 # Switch to DEPLOY_PROD_ROLE in your session, then:
 dbt build --target prod
-# Or via native dbt project:
-# EXECUTE DBT PROJECT NS11MM_DW_PROD.INTERMEDIATE.NS11MM_DBT ARGS = 'build';
+# Or via the native dbt project object in the target database:
+# EXECUTE DBT PROJECT NS11MM_DW_PROD.PUBLIC.NS11MM_DATA_PLATFORM ARGS = 'build';
 ```
 
 **If you get `Insufficient privileges` when running `--target dev_shared` or `--target prod`, you do not have the required role.** Contact Jeremy.
@@ -284,22 +295,21 @@ Any change to these files is a Tier 1 change:
 
 | File | Why it's Tier 1 |
 |------|-----------------|
-| `dbt_project.yml` | Controls all model materializations, hooks, and vars |
-| `profiles.yml` | Controls database/warehouse routing |
-| `macros/data_quality/check_source_group_readiness.sql` | Circuit breaker — can block all runs |
+| `dbt_project.yml` | Controls all model materializations, hooks, grants, and vars |
+| `profiles.yml.template` | Controls database/warehouse routing for every developer and CI |
 | `models/raw/sources.yml` (freshness blocks) | Source SLA definitions (`dbt source freshness`) |
 | `macros/generate_schema_name.sql` | Schema routing for all models |
 | `.github/workflows/dbt-ci.yml` | CI/CD pipeline definition |
 | `scripts/setup_developer_workspace.sql` | Access control and permissions |
-| `CODEOWNERS` | PR approval gates |
+| `.github/CODEOWNERS` | PR approval gates |
 
 **Process:**
-1. File a Change Log entry (see RUNBOOK.md)
+1. File a Change Log entry (`CHANGELOG.md`; see the [docs index](docs/README.md) for process docs)
 2. Post 72-hour advance notice in Teams data channel
 3. Get written approval from JMYERS
-4. Merge PR (CODEOWNERS enforces reviewer)
-5. Deploy to staging first: `dbt build --target staging`
-6. Validate staging, then deploy to prod
+4. Merge PR (`.github/CODEOWNERS` enforces reviewer)
+5. Deploy to shared dev first: `dbt build --target dev_shared`
+6. Validate shared dev, then deploy to prod
 7. Post-deploy validation + Teams notification
 
 ### Tier 2 — Model Changes (standard PR process)
@@ -361,9 +371,12 @@ If a Tier 1 change is needed urgently (pipeline is down, data is stale):
 
 ### profiles.yml Targets and Roles
 
+Targets are defined in [`profiles.yml.template`](profiles.yml.template) (copy it to `~/.dbt/profiles.yml`):
+
 ```yaml
 dev:          # Personal sandbox — TRANSFORMER_ROLE
 dev_shared:   # Shared dev — DEPLOY_DEV_ROLE (Jeremy only)
+ci:           # CI throwaway builds in NS11MM_DW_DEV_CI — TRANSFORMER_ROLE (CI service user)
 prod:         # Production — DEPLOY_PROD_ROLE (Jeremy only)
 ```
 

@@ -2,7 +2,7 @@
 
 Fact tables and bridge tables for the NS11MM data warehouse.
 
-## Enabled Models
+## Enabled Models (11)
 
 | Model | Description |
 |-------|-------------|
@@ -13,18 +13,27 @@ Fact tables and bridge tables for the NS11MM data warehouse.
 
 ### Report-estate facts (added in the report buildout, 1.6.0)
 
-Facts backing the migrated Pentaho report estate. Live facts read current
-seeds; stub facts are wired to placeholder seeds and populate when their source
-feed lands (no model rework required at that point).
+Facts backing the migrated Pentaho report estate.
 
 | Model | Status | Description |
 |-------|--------|-------------|
 | `fct_retail_performance` | **Live** | Retail sales/profit/units/donations, tidy grain: one row per day x facility x product category. Replaces legacy `fact_retail`. |
 | `fct_retail_daily` | **Live** | Retail facility-grain fact: transactions, visitor counts, and facility rollups. Grain for the retail ratios. Replaces legacy `fact_num_tickets` + facility rollup. |
 | `fct_daily_scan` | **Live*** | Gate passes scanned + tickets sold by market segment per day. Replaces legacy `fact_dailyscan_data`. (*Totals live; segment split pending channel-mapping validation.) |
-| `fct_today_sales_hourly` | **Stub** | Same-day hourly retail sales by facility. Needs the real-time CounterPoint feed (`fact_todays_retail_data`). |
+| `fct_today_sales_hourly` | **Live** | Same-day hourly retail sales by facility. Rebuilt on the real same-day CounterPoint feed (`stg_counterpoint__todays_retail`); no longer a stub. |
 
-## Disabled Models (`enabled=false`) — in `disabled/` subfolder
+### Budget facts
+
+Budget/forecast facts behind the budget-vs-actual reports, sourced from the
+Excel→CSV budget seeds via `int_budget__*`.
+
+| Model | Description |
+|-------|-------------|
+| `fct_budget_dpr_forecasts` | DPR budget/forecast (one row per day) |
+| `fct_budget_admissions_forecasts` | Admissions/attendance budget by facility (one row per day x facility) |
+| `fct_budget_retail_forecasts` | Retail budget/forecast by facility (one row per day x facility) |
+
+## Disabled Models (`enabled=false`) — in `disabled/` subfolder (20)
 
 | Model | Blocked By | Re-enable When |
 |-------|-----------|----------------|

@@ -4,11 +4,12 @@ Welcome. This page is written for everyone **outside** the data team — Develop
 
 If you've ever asked *"how many people visited last weekend?"*, *"how is the spring campaign performing?"*, or *"are we retaining members?"* — the answers live here, and this page tells you exactly where to find them.
 
-> **What's available today (July 2026):** the platform is being built in stages. The first
-> area to go live is **Revenue and Operations via the Daily Performance Report** — daily
-> tickets, tours, retail, donations, and fees from our ticketing (Gateway) and retail (CounterPoint)
-> systems. The other areas below (Membership, Donor Relations, Digital/Marketing, and the
-> attendance/capacity views) are **planned** and arrive as each source system is connected.
+> **What's available today (July 2026):** the platform is being built in stages. Live today:
+> **Revenue and Operations via the Daily Performance Report** — daily tickets, tours, retail,
+> donations, and fees from our ticketing (Gateway) and retail (CounterPoint) systems — and the
+> **Retail Performance** dashboard built on the retail estate. The other areas below
+> (Membership, Donor Relations, Digital/Marketing, and the attendance/capacity views) are
+> **planned** and arrive as each source system is connected.
 > Rows marked *(planned)* below are not available yet.
 
 ---
@@ -46,7 +47,7 @@ Match your question to the dashboard that answers it. If you don't have access, 
 | "How did today/this week go across tickets, retail, and visitors?" | Daily Operations | *(planned)* | Operations, leadership |
 | "Where and when are visitors coming in? Are we near capacity?" | Capacity Planning | *(planned)* | Operations, Visitor Experience |
 | "How are members and donors trending? Who's lapsing or at risk?" | Membership and Donors | *(planned)* | Membership, Development |
-| "How is the gift shop performing?" | Retail Performance | *(planned)* | Operations, Retail |
+| "How is the gift shop performing?" | **Retail Performance** | **Live** | Operations, Retail |
 | "How is our email marketing performing?" | Campaign Performance | *(planned)* | Marketing |
 | "What's a visitor worth over their lifetime?" | Customer LTV | *(planned)* | Development, Membership |
 | "How are paid and organic channels driving revenue?" | Digital Marketing | *(planned)* | Marketing, Digital |
@@ -55,7 +56,7 @@ Match your question to the dashboard that answers it. If you don't have access, 
 
 ## What every number means
 
-Every metric used in dashboards is certified and defined in the [Metric Glossary](METRIC_GLOSSARY.md). If you ever see a number and wonder exactly how it's calculated, the glossary is the authoritative answer.
+Every metric used in dashboards is certified before it ships. The authoritative definitions live in the semantic view specs in [`cortex_project/`](../../cortex_project/) (the same definitions that power self-service AI querying); the governance rules for how metrics are defined and changed are in [Building Reports & Metrics](../architecture/BUILD_DIMS_METS.md). If you ever see a number and wonder exactly how it's calculated, start there — or just ask Jeremy.
 
 A few of the most common ones:
 
@@ -86,13 +87,10 @@ For self-service analytics access (running your own queries against the data), c
 
 | Question type | Contact |
 | --- | --- |
-| Dashboard access or Power BI issues | Jeremy Myers |
-| What a metric means | [Metric Glossary](METRIC_GLOSSARY.md) first, then Jeremy Myers |
+| Dashboard access or Power BI issues | Jeremy Myers (platform owner) |
+| What a metric means | [Building Reports & Metrics](../architecture/BUILD_DIMS_METS.md) and the `cortex_project/` semantic views first, then Jeremy Myers |
 | Something looks wrong in the numbers | Jeremy Myers — include the dashboard name and the specific number |
 | New report or analysis request | Jeremy Myers — submit through the Platform Hub |
-| Attendance or ticketing data | Sarah Chen (Attendance and Visitation) |
-| Fundraising or donor data | Diane Foster (Revenue and Fundraising) |
-| Membership data | Rachel Torres (Membership) |
-| Marketing and email data | Anna Kim (Digital and Marketing) |
-| Retail data | James Okafor (Operations) |
-| Education program data | Marcus Williams (Education) |
+| Attendance or ticketing data | Chris Wogas (Attendance & Ticketing) |
+| Fundraising data | Jan-Michael Llanes (Fundraising) |
+| Retail data | Gennady Zaritsky (Retail) |

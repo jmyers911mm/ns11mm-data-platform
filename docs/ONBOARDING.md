@@ -33,7 +33,7 @@ You don't need to memorize anything — just know where to look.
 
 ## Step 2 — Set up your machine
 
-- [ ] Install **Python 3.12** (pinned — do not use 3.13 or 3.14; incompatible with dbt-snowflake)
+- [ ] Install **Python 3.11** (pinned — matches CI and the ingestion pipelines; do not use 3.13 or 3.14)
 - [ ] Clone the repo:
   ```powershell
   git clone https://github.com/ns11mm/ns11mm-data-platform.git
@@ -41,67 +41,63 @@ You don't need to memorize anything — just know where to look.
   ```
 - [ ] Create a virtual environment and install dbt:
   ```powershell
-  py -3.12 -m venv .venv
+  py -3.11 -m venv .venv
   & .venv\Scripts\Activate.ps1
-  pip install dbt-core dbt-snowflake==1.8.4
+  pip install dbt-snowflake==1.9.*
   dbt deps
+  ```
+- [ ] Enable the repo's git hooks (semantic-view DDL drift guard — see [CONTRIBUTING](../CONTRIBUTING.md)):
+  ```powershell
+  git config core.hooksPath .githooks
   ```
 
 ---
 
-## Step 3 — Create your profiles.yml
+## Step 3 — Create your profiles.yml from the template
 
-Create at `C:\Users\<your-name>\.dbt\profiles.yml` — **never commit this file** (it's gitignored).
+Copy the repo's [`profiles.yml.template`](../profiles.yml.template) to `C:\Users\<your-name>\.dbt\profiles.yml` (your home `.dbt` folder, **not** the repo root):
 
-```yaml
-ns11mm_data_platform:
-  target: dev
-  outputs:
-    dev:
-      type: snowflake
-      account: om01578.east-us.azure
-      user: <your-email>@911memorial.org
-      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
-      authenticator: username_password_mfa
-      role: TRANSFORMER_ROLE
-      warehouse: DBT_DEV_WH
-      database: NS11MM_DW_DEV_<YOUR_USERNAME>
-      schema: MARTS
-      threads: 4
+```powershell
+Copy-Item profiles.yml.template $env:USERPROFILE\.dbt\profiles.yml
 ```
 
+`profiles.yml` is gitignored and must never be committed — the repo only carries the template. The template reads your identity from environment variables rather than hardcoding it:
 
-> **Note:** The Snowflake Git workspace uses a simplified `profiles.yml` without `password` or `authenticator` (session auth is automatic). The file above is for **local VS Code development only**.
+| Env var | Value |
+|---|---|
+| `SNOWFLAKE_ACCOUNT` | e.g. `<locator>.<region>.azure` |
+| `SNOWFLAKE_USER` | your `@911memorial.org` login |
+| `DBT_DEV_DATABASE` | your personal dev DB, e.g. `NS11MM_DW_DEV_<YOUR_USERNAME>` (created via `scripts/setup_developer_workspace.sql`) |
+
+Interactive developers authenticate via SSO (`externalbrowser`); CI uses password auth from repository secrets (see `.github/workflows/dbt-ci.yml`).
 
 Ask Jeremy for your personal dev database name if it hasn't been provisioned yet.
 
 ---
 
-## Step 4 — Set your password and test the connection
+## Step 4 — Set your environment variables and test the connection
 
 In every new terminal session before running dbt:
 
 ```powershell
-$env:SNOWFLAKE_PASSWORD = "your_snowflake_password"
+$env:SNOWFLAKE_ACCOUNT = "<account>"
+$env:SNOWFLAKE_USER = "<you>@911memorial.org"
+$env:DBT_DEV_DATABASE = "NS11MM_DW_DEV_<YOUR_USERNAME>"
 dbt debug --target dev
 ```
 
-You should see `Connection test: OK` after approving the Duo push on your phone.
-
-**Known issue:** `authenticator: externalbrowser` (SSO popup) does not work reliably from VS Code terminal. Use `username_password_mfa` instead — it sends a Duo push to your phone.
+You should see `Connection test: OK` after completing the browser SSO / Duo prompt.
 
 ---
 
 ## Step 5 — Load seeds and run your first build
 
-Seeds must be loaded before models that depend on them:
+Seeds must be loaded before models that depend on them. The 19 reference seeds land in the dedicated `SEEDS` schema of your personal database:
 
 ```powershell
 dbt seed --target dev
 dbt run --target dev
 ```
-
-`dim_date` and `dim_marketing_channel` will build successfully immediately. Staging models will show errors for missing RAW tables — this is expected until pipelines are active.
 
 ---
 
@@ -111,11 +107,14 @@ Open Snowsight and query your personal database:
 
 ```sql
 -- Confirm dim_date built (13,149 rows expected)
-SELECT COUNT(*), MIN(date_id), MAX(date_id)
+SELECT COUNT(*), MIN(date_key), MAX(date_key)
 FROM NS11MM_DW_DEV_<YOUR_USERNAME>.MARTS.DIM_DATE;
 
--- Confirm dim_marketing_channel built
-SELECT * FROM NS11MM_DW_DEV_<YOUR_USERNAME>.MARTS.DIM_MARKETING_CHANNEL;
+-- Confirm dim_facility built
+SELECT * FROM NS11MM_DW_DEV_<YOUR_USERNAME>.MARTS.DIM_FACILITY;
+
+-- Confirm seeds landed in the SEEDS schema
+SHOW TABLES IN SCHEMA NS11MM_DW_DEV_<YOUR_USERNAME>.SEEDS;
 ```
 
 Or generate and view dbt docs locally:

@@ -32,4 +32,4 @@ The platform now exposes metrics through two semantic surfaces: the dbt semantic
 
 ## Open item
 
-The definition-versus-exposure rules drafted separately (a metric is defined once upstream and only exposed by semantic views and `rpt_` tables, with reconciliation testing) refine this ADR and ADR-008. Decide whether they fold into ADR-005/ADR-008 or stand as their own ratified ADR, and assign the correct number rather than the provisional one used in that draft. [confirm]
+The definition-versus-exposure rules drafted separately (a metric is defined once upstream and only exposed by semantic views and `rpt_` tables, with reconciliation testing) refine this ADR and ADR-008. They stand as their own ADR: assigned ADR-018 (matches the external register sequence) — see [ADR-018](ADR_018_metric_definition_ownership.md), currently Proposed.

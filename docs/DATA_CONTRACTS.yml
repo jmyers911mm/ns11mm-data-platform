@@ -1,15 +1,29 @@
 version: 2
 
+# Data contracts for the LIVE mart surfaces only. Disabled models (e.g.
+# fct_ticket_sales, rpt_member_360) carry no contract until they are re-enabled.
+
 data_contracts:
   - name: raw_source_freshness
-    description: "SLA for RAW data landing from source pipelines"
+    description: >
+      SLA for RAW data landing, mirroring the freshness blocks in
+      models/raw/sources.yml. Ingestion is currently seed-based (batch exports
+      loaded to RAW); the function pipelines are disabled. Intraday/hourly SLAs
+      return when the function pipelines go live.
     sla:
-      - source: gateway
-        max_stale_hours: 6
+      - source: gateway_seed
+        warn_after: {count: 7, period: day}
+        error_after: {count: 14, period: day}
         severity: critical
         owner: Jeremy Myers
-      - source: counterpoint
-        max_stale_hours: 6
+      - source: counterpoint_seed
+        warn_after: {count: 7, period: day}
+        error_after: {count: 14, period: day}
+        severity: critical
+        owner: Jeremy Myers
+      - source: report_estate_seed
+        warn_after: {count: 2, period: day}
+        error_after: {count: 4, period: day}
         severity: critical
         owner: Jeremy Myers
 
@@ -28,25 +42,33 @@ data_contracts:
         consumers: [ML_ROLE]
 
   - name: data_quality_thresholds
-    description: "Acceptable quality bounds — alerts fire when breached"
+    description: "Acceptable quality bounds for the live marts — alerts fire when breached"
     thresholds:
       - table: DIM_CUSTOMER
         column: CUSTOMER_ID
         null_rate_max_pct: 0
         duplicate_rate_max_pct: 0
-      - table: FCT_TICKET_SALES
-        column: TRANSACTION_ID
+      - table: FCT_DAILY_PERFORMANCE
+        column: DATE_KEY
         null_rate_max_pct: 0
         duplicate_rate_max_pct: 0
-      - table: FCT_TICKET_SALES
-        column: TOTAL_AMOUNT
+      - table: FCT_DAILY_PERFORMANCE
+        column: TICKET_REVENUE
         min_value: 0
-        max_value: 10000
-      - table: RPT_MEMBER_360
-        column: CUSTOMER_ID
-        null_rate_max_pct: 0
-        duplicate_rate_max_pct: 0
+      - table: FCT_DAILY_OPERATIONS
+        column: TICKET_REVENUE
+        min_value: 0
       - table: FCT_DAILY_OPERATIONS
         column: TOTAL_VISITORS
+        min_value: 0
+        max_value: 50000
+      - table: FCT_RETAIL_DAILY
+        column: NET_SALES
+        min_value: 0
+      - table: FCT_RETAIL_PERFORMANCE
+        column: NET_SALES
+        min_value: 0
+      - table: FCT_DAILY_SCAN
+        column: PASSES_SCANNED
         min_value: 0
         max_value: 50000

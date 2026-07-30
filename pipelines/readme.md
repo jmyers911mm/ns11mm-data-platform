@@ -1,8 +1,14 @@
 # NS11MM Data Platform — Bronze Ingestion Pipelines
 
-This folder contains all source ingestion pipelines for the NS11MM data platform. Each pipeline extracts raw data from a source system and lands it in the `NS11MM_DW_DEV.RAW` schema in Snowflake as append-only VARIANT records.
+This folder contains all source ingestion pipelines for the NS11MM data platform. Each pipeline extracts raw data from a source system and lands it in the `RAW` schema of the env-selected database (default `NS11MM_DW_DEV`) as append-only VARIANT records.
 
 **Scope:** Raw ingestion to Snowflake RAW only. dbt staging models, Silver, and Gold are handled separately in `models/`.
+
+> **Status (July 2026): scaffolded, not deployed.** Production ingestion is
+> currently seed/stage-based; the `pipeline.py` extract queries are unconfirmed
+> placeholders and none of the Azure Function apps are deployed (all 14 deploy
+> YAMLs are parked in `disabled/` — see `disabled/README.md`). The schedule table
+> below describes the **planned** nightly cadence.
 
 ---
 
@@ -15,11 +21,12 @@ pipelines/
 │
 ├── shared/                      ← shared library: import from here, never copy
 │   ├── __init__.py
-│   ├── keyvault.py              ← Azure Key Vault secret fetching
-│   └── snowflake_client.py      ← Snowflake connection, RAW landing, pipeline logging
+│   ├── keyvault.py              ← Azure Key Vault secret fetching (vault URL env-selectable)
+│   ├── snowflake_client.py      ← Snowflake connection, RAW landing, pipeline logging
+│   └── refresh_log.py           ← appends per-table refresh results to docs/REFRESH_LOG.md
 │
-├── salesforce_nps/              ← Salesforce NPS (CRM)
-├── salesforce_mc/               ← Salesforce Marketing Cloud
+├── salesforce_nps/              ← Salesforce NPS (CRM)          [short name: sfnps]
+├── salesforce_mc/               ← Salesforce Marketing Cloud    [short name: sfmc]
 ├── gateway/                     ← Gateway Ticketing Galaxy
 ├── counterpoint/                ← NCR CounterPoint POS
 ├── shopify/                     ← Shopify (E-commerce)
@@ -27,8 +34,8 @@ pipelines/
 ├── wufoo/                       ← Wufoo (Forms)
 ├── clicky/                      ← Clicky (Web Analytics)
 ├── ga4/                         ← Google Analytics 4
-├── google_ads/                  ← Google Ads
-├── meta_ads/                    ← Meta Ads (Facebook/Instagram)
+├── google_ads/                  ← Google Ads                    [short name: googleads]
+├── meta_ads/                    ← Meta Ads (Facebook/Instagram) [short name: metaads]
 ├── vena/                        ← Vena Solutions (FP&A)
 ├── blackbaud/                   ← Blackbaud Financial Edge NXT
 └── drupal/                      ← Drupal CMS
@@ -38,7 +45,22 @@ Each source folder contains:
 - `pipeline.py` — authentication and extraction logic unique to that source
 - `requirements.txt` — any dependencies beyond `requirements-shared.txt`
 
-Azure DevOps deployment YAML files live in the **repo root**, one per source (e.g. `azure-pipelines-sfmc.yml`).
+**Deployment YAMLs are parked.** All 14 Azure DevOps deployment YAML files
+(`azure-pipelines-<shortname>.yml`) live in the repo-level `disabled/` folder, not
+the repo root: ingestion is seed/stage-based today and the function scaffolding is
+incomplete. See `disabled/README.md` for why and for the re-enable requirements
+(add `function_app.py` + `host.json`, package `pipelines/shared/`, confirm the
+source queries, move the YAML back to the repo root).
+
+**Short-name mapping** (YAML/function-app names → source folders): `sfmc` →
+`salesforce_mc`, `sfnps` → `salesforce_nps`, `googleads` → `google_ads`,
+`metaads` → `meta_ads`; all other short names match their folder name.
+
+**Environment selection.** The shared library reads its targets from Function App
+settings (env vars), defaulting to dev:
+- `NS11MM_KEYVAULT_URL` — Key Vault (default `https://kv-ns11mm-dp-dev.vault.azure.net/`)
+- `NS11MM_SNOWFLAKE_DATABASE` — landing database (default `NS11MM_DW_DEV`)
+- `NS11MM_SNOWFLAKE_WAREHOUSE` — ingestion warehouse (default `SOURCES_WH`)
 
 ---
 
@@ -124,7 +146,7 @@ Changes to `shared/` affect all pipelines. Test carefully before merging.
 2. Add `pipeline.py` using an existing pipeline as a template — only write `authenticate()` and `extract()`
 3. Add `requirements.txt` with any source-specific dependencies (most sources need nothing beyond shared)
 4. Add credentials to Azure Key Vault (`kv-ns11mm-dp-dev`) — never in code or config files
-5. Copy an existing `azure-pipelines-*.yml` from the repo root, update the three variables at the top (`FUNCTION_APP_NAME`, source folder name, cron expression), and save as `azure-pipelines-<source_id>.yml`
+5. Copy an existing `azure-pipelines-*.yml` from `disabled/`, update the three variables at the top (`FUNCTION_APP_NAME`, source folder name, cron expression), save as `azure-pipelines-<source_id>.yml`, and satisfy the re-enable requirements in `disabled/README.md` before moving it to the repo root
 6. Run with `--full` for the initial historical load
 7. Confirm rows in `RAW.PIPELINE_LOG` before enabling the nightly schedule
 
@@ -185,7 +207,7 @@ Snowflake credentials (`SNOWFLAKE-ACCOUNT`, `SNOWFLAKE-USER`, `SNOWFLAKE-PASSWOR
 | Data platform ownership | Jeremy Myers |
 | Salesforce NPS / Marketing Cloud | Salesforce Admin |
 | Shopify / Digital sources (GA4, Ads, Wufoo, Clicky, Drupal) | Anna Kim |
-| Fundraising (Classy) | Diane Foster |
+| Fundraising (Classy) | Jan-Michael Llanes |
 | Finance (Vena, Blackbaud) | Finance team |
 | Ticketing / POS (Gateway, CounterPoint) | Kenny / IT |
 

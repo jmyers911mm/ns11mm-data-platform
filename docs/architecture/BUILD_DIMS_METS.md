@@ -2,7 +2,7 @@
 
 **Audience:** Data platform developers (Kalea, Phinn, Diana, contributors)
 **Governs:** any PR that adds or changes an `rpt_` model, a semantic view, or a metric
-**Authority:** ADR-005 (Metric Gate), ADR-009 (Metric Definition Ownership). This guide is the how-to; the ADRs are the why. If they conflict, the ADRs win.
+**Authority:** ADR-005 (Metric Gate), ADR-018 (Metric Definition Ownership). This guide is the how-to; the ADRs are the why. If they conflict, the ADRs win.
 
 ---
 

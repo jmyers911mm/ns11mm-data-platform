@@ -1,234 +1,111 @@
 # NS11MM Data Platform Architecture
 
-> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
-> sources are connected, feeding the Daily Performance Report. Other sources, models, and
-> domains described below are part of the target design but are currently `enabled=false` /
-> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+> **Source of truth:** `ns11mm/ns11mm-data-platform` — built from the actual repo tree.
+> **Last updated: 2026-07-29**  ·  Jeremy Myers, VP of AI & Analytics
 
-> **Source of truth:** `ns11mm/ns11mm-data-platform` — built from actual repo structure  
-> **Last updated:** June 2026  ·  Jeremy Myers, VP of AI & Analytics  
-> **Legend:** `┌─┐` standard layer  `╔═╗` test gate
+End-to-end flow of the platform as it exists today. Disabled/target-state domains
+(marketing, CRM, fundraising, GL, GA4/ads) live in per-folder `disabled/`
+subfolders and are **not** shown here.
 
 ```
+ CI/CD ── GitHub Actions dbt-ci.yml (two jobs, database NS11MM_DW_DEV_CI):
+          job 1: sqlfluff lint + dbt compile (manifest upload)
+          job 2: dbt build --select state:modified+  (slim when main manifest exists)
+          pre-commit: scripts/generate_semantic_view_ddl.py --check (DDL drift guard)
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│              NS11MM DATA PLATFORM  ·  ns11mm_data_platform                            │
-│   Snowflake  ·  dbt Core  ·  Cortex Semantic Views  ·  Power BI            │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-  CI/CD ─── ns11mm/ns11mm-data-platform ─── PR gate ─── GitHub Actions dbt-ci.yml
-            SQLFluff  ·  dbt_project_evaluator  ·  no direct pushes to main
-
-
- ┌─────────────────────────────────────────────────────────────────────────┐
- │  RAW SCHEMA  ·  immutable  ·  no dbt model writes to BRONZE          │
- │                                                                         │
- │  raw_pos_tickets       raw_pos_retail        raw_ticket_scans           │
- │  raw_ticket_capacity   raw_customer_identifiers                         │
- │  raw_sf_crm            raw_sf_marketing_cloud                           │
- │  raw_google_analytics  raw_google_ads         raw_meta_ads              │
- │                                                                         │
- │  Freshness  default: warn 24 h / error 48 h                            │
- │             tickets & scans: warn 30 min / error 60 min                │
- └─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
- ┌─────────────────────────────────────────────────────────────────────────┐
- │  STAGING  ·  schema: STAGING  ·  materialized: view                   │
- │  query_tag: dbt_ns11mm_staging  ·  tags: daily, critical                │
- │                                                                         │
- │  stg_salesforce_nps__contacts   stg_salesforce_mc__tracking             │
- │  stg_gateway__transactions      stg_gateway__customers                  │
- │  stg_counterpoint__transactions stg_counterpoint__line_items             │
- │  stg_shopify__orders            stg_classy__transactions                │
- │  stg_ga4__sessions   stg_google_ads__campaigns  stg_meta_ads__campaigns │
- │  stg_blackbaud__journal_entries stg_vena__budget   + 12 more             │
- │                                                                         │
- │  Rename & cast · deduplicate · unique + not_null on PKs                 │
- │  source freshness enforced on all models                                │
- └─────────────────────────────────────────────────────────────────────────┘
-          │                                           ▲
-          │                    ┌──────────────────────┤
-          │                    │  SEEDS  (8 total)     │
-          │                    │                       │
-          │                    │  raw data (dev/test)  │
-          │                    │  raw_google_ads       │
-          │                    │  raw_google_analytics │
-          │                    │  raw_meta_ads         │
-          │                    │                       │
-          │                    │  reference tables     │
-          │                    │  ref_customer_segments│
-          │                    │  ref_ltv_tiers        │
-          │                    │  ref_marketing_chan.  │
-          │                    │  ref_payment_methods  │
-          │                    │  ref_ticket_types     │
-          │                    └──────────────────────┘
-          ▼
- ┌─────────────────────────────────────────────────────────────────────────┐
- │  INTERMEDIATE — INCREMENTAL  ·  schema: INTERMEDIATE  ·  incremental merge          │
- │  on_schema_change: append_new_columns  ·  copy_grants: true             │
- │  query_tag: dbt_museum_silver  ·  transient: true                       │
- │                                                                         │
- │  silver_pos_tickets       silver_pos_retail    silver_ticket_scans      │
- │  silver_ticket_inventory  silver_sf_crm        silver_sf_marketing_cloud│
- │  silver_google_analytics  silver_google_ads    silver_meta_ads          │
- │                                                                         │
- │  ┌───────────────────────────────────────────────────────────────────┐  │
- │  │  SNAPSHOTS  →  SILVER  ·  strategy: check  ·  unique_key: hashdiff│  │
- │  │  snap_sf_crm   snap_dim_customer                                  │  │
- │  └───────────────────────────────────────────────────────────────────┘  │
- └─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
- ╔═════════════════════════════════════════════════════════════════════════╗
- ║  RECONCILIATION TESTS  ·  Bronze ↔ Silver row counts                   ║
- ║                                                                         ║
- ║  assert_silver_bronze_retail_count_match                                ║
- ║  assert_silver_bronze_scan_count_match                                  ║
- ║  assert_silver_bronze_ticket_count_match                                ║
- ╚═════════════════════════════════════════════════════════════════════════╝
-                                   │
-                                   ▼
- ┌─────────────────────────────────────────────────────────────────────────┐
- │  GOLD  ·  schema: MARTS  ·  copy_grants: true                            │
- │  post-hook: GRANT SELECT → POWERBI_ROLE  and  ML_ROLE                   │
- │                                                                         │
- │  ┌─────────────────────────────────────────────────────────────────┐   │
- │  │  DIMENSIONS  ·  materialized: table  ·  access: public          │   │
- │  │                                                                 │   │
- │  │  dim_customer   dim_member         dim_date                     │   │
- │  │  dim_ticket_type  dim_gate         dim_payment_method           │   │
- │  │  dim_campaign   dim_marketing_channel   dim_product             │   │
- │  └─────────────────────────────────────────────────────────────────┘   │
- │                                                                         │
- │  ┌─────────────────────────────────────────────────────────────────┐   │
- │  │  FACTS  ·  materialized: incremental merge  ·  access: public   │   │
- │  │                                                                 │   │
- │  │  Visitor & Tickets             Operations                       │   │
- │  │  fct_ticket_sales              fct_daily_operations             │   │
- │  │  fct_ticket_utilization        fct_monthly_operations           │   │
- │  │  fct_ticket_availability                                        │   │
- │  │  fct_ticket_demand_benchmarks  Retail                           │   │
- │  │  fct_visitor_traffic           fct_retail_line_items            │   │
- │  │                                fct_retail_performance           │   │
- │  │  Membership & Donors           fct_monthly_retail               │   │
- │  │  fct_member_360                                                 │   │
- │  │  fct_donor_retention           Digital & Marketing              │   │
- │  │  fct_donor_cohort_survival     fct_digital_ad_performance       │   │
- │  │                                fct_ad_campaign_daily            │   │
- │  │                                fct_campaign_performance         │   │
- │  │                                fct_marketing_channel_summary    │   │
- │  │                                fct_website_traffic              │   │
- │  │                                fct_website_funnel               │   │
- │  │                                bridge_session_customer          │   │
- │  └─────────────────────────────────────────────────────────────────┘   │
- │                           │                                             │
- │  ╔════════════════════════╩════════════════════════════════════════╗   │
- │  ║  REFERENTIAL INTEGRITY TESTS  ·  FK integrity & seed alignment  ║   │
- │  ║                                                                 ║   │
- │  ║  assert_campaign_fk_integrity                                   ║   │
- │  ║  assert_customer_segments_match_seed                            ║   │
- │  ║  assert_ltv_tiers_match_seed                                    ║   │
- │  ║  assert_member360_emails_exist_in_crm                           ║   │
- │  ║  assert_member360_no_orphan_contacts                            ║   │
- │  ║  assert_payment_methods_exist_in_dim                            ║   │
- │  ║  assert_payment_methods_match_seed                              ║   │
- │  ║  assert_products_exist_in_dim                                   ║   │
- │  ║  assert_scan_gates_exist_in_dim                                 ║   │
- │  ║  assert_ticket_types_exist_in_dim                               ║   │
- │  ║  assert_ticket_types_match_seed                                 ║   │
- │  ╚═════════════════════════════════════════════════════════════════╝   │
- │                                                                         │
- │  ┌─────────────────────────────────────────────────────────────────┐   │
- │  │  REPORTS  ·  materialized: incremental merge  ·  access: public │   │
- │  │                                                                 │   │
- │  │  rpt_daily_operations   rpt_visitor_traffic   rpt_ticket_sales  │   │
- │  │  rpt_retail_performance rpt_member_360        rpt_customer_ltv  │   │
- │  │  rpt_campaign_performance   rpt_digital_marketing               │   │
- │  └─────────────────────────────────────────────────────────────────┘   │
- │                           │                                             │
- │  ╔════════════════════════╩════════════════════════════════════════╗   │
- │  ║  BUSINESS RULES + REVENUE RECONCILIATION TESTS                  ║   │
- │  ║                                                                 ║   │
- │  ║  assert_gold_campaign_rates_valid                               ║   │
- │  ║  assert_gold_daily_ops_no_negative_revenue                      ║   │
- │  ║  assert_gold_member_no_negative_ltv                             ║   │
- │  ║  assert_gold_ops_covers_all_scan_dates                          ║   │
- │  ║  assert_retail_revenue_reconciles                               ║   │
- │  ║  assert_ticket_revenue_reconciles                               ║   │
- │  ║  assert_visitor_count_reconciles                                ║   │
- │  ╚═════════════════════════════════════════════════════════════════╝   │
- └─────────────────────────────────────────────────────────────────────────┘
-              │                                         │
-              ▼                                         ▼
- ┌────────────────────────────┐     ┌───────────────────────────────────────┐
- │  ML_FEATURES SCHEMA        │     │  CORTEX SEMANTIC VIEWS  (GOLD schema) │
- │  materialized: table       │     │  CREATE SEMANTIC VIEW DDL             │
- │  GRANT SELECT → ML_ROLE    │     │  defined in analyses/  ·  outside dbt │
- │  transient: true           │     │                                       │
- │                            │     │  SV_MUSEUM_OPERATIONS  (13 entities)  │
- │  Forecasting & Demand      │     │    fct_ticket_sales                   │
- │  ml_daily_visitor_features │     │    fct_retail_line_items              │
- │  ml_ticket_demand_features │     │    fct_daily_operations               │
- │  ml_visitor_forecast_train.│     │    fct_visitor_traffic                │
- │  ml_dynamic_pricing_feat.  │     │    fct_campaign_performance           │
- │                            │     │    rpt_customer_ltv · dim_*           │
- │  Churn & Retention         │     │                                       │
- │  ml_donor_churn_features   │     │  SV_DONOR_RETENTION  (6 entities)     │
- │  ml_member_churn_features  │     │    fct_donor_retention                │
- │  ml_ticket_no_show_feat.   │     │    fct_donor_cohort_survival          │
- │  ml_donor_upgrade_prop._f. │     │    dim_customer                       │
- │                            │     │                                       │
- │  Marketing & Revenue       │     │  MARKETING_PERFORMANCE_SV (5 entities)│
- │  ml_email_send_time_feat.  │     │    fct_digital_ad_performance         │
- │  ml_campaign_response_feat.│     │    fct_website_traffic                │
- │  ml_ad_budget_optim._feat. │     │    fct_campaign_performance           │
- │  ml_marketing_attr._feat.  │     │    fct_marketing_channel_summary      │
- │  ml_ad_creative_features   │     │    dim_marketing_channel · dim_date   │
- │  ml_retail_cross_sell_feat.│     │    Synonyms · Facts · Relationships   │
- └────────────────────────────┘     └───────────────────────────────────────┘
-              │                                  │                   │
-              ▼                                  ▼                   ▼
- ┌────────────────────────────┐   ┌─────────────────────────┐  ┌────────────┐
- │  SNOWFLAKE ML MODELS       │   │  POWER BI               │  │  CORTEX    │
- │  trained on ML_FEATURES    │   │  Museum Analytics WS    │  │  AGENT     │
- │  maturity in exposures.yml │   │  PBIP · Tabular Editor  │  │            │
- │                            │   │  thin display layer only│  │  museum_   │
- │  FORECAST  (90-day)        │   │                         │  │  ops_agent │
- │    ml_visitor_forecasting  │   │  Daily Operations       │  │            │
- │                            │   │    rpt_daily_operations │  │  Reads:    │
- │  CLASSIFICATION            │   │    rpt_visitor_traffic  │  │  SV_MUSEUM │
- │    donor churn             │   │    rpt_retail_performance│  │  _OPERA-   │
- │    ticket no-show          │   │    refresh: 6:30 AM ET  │  │  TIONS     │
- │    donor upgrade           │   │                         │  │            │
- │    email send time         │   │  Membership & Donors    │  │  SV_DONOR  │
- │    campaign response       │   │    rpt_member_360       │  │  _RETEN-   │
- │                            │   │    rpt_customer_ltv     │  │  TION      │
- │  REGRESSION                │   │    fct_donor_retention  │  │            │
- │    dynamic pricing         │   │    fct_donor_cohort_*   │  │  Observ-   │
- │                            │   │    refresh: 7:00 AM ET  │  │  ability   │
- │  COLLAB. FILTERING         │   │                         │  │  enabled   │
- │    retail cross-sell       │   │  Retail Performance     │  └────────────┘
- └────────────────────────────┘   │    rpt_retail_performance│
-                                  │    fct_retail_line_items │
-                                  │    refresh: 6:30 AM ET   │
-                                  │                         │
-                                  │  Capacity Planning      │
-                                  │    fct_ticket_avail.    │
-                                  │    fct_ticket_demand_   │
-                                  │      benchmarks         │
-                                  │    refresh: every 30 min│
-                                  │                         │
-                                  │  Campaign Analytics     │
-                                  │    rpt_campaign_perf.   │
-                                  │    refresh: 7:00 AM ET  │
-                                  │                         │
-                                  │  ─────────────────────  │
-                                  │  Semantic Views         │
-                                  │  Connector (DirectQuery)│
-                                  │  SV_MUSEUM_OPERATIONS   │
-                                  │  Role: POWERBI_ROLE     │
-                                  │  WH: DBT_PROD_WH        │
-                                  └─────────────────────────┘
-
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │ RAW schema · immutable seed/stage loads (ADR-001) · _loaded_at on rows   │
+ │   gateway_seed        16 SEED_GATE_* tables   (freshness warn 7d/err 14d)│
+ │   counterpoint_seed    5 SEED_CP_* tables     (freshness warn 7d/err 14d)│
+ │   report_estate_seed  15 911dw tables: passes-by-hour, today's retail,   │
+ │                       sensource, shopify, website recurring, WiFi UAP,   │
+ │                       budgets, wide metrics   (freshness warn 2d/err 4d) │
+ │ SEEDS schema · budget_seeds source (Excel→CSV budget workbook loads)     │
+ │   + the 19 repo seeds (dbt seed → SEEDS)                                 │
+ └──────────────────────────────────────────────────────────────────────────┘
+                                    │  {{ source(...) }} via {{ target.database }}
+                                    ▼
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │ STAGING · 34 stg_ views · query_tag dbt_ns11mm_staging                   │
+ │   17 gateway · 7 counterpoint · 2 budget · 2 sensource · 3 shopify       │
+ │   · 1 dpr · 1 ecommerce · 1 wifi (PII)                                   │
+ │   rename → snake_case · try_to_timestamp · trim(plu) · QUALIFY dedup     │
+ └──────────────────────────────────────────────────────────────────────────┘
+                                    │  {{ ref(...) }}
+                                    ▼
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │ INTERMEDIATE · 21 int_ models · query_tag dbt_ns11mm_silver              │
+ │   views by default; 4 hot models are tables (ticket/item journal lines,  │
+ │   retail lines, ticket demand features)                                  │
+ │   conformance: int_gateway__* · int_counterpoint__retail_lines           │
+ │   metric definitions: int_dpr__* (6) · retail: int_retail__* (3)         │
+ │   budget: int_budget__* (3, read budget_seeds directly — documented      │
+ │   exception) · legacy-named: int_pos_tickets/int_ticket_scans/inventory  │
+ └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │ MARTS · query_tag dbt_ns11mm_gold · grants via dbt grants config         │
+ │   (POWERBI_ROLE + ML_ROLE; rpt_wifi_email_export opts out)               │
+ │                                                                          │
+ │   DIMENSIONS  13 dim_ tables   (date, facility, store, product, coa,     │
+ │               customer, gate, event, ticket_type, tour_product,          │
+ │               access_code, dpr/retail line items)                        │
+ │   FACTS       11 fct_ tables   (daily_performance, daily_operations,     │
+ │               daily_scan, retail_daily, retail_performance,              │
+ │               today_sales_hourly, ticket_availability,                   │
+ │               ticket_demand_forecast, 3 budget facts)                    │
+ │   REPORTS     23 rpt_ files → 21 build as views (rpt_daily_performance_  │
+ │               report is a table); 2 gated enabled=false (rpt_dpr_        │
+ │               narrative, rpt_retail_narrative — Cortex AI_COMPLETE,      │
+ │               deployed via scripts/setup_*_narrative.sql)                │
+ └──────────────────────────────────────────────────────────────────────────┘
+        │                                     │
+        ▼                                     ▼
+ ┌─────────────────────────┐   ┌────────────────────────────────────────────┐
+ │ ML_FEATURES · 2 tables  │   │ SEMANTIC VIEWS · 4 · authored in           │
+ │ query_tag               │   │ cortex_project/*.sv.yaml (source of truth) │
+ │ dbt_ns11mm_ml_features  │   │   MARTS.DPR (49 metrics) · MARTS.RETAIL    │
+ │ ml_ticket_demand_       │   │   MARTS.ATTENDANCE · MARTS.UNIFIED         │
+ │   features              │   │ (+ FUNDRAISING_ECOM scaffold in disabled/) │
+ │ ml_visitor_forecast_    │   │ DDL twins scripts/deploy_semantic_view_*.  │
+ │   training              │   │ sql GENERATED by generate_semantic_view_   │
+ │ → Snowflake ML FORECAST │   │ ddl.py — never hand-edited (drift guard)   │
+ └─────────────────────────┘   └────────────────────────────────────────────┘
+                                      │
+                                      ▼
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │ CONSUMERS (display-only, ADR-004)                                        │
+ │   Power BI      reads rpt_ views incl. thin SEMANTIC_VIEW() projections  │
+ │                 (rpt_dpr/retail/daily_scan/today_sales_powerbi)          │
+ │   Cortex        Cortex Analyst on the 4 semantic views; DPR_ANALYST      │
+ │                 agent (cortex_project/DPR_ANALYST.agent.yaml)            │
+ │   Streamlit     dpr-dashboard/ (DPR dashboard with YoY comparisons)      │
+ │   13 exposures declared in models/exposures.yml                          │
+ └──────────────────────────────────────────────────────────────────────────┘
 ```
+
+## Test gates
+
+- **Schema tests** per layer `schema.yml`: `unique` / `not_null` on keys,
+  `accepted_values` on categoricals.
+- **Singular tests** (12 active): 7 business rules (`alert_` = warn-severity
+  monitoring, `assert_` = error) · 4 reconciliation · 1 referential integrity.
+  8 more disabled in `tests/*/disabled/` pending their upstream models.
+- **Source freshness**: `dbt source freshness` against the SLAs above
+  (gateway/counterpoint warn 7d / error 14d; report_estate warn 2d / error 4d).
+- The custom generic-test library (`macros/generic_tests/`) exists but is not
+  yet adopted by any `schema.yml`.
+
+## Key configs (dbt_project.yml)
+
+- Query tags per layer: `dbt_ns11mm_staging` / `dbt_ns11mm_silver` /
+  `dbt_ns11mm_gold` / `dbt_ns11mm_ml_features` (`dbt_ns11mm_snapshots` reserved;
+  no snapshots configured).
+- Statement timeout 3600s (300s for `intraday`-tagged models).
+- `on-run-end` (non-dev targets): `apply_governance_tags()` +
+  `apply_masking_policies()`.
+- Custom `generate_schema_name` (at `macros/` root) makes `+schema:` literal:
+  STAGING / INTERMEDIATE / MARTS / ML_FEATURES / SEEDS.
+- Calendar-based reporting only: `dim_date` has **no fiscal columns**; the
+  fiscal calendar is pending ADR-005 committee sign-off.

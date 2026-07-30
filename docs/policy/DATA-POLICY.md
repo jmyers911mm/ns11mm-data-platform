@@ -41,7 +41,7 @@ This policy applies to:
 
 - **Data types:** visitor records, donor information, archival and historical records, operational metrics, staff data, and digital content.
 - **Personnel:** all Museum departments and staff interacting with data, including contractors, external partners, and vendors.
-- **Systems:** databases, spreadsheets, cloud storage, analytics platforms (including Microsoft Fabric and Power BI), and physical records.
+- **Systems:** databases, spreadsheets, cloud storage, analytics platforms (including Snowflake and Power BI), and physical records.
 
 ## 3. Roles and Responsibilities
 
@@ -56,7 +56,7 @@ The following roles carry defined data governance responsibilities across the Mu
 | **Business Unit Leads** | Ensure proper data use within departments; submit requests for new data access or use cases; champion data quality. |
 | **All Staff** | Follow approved data procedures; report anomalies or suspected breaches; complete required governance training. |
 
-**Note:** A Data Governance Council, comprising the VP of AI & Analytics, CIO, Legal, and designated Business Unit Leads, meets quarterly to review policy, data quality metrics, and escalated issues.
+**Note:** The AI & Data Committee (referred to in earlier drafts of this policy as the "Data Governance Council"; naming standardized per the 2026-06-19 committee minutes), comprising the VP of AI & Analytics, CIO, Legal, and designated Business Unit Leads, meets quarterly to review policy, data quality metrics, and escalated issues.
 
 ## 4. Data Governance Principles
 
@@ -300,7 +300,7 @@ QA standards by phase:
 
 The following regular activities sustain active governance:
 
-- **Quarterly:** Data Governance Council review of data quality metrics, SLA adherence, policy updates, and escalated issues. Attended by VP of AI & Analytics, CIO, Legal, and Business Unit Leads.
+- **Quarterly:** AI & Data Committee review of data quality metrics, SLA adherence, policy updates, and escalated issues. Attended by VP of AI & Analytics, CIO, Legal, and Business Unit Leads.
 - **Monthly:** Data steward review of quality scores, open incidents, and certification status of critical datasets.
 - **On-demand:** Incident reporting process for breaches, pipeline failures, or significant data anomalies.
 - **Annually:** Full policy review and update cycle; data governance training refresh.
@@ -350,7 +350,7 @@ Violations of this data governance policy may result in:
 - Access restrictions or revocation of data privileges.
 - Escalation to HR or Legal, up to and including disciplinary action.
 
-This policy is reviewed and updated annually by the Data Governance Council, with approval from the Policy Owner (VP, AI & Analytics) and the CIO. All updates are version-controlled and communicated organization-wide.
+This policy is reviewed and updated annually by the AI & Data Committee, with approval from the Policy Owner (VP, AI & Analytics) and the CIO. All updates are version-controlled and communicated organization-wide.
 
 ## Appendix A: Reference Assets & Living Documents
 
@@ -358,7 +358,7 @@ The following assets support day-to-day implementation of this policy. Owners ar
 
 | Asset | Description | Location / Owner |
 |---|---|---|
-| **Data Dictionary** | Centralized repository of all dataset and field definitions | SharePoint / Fabric Catalog |
+| **Data Dictionary** | Centralized repository of all dataset and field definitions | SharePoint |
 | **Certified Datasets Register** | List of approved, validated datasets for reporting use | Data Team, updated quarterly |
 | **Issue Log / Ticketing** | Central log for all data quality incidents and resolutions | Trello / IT ticketing system |
 | **QA Checklist** | Pre-release checklist for new datasets and dashboard updates | Data Team SharePoint |

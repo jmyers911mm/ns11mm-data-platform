@@ -29,9 +29,11 @@ Chief Information Officer, and ratified by the AI & Data Committee. It
 applies to all staff, contractors, and vendors who touch NS11MM data or
 use AI tools in the course of their work.
 
-**Charter and Policy.** This charter is the "why" and the "what." A
-companion Data & AI Policy document, to be developed and ratified
-following this charter's adoption, will be the "how." The policy will
+**Charter and Policy.** This charter is the "why" and the "what." The
+companion policy is the "how": it ships as the
+[Data Governance and Integrity Policy](DATA-POLICY.md) (v1.0, effective
+April 2026), alongside the [Generative AI Usage Policy](AI-POLICY.md).
+The policy will
 translate each principle in this charter into concrete operational
 rules: specific access controls, approved tool lists, metric definition
 procedures, incident response thresholds, and AI risk classifications.

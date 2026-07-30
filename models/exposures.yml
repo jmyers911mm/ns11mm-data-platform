@@ -30,13 +30,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: MIGRATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance over fct_daily_operations + fct_revenue_bridge."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance_report over fct_daily_performance. (fct_revenue_bridge reference removed — model not in repo/planned.)"
       audience: ["CFO", "Finance & Planning", "Revenue SVP"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "rpt_daily_performance over fct_daily_operations + fct_revenue_bridge"
+      target_model: "rpt_daily_performance_report over fct_daily_performance (fct_revenue_bridge reference removed — planned)"
       source_models: [MARTS.FCT_DAILY_PERFORMANCE]
       metrics: [MET-002, MET-004, MET-047, MET-005, MET-006, MET-048]
       packages: ["Daily Performance Pack"]
@@ -51,7 +51,7 @@ exposures:
     type: dashboard
     maturity: low
     description: >
-      Year-to-date view of the Daily Performance Report; consolidates into rpt_daily_performance with a period parameter.
+      Year-to-date view of the Daily Performance Report; consolidates into rpt_daily_performance_report with a period parameter.
     depends_on: [ref('fct_daily_performance')]
     owner:
       name: "Mary Ng-Zuffante"
@@ -66,13 +66,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: CONSOLIDATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance (period=YTD param)."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance_report (period=YTD param)."
       audience: ["CFO", "Finance & Planning"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "rpt_daily_performance (period=YTD param)"
+      target_model: "rpt_daily_performance_report (period=YTD param)"
       source_models: [MARTS.FCT_DAILY_PERFORMANCE]
       metrics: [MET-004, MET-047, MET-005, MET-006]
       packages: ["Daily Performance Pack"]
@@ -87,7 +87,7 @@ exposures:
     type: dashboard
     maturity: low
     description: >
-      Month-to-date view of the Daily Performance Report; consolidates into rpt_daily_performance with a period parameter.
+      Month-to-date view of the Daily Performance Report; consolidates into rpt_daily_performance_report with a period parameter.
     depends_on: [ref('fct_daily_performance')]
     owner:
       name: "Mary Ng-Zuffante"
@@ -102,13 +102,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: CONSOLIDATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance (period=MTD param)."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance_report (period=MTD param)."
       audience: ["CFO", "Finance & Planning"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "rpt_daily_performance (period=MTD param)"
+      target_model: "rpt_daily_performance_report (period=MTD param)"
       source_models: [MARTS.FCT_DAILY_PERFORMANCE]
       metrics: [MET-004, MET-047, MET-005]
       packages: ["Daily Performance Pack"]
@@ -138,13 +138,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: CONSOLIDATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: export feed off rpt_daily_performance."
+      scope: "Migrated from the legacy Pentaho estate. Target model: export feed off rpt_daily_performance_report."
       audience: ["Finance & Planning"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "export feed off rpt_daily_performance"
+      target_model: "export feed off rpt_daily_performance_report"
       source_models: [MARTS.FCT_DAILY_PERFORMANCE]
       metrics: [MET-002, MET-004, MET-047]
       packages: ["Daily Performance Pack"]
@@ -174,13 +174,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: CONSOLIDATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance / rpt_revenue_bridge."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_daily_performance_report. (rpt_revenue_bridge reference removed — model disabled.)"
       audience: ["Revenue SVP", "Operations Leadership"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "rpt_daily_performance / rpt_revenue_bridge"
+      target_model: "rpt_daily_performance_report (rpt_revenue_bridge reference removed — disabled)"
       source_models: [MARTS.FCT_DAILY_PERFORMANCE]
       metrics: [MET-004, MET-005, MET-006, MET-047]
       packages: ["Daily Performance Pack"]
@@ -246,13 +246,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: MIGRATE
       status: in-review
-      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_retail_performance + fct_monthly_retail."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_retail_performance + fct_retail_daily (fct_monthly_retail disabled)."
       audience: ["Retail VP", "Finance & Planning"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "rpt_retail_performance + fct_monthly_retail"
+      target_model: "rpt_retail_performance + fct_retail_daily (fct_monthly_retail disabled)"
       source_models: [MARTS.FCT_RETAIL_DAILY]
       metrics: [MET-058, MET-059, MET-062, MET-066, MET-065]
       packages: ["Retail Pack"]
@@ -282,13 +282,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: MIGRATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: fct_retail_line_items (cart / abandon slice)."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_retail_carts_analysis over fct_retail_daily (fct_retail_line_items disabled)."
       audience: ["Retail VP"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "fct_retail_line_items (cart / abandon slice)"
+      target_model: "rpt_retail_carts_analysis over fct_retail_daily (fct_retail_line_items disabled)"
       source_models: [MARTS.FCT_RETAIL_DAILY]
       metrics: [MET-062, MET-058, MET-066, MET-067]
       packages: ["Retail Pack"]
@@ -318,13 +318,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: MIGRATE
       status: in-review
-      scope: "Migrated from the legacy Pentaho estate. Target model: fct_monthly_retail + rpt_retail_performance."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_monthly_retail_kpi + rpt_retail_performance (fct_monthly_retail disabled)."
       audience: ["Retail VP", "Finance & Planning"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Monthly · 1st business day"
-      target_model: "fct_monthly_retail + rpt_retail_performance"
+      target_model: "rpt_monthly_retail_kpi + rpt_retail_performance (fct_monthly_retail disabled)"
       source_models: [MARTS.FCT_RETAIL_PERFORMANCE]
       metrics: [MET-058, MET-059, MET-069, MET-070, MET-065]
       packages: ["Retail Pack"]
@@ -447,7 +447,7 @@ exposures:
     type: application
     maturity: low
     description: >
-      Recurring online commerce revenue (donations + memberships). STUB: Classy / Shopify recurring feed pending (ADR-008).
+      Recurring online commerce revenue (donations + memberships). STUB: Classy / Shopify recurring feed pending external register ADR-008 (see docs/adr/README.md).
     depends_on: [ref('rpt_website_commerce')]
     owner:
       name: "Jan-Michael Llanes"
@@ -462,13 +462,13 @@ exposures:
       legacy_platform: Pentaho
       disposition: MIGRATE
       status: draft
-      scope: "Migrated from the legacy Pentaho estate. Target model: fct_website_funnel / rpt_website_commerce."
+      scope: "Migrated from the legacy Pentaho estate. Target model: rpt_website_commerce (fct_website_funnel disabled)."
       audience: ["Corporate Giving VP", "Digital VP"]
       technical_owner: Jeremy Myers
       approval_date: ""
       last_validated: ""
       refresh: "Daily · 08:00 ET"
-      target_model: "fct_website_funnel / rpt_website_commerce"
+      target_model: "rpt_website_commerce (fct_website_funnel disabled)"
       source_models: [MARTS.RPT_WEBSITE_COMMERCE]
       metrics: [MET-057]
       packages: ["Digital & Fundraising Pack"]

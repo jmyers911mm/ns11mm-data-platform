@@ -1,25 +1,59 @@
 # Intermediate (Silver) Models
 
 Business logic transformations that clean, enrich, and combine staging data into analytical building blocks.
+Materialized as views by default; four heavily-read models (`int_gateway__ticket_journal_lines`,
+`int_gateway__item_journal_lines`, `int_gateway__ticket_demand_features`,
+`int_counterpoint__retail_lines`) are tables.
 
-## Enabled Models
+## Enabled Models (21)
 
-| Model | Sources | Description |
-|-------|---------|-------------|
-| `int_counterpoint__retail_lines` | `stg_counterpoint__pstkthistlin`, `stg_counterpoint__pstkthist`, seeds | CounterPoint retail line items with facility assignment |
-| `int_gateway__item_journal_lines` | `stg_gateway__jnldetails`, `stg_gateway__jnlitems`, `stg_gateway__jnlheaders` | Gateway item-level journal lines (non-ticket revenue) |
-| `int_gateway__ticket_journal_lines` | `stg_gateway__jnltickets`, `stg_gateway__jnlheaders`, `stg_gateway__items` | Gateway ticket journal lines with product classification |
-| `int_gateway__ticket_demand_features` | `stg_gateway__tickets`, `stg_gateway__items` | Ticket demand features with presale lead time and temporal patterns |
-| `int_pos_tickets` | `stg_gateway__tickets` | Daily POS ticket transactions for revenue reporting |
-| `int_ticket_scans` | `stg_gateway__usage` | Gate scan events for visitor admission counts |
-| `int_ticket_inventory` | `int_gateway__ticket_demand_features` | Derived daily ticket inventory (reservations vs rolling-90d-max capacity) |
-| `int_dpr__admissions` | `int_gateway__ticket_journal_lines` | DPR admissions revenue |
-| `int_dpr__donations` | `int_gateway__item_journal_lines` | DPR donation revenue |
-| `int_dpr__fees_and_services` | `int_gateway__item_journal_lines` | DPR fees and services revenue |
-| `int_dpr__retail` | `int_counterpoint__retail_lines` | DPR retail revenue |
-| `int_dpr__tour_revenue` | `int_gateway__ticket_journal_lines` | DPR tour revenue |
+### Gateway (ticketing)
 
-## Disabled Models (`enabled=false`) — in `disabled/` subfolder
+| Model | Description |
+|-------|-------------|
+| `int_gateway__item_attributes` | Conformed Gateway item/ticket attributes (vattribute), one row per attribute value group |
+| `int_gateway__item_journal_lines` | Enriched Gateway (Galaxy) item journal lines (audio guides, service fees, ticketing donations) |
+| `int_gateway__scan_lines` | Gate scan lines with ticket market segment |
+| `int_gateway__ticket_demand_features` | Ticket demand features (presale lead time + temporal patterns) |
+| `int_gateway__ticket_journal_lines` | Enriched Gateway (Galaxy) ticket journal lines (jnl_code_id = 101) |
+
+### CounterPoint / retail
+
+| Model | Description |
+|-------|-------------|
+| `int_counterpoint__retail_lines` | CounterPoint (NCR) retail transaction lines with seed-driven store scope + facility assignment |
+| `int_retail__customers` | Retail customer / transaction counts (business_date × facility) |
+| `int_retail__performance` | Retail performance, tidy category grain (business_date × facility × category) |
+| `int_retail__visitors` | Retail visitor counts + ecommerce orders (reads `stg_sensource__visitors` + `stg_shopify__orders`) |
+
+### DPR metric definitions
+
+| Model | Description |
+|-------|-------------|
+| `int_dpr__admissions` | General-admission tickets sold, ticket revenue, attendance |
+| `int_dpr__attendance` | Scan-based museum and memorial attendance |
+| `int_dpr__donations` | Gateway ticketing donations (issued) and box/exit donations |
+| `int_dpr__fees_and_services` | Service fees, audio guide/headset, memorial+museum tour |
+| `int_dpr__retail` | Retail gross profit, MUS AG, and retail-sourced donations |
+| `int_dpr__tour_revenue` | Guided-tour, virtual-tour, field-trip, and program revenue |
+
+### Budget
+
+| Model | Description |
+|-------|-------------|
+| `int_budget__admissions_forecasts` | Cleanse and type-cast admissions/attendance forecast seed (date × facility) |
+| `int_budget__dpr_forecasts` | Cleanse and type-cast DPR budget/forecast seed (one row per day) |
+| `int_budget__retail_forecasts` | Cleanse and type-cast retail forecast seed (date × facility) |
+
+### Tickets (legacy-named)
+
+| Model | Description |
+|-------|-------------|
+| `int_pos_tickets` | Daily POS ticket transactions from Gateway tickets |
+| `int_ticket_inventory` | Derived daily ticket inventory (reservations vs rolling-90d-max capacity) |
+| `int_ticket_scans` | Ticket scan / usage events for gate admission counts |
+
+## Disabled Models (`enabled=false`) — in `disabled/` subfolder (8)
 
 | Model | Blocked By | Re-enable When |
 |-------|-----------|----------------|

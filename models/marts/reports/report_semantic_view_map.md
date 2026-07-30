@@ -7,9 +7,9 @@ conversational surface for the reports at its grain, built on the same fact the
 report reads.
 
 The mapping below is derived from each `rpt_` model's upstream `ref()` and the
-fact each semantic view is built on. See [`README.md`](README.md) for the
-semantic-view design and [`models/marts/reports/README.md`](../models/marts/reports/README.md)
-for report status.
+fact each semantic view is built on. See
+[`cortex_project/README.md`](../../../cortex_project/README.md) for the
+semantic-view design and [`README.md`](README.md) for report status.
 
 ## Mapping
 
@@ -21,11 +21,23 @@ for report status.
 | Retail Carts Analysis | `rpt_retail_carts_analysis` | `FCT_RETAIL_DAILY` | **`retail`** | ✅ full |
 | Monthly Retail KPI | `rpt_monthly_retail_kpi` | `FCT_RETAIL_DAILY` | **`retail`** | ✅ full |
 | Daily Scan Report | `rpt_daily_scan` | `FCT_DAILY_SCAN` | **`attendance`** | ✅ full |
-| Attendance Report _(stub)_ | `rpt_attendance` | `FCT_DAILY_PERFORMANCE` + Sensource | **`attendance`** | ⚠️ partial — DPR attendance only, not the Sensource blend |
-| Daily Attendance Report _(stub)_ | `rpt_daily_attendance` | `FCT_DAILY_PERFORMANCE` + hourly passes | **`attendance`** | ⚠️ partial — DPR attendance only, not hourly |
-| Today's Sales | _(no `rpt_`; fact only)_ | `FCT_TODAY_SALES_HOURLY` | **`attendance`** | ❌ excluded (hourly grain) |
-| Website Commerce Report _(stub)_ | `rpt_website_commerce` | `RPT_WEBSITE_COMMERCE` | **`fundraising_ecom`** | ❌ excluded (monthly grain) |
-| Blue State WiFi Email Export _(stub)_ | `rpt_wifi_email_export` | `stg_wifi__audience` | **none — by design** | ❌ (PII export, not a chat surface) |
+| Attendance Report | `rpt_attendance` | `FCT_DAILY_PERFORMANCE` + `stg_sensource__*` | **`attendance`** | ⚠️ partial — DPR attendance only, not the Sensource blend |
+| Daily Attendance Report | `rpt_daily_attendance` | `FCT_DAILY_PERFORMANCE` + `stg_gateway__passes_by_hour` | **`attendance`** | ⚠️ partial — DPR attendance only, not hourly |
+| Today's Sales | `rpt_today_sales_powerbi` | `FCT_TODAY_SALES_HOURLY` | **`attendance`** | ❌ excluded (hourly grain) |
+| Website Commerce Report | `rpt_website_commerce` | `RPT_WEBSITE_COMMERCE` (view on `stg_ecommerce__website_recurring`) | **`fundraising_ecom`** _(scaffold in `cortex_project/disabled/`)_ | ❌ excluded (monthly grain) |
+| Blue State WiFi Email Export | `rpt_wifi_email_export` | `stg_wifi__audience` | **none — by design** | ❌ (PII export, not a chat surface) |
+
+## Serving-shape families (no Pentaho counterpart)
+
+These `rpt_` models are serving shapes for Power BI / budget-vs-actual / AI
+narratives rather than migrated Pentaho reports:
+
+| Family | Models | Semantic view relationship |
+|---|---|---|
+| Power BI semantic-view projections | `rpt_dpr_powerbi`, `rpt_retail_powerbi`, `rpt_daily_scan_powerbi`, `rpt_today_sales_powerbi` | Thin `SEMANTIC_VIEW()` projections **of** `dpr` / `retail` / `attendance` — they read the views, they are not fronted by them |
+| Long serving shapes | `rpt_dpr_report_long`, `rpt_retail_report_long`, `rpt_retail_category_long` | Same facts as the `dpr`/`retail` views; unpivoted for the Power BI matrix |
+| Budget-vs-actual daily | `rpt_dpr_budget_daily`, `rpt_retail_budget_daily` | `FCT_BUDGET_*_FORECASTS` + actuals; budget metrics surface through `dpr`/`retail` |
+| AI narratives | `rpt_dpr_narrative_brief` + `rpt_dpr_narrative` (gated), `rpt_retail_narrative_brief` + `rpt_retail_narrative` (gated) | Deterministic briefs feed Cortex `AI_COMPLETE`; not chat surfaces themselves |
 
 ## Notes
 
@@ -43,7 +55,7 @@ for report status.
   only the Sensource/hourly components are not.
 - **WiFi export has no semantic view on purpose.** `rpt_wifi_email_export` is a
   restricted PII extract (least-privilege grant only — see
-  [`DATA_CLASSIFICATION.md`](../docs/architecture/DATA_CLASSIFICATION.md)), not a
+  [`DATA_CLASSIFICATION.md`](../../../docs/architecture/DATA_CLASSIFICATION.md)), not a
   surface to expose to Cortex Analyst.
 
 ## Rule of thumb

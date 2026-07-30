@@ -1,12 +1,13 @@
 # Test Orchestration & Alert Routing
 
-> **Current scope (July 2026):** Gateway (ticketing) and CounterPoint (retail POS)
-> sources are connected, feeding the Daily Performance Report and ticket demand
-> forecasting models. Other sources and domains described below are part of the
+> **Current scope (July 2026):** Gateway (ticketing), CounterPoint (retail POS), the
+> 911dw report-estate tables, and the budget seeds are connected, feeding the Daily
+> Performance Report, the migrated Pentaho report estate, and ticket demand
+> forecasting. Other sources and domains described below are part of the
 > target design but are currently disabled / not yet ingested.
 
 > **Source of truth:** `ns11mm/ns11mm-data-platform`  
-> **Last updated:** July 2026  ·  Jeremy Myers, VP of AI & Analytics  
+> **Last updated: 2026-07-29**  ·  Jeremy Myers, VP of AI & Analytics  
 > **Legend:** `┌─┐` pipeline step  `╔═╗` custom test gate  `░░` disabled/future
 
 ```
@@ -22,27 +23,27 @@
  ══════════════════════════════════════════════════════════════════════════════
 
  ┌────────────────────────────┐ ┌─────────────────────┐ ┌──────────────────┐
- │  TICKETING & OPERATIONS    │ │░░CRM & FUNDRAISING░░│ │░░DIGITAL &░░░░░░░│
- │  ✓ ENABLED                 │ │░░NOT YET CONNECTED░░│ │░░MARKETING░░░░░░░│
+ │  TICKETING, RETAIL &       │ │░░CRM & FUNDRAISING░░│ │░░DIGITAL &░░░░░░░│
+ │  REPORT ESTATE  ✓ ENABLED  │ │░░NOT YET CONNECTED░░│ │░░MARKETING░░░░░░░│
  │                            │ │                      │ │░░NOT CONNECTED░░░│
- │  stg_gateway_* (16 views)  │ │  raw_salesforce_*    │ │                  │
- │  stg_counterpoint_* (5)    │ │  raw_classy_*        │ │  raw_ga4_*       │
- │                            │ │  raw_blackbaud_nxt_* │ │  raw_google_ads_*│
- │  Freshness SLA             │ │                      │ │  raw_meta_ads_*  │
- │  warn  >  3 hours          │ │  Freshness SLA       │ │                  │
- │  error >  6 hours          │ │  warn  > 3 hours     │ │  Freshness SLA   │
- │                            │ │  error > 6 hours     │ │  warn  > 4 hrs   │
- │  High-frequency ops data   │ │                      │ │  error > 8 hrs   │
- │  drives capacity planning  │ │                      │ │                  │
- │  & Cortex agent            │ │                      │ │                  │
+ │  gateway_seed (17 stg)     │ │  raw_salesforce_*    │ │                  │
+ │  counterpoint_seed (7 stg) │ │  raw_classy_*        │ │  raw_ga4_*       │
+ │  report_estate_seed (10stg)│ │  raw_blackbaud_nxt_* │ │  raw_google_ads_*│
+ │  budget_seeds (SEEDS)      │ │                      │ │  raw_meta_ads_*  │
+ │                            │ │  Freshness SLA       │ │                  │
+ │  Freshness SLA (sources.yml)│ │  (once connected)   │ │  Freshness SLA   │
+ │  gateway/counterpoint:     │ │                      │ │  (once connected)│
+ │    warn > 7d / error > 14d │ │                      │ │                  │
+ │  report_estate:            │ │                      │ │                  │
+ │    warn > 2d / error > 4d  │ │                      │ │                  │
  └────────────────────────────┘ └─────────────────────┘ └──────────────────┘
           │
-          │  (only Gateway + CounterPoint connected today)
+          │  (Gateway + CounterPoint + report estate + budget seeds today)
           │
           ▼
 
-                         2 sources land in
-                         NS11MM_DW_DEV.RAW (immutable)
+                         3 RAW source groups + budget_seeds land in
+                         {{ target.database }}.RAW / .SEEDS (immutable)
                                          │
                                          ▼
 
@@ -57,8 +58,8 @@
                                    ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
  │  STEP 1  ·  dbt source freshness                                        │
- │  evaluates loaded_at_field on Gateway + CounterPoint source tables      │
- │  per-cluster thresholds defined in sources.yml                          │
+ │  evaluates _loaded_at on the gateway / counterpoint / report_estate     │
+ │  source tables · per-group thresholds defined in sources.yml            │
  └─────────────────────────────────────────────────────────────────────────┘
                     │
          ┌──────────┴──────────────────────────────────────┐
@@ -66,8 +67,9 @@
          │                                               └──► Section 3
          ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
- │  STEP 2  ·  dbt build → STAGING  (21 stg_ views)                       │
- │  16 gateway + 5 counterpoint staging models                             │
+ │  STEP 2  ·  dbt build → STAGING  (34 stg_ views)                       │
+ │  17 gateway + 7 counterpoint + 2 budget + 2 sensource + 3 shopify       │
+ │  + 1 each dpr / ecommerce / wifi                                        │
  │  generic tests per model:                                               │
  │    unique + not_null on all PKs                                         │
  │    accepted_values on categorical columns                               │
@@ -78,16 +80,16 @@
          │                                               └──► Section 3
          ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
- │  STEP 3  ·  dbt build → INTERMEDIATE  (13 int_ models)                 │
- │  incremental merge models:                                              │
- │    int_gateway__item_journal_lines                                      │
- │    int_gateway__ticket_journal_lines                                    │
- │    int_gateway__ticket_demand_features                                  │
- │    int_pos_tickets                                                      │
- │    int_ticket_inventory                                                 │
- │    int_ticket_scans                                                     │
+ │  STEP 3  ·  dbt build → INTERMEDIATE  (21 int_ models)                 │
+ │  views + 4 tables (ticket/item journal lines, retail lines,             │
+ │  ticket demand features):                                               │
+ │    int_gateway__item_attributes / item_journal_lines /                  │
+ │      scan_lines / ticket_demand_features / ticket_journal_lines         │
  │    int_counterpoint__retail_lines                                       │
  │    int_dpr__admissions / attendance / donations / fees / retail / tours │
+ │    int_retail__customers / performance / visitors                       │
+ │    int_budget__admissions / dpr / retail forecasts                      │
+ │    int_pos_tickets · int_ticket_inventory · int_ticket_scans            │
  │  generic tests: unique + not_null on all PKs, accepted_values          │
  └─────────────────────────────────────────────────────────────────────────┘
                     │
@@ -96,10 +98,12 @@
          │                                               └──► Section 3
          ▼
  ╔═════════════════════════════════════════════════════════════════════════╗
- ║  TEST GATE A  ·  RECONCILIATION  ·  2 tests enabled                    ║
+ ║  TEST GATE A  ·  RECONCILIATION  ·  4 tests enabled                    ║
  ║  severity: error  ·  store_failures: true                              ║
  ║                                                                         ║
  ║  ✓ assert_raw_silver_ticket_count_match                                 ║
+ ║  ✓ assert_rpt_avg_ticket_price                                          ║
+ ║  ✓ assert_silver_gold_retail_revenue_reconciliation                     ║
  ║  ✓ assert_silver_gold_revenue_reconciliation                            ║
  ║                                                                         ║
  ║  DISABLED (future):                                                     ║
@@ -113,13 +117,15 @@
          │                                    pipeline halts → Section 3
          ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
- │  STEP 4  ·  dbt build → MARTS DIMENSIONS  (1 enabled)                   │
+ │  STEP 4  ·  dbt build → MARTS DIMENSIONS  (13 enabled)                  │
  │                                                                         │
- │  ✓ dim_date                                                             │
+ │  ✓ dim_access_code · dim_coa · dim_customer · dim_date                  │
+ │  ✓ dim_dpr_line_item · dim_event · dim_facility · dim_gate              │
+ │  ✓ dim_product · dim_retail_line_item · dim_store                       │
+ │  ✓ dim_ticket_type · dim_tour_product                                   │
  │                                                                         │
- │  DISABLED (8): dim_budget_version, dim_campaign, dim_customer,          │
- │    dim_fund, dim_gate, dim_marketing_channel, dim_payment_method,       │
- │    dim_product, dim_ticket_type                                         │
+ │  DISABLED (4): dim_budget_version, dim_campaign, dim_fund,              │
+ │    dim_payment_method                                                   │
  └─────────────────────────────────────────────────────────────────────────┘
                     │
          ┌──────────┴──────────────────────────────────────┐
@@ -127,12 +133,12 @@
          │                                               └──► Section 3
          ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
- │  STEP 5  ·  dbt build → MARTS FACTS  (4 enabled)                        │
+ │  STEP 5  ·  dbt build → MARTS FACTS  (11 enabled)                       │
  │                                                                         │
- │  ✓ fct_daily_operations                                                 │
- │  ✓ fct_daily_performance                                                │
- │  ✓ fct_ticket_availability                                              │
- │  ✓ fct_ticket_demand_forecast                                           │
+ │  ✓ fct_daily_operations · fct_daily_performance · fct_daily_scan        │
+ │  ✓ fct_retail_daily · fct_retail_performance · fct_today_sales_hourly   │
+ │  ✓ fct_ticket_availability · fct_ticket_demand_forecast                 │
+ │  ✓ fct_budget_dpr / admissions / retail _forecasts                      │
  │                                                                         │
  │  DISABLED (20): fct_ad_campaign_daily, fct_campaign_attribution,        │
  │    fct_campaign_performance, fct_digital_ad_performance,                │
@@ -168,14 +174,22 @@
          │                                    pipeline halts → Section 3
          ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
- │  STEP 6  ·  dbt build → MARTS REPORTS  (1 enabled)                      │
+ │  STEP 6  ·  dbt build → MARTS REPORTS  (21 enabled views)               │
  │                                                                         │
- │  ✓ rpt_daily_performance_report                                         │
+ │  ✓ DPR: rpt_daily_performance_report (table) · report_long ·            │
+ │    budget_daily · powerbi · narrative_brief · tracker_ytd               │
+ │  ✓ Retail: performance · report_long · category_long · budget_daily ·   │
+ │    carts_analysis · monthly_kpi · powerbi · narrative_brief             │
+ │  ✓ Attendance: attendance · daily_attendance · daily_scan ·             │
+ │    daily_scan_powerbi · today_sales_powerbi                             │
+ │  ✓ Other: website_commerce · wifi_email_export (PII, grants opt-out)    │
  │                                                                         │
- │  DISABLED (8): rpt_campaign_performance, rpt_customer_ltv,              │
- │    rpt_daily_operations, rpt_digital_marketing, rpt_member_360,         │
- │    rpt_retail_performance, rpt_revenue_bridge, rpt_ticket_sales,        │
- │    rpt_visitor_traffic                                                   │
+ │  GATED (2, enabled=false by design): rpt_dpr_narrative,                 │
+ │    rpt_retail_narrative (Cortex AI_COMPLETE; deployed via scripts/)     │
+ │  DISABLED (9, in disabled/): rpt_campaign_performance,                  │
+ │    rpt_customer_ltv, rpt_daily_operations, rpt_digital_marketing,       │
+ │    rpt_member_360, rpt_retail_performance (POC), rpt_revenue_bridge,    │
+ │    rpt_ticket_sales, rpt_visitor_traffic                                │
  └─────────────────────────────────────────────────────────────────────────┘
                     │
          ┌──────────┴──────────────────────────────────────┐
@@ -183,13 +197,15 @@
          │                                               └──► Section 3
          ▼
  ╔═════════════════════════════════════════════════════════════════════════╗
- ║  TEST GATE C  ·  BUSINESS RULES  ·  5 tests enabled                    ║
- ║  severity: error  ·  store_failures: true                               ║
+ ║  TEST GATE C  ·  BUSINESS RULES  ·  7 tests enabled                    ║
+ ║  severity: error (assert_) / warn (alert_)  ·  store_failures: true    ║
  ║                                                                         ║
- ║  ✓ alert_null_primary_keys_in_raw                                       ║
- ║  ✓ assert_critical_tables_not_empty                                     ║
+ ║  ✓ alert_null_primary_keys_in_raw  (warn)                               ║
+ ║  ✓ assert_critical_tables_not_empty  (15 critical tables)               ║
  ║  ✓ assert_date_coverage                                                 ║
  ║  ✓ assert_no_future_tickets                                             ║
+ ║  ✓ assert_no_negative_attendance                                        ║
+ ║  ✓ assert_no_negative_retail_revenue                                    ║
  ║  ✓ assert_no_negative_revenue                                           ║
  ║                                                                         ║
  ║  DISABLED (2):                                                          ║
@@ -211,11 +227,12 @@
                     │
                     ▼
  ┌─────────────────────────────────────────────────────────────────────────┐
- │  SEEDS  (3 reference tables)                                            │
+ │  SEEDS  (19 CSVs → SEEDS schema)                                        │
  │                                                                         │
- │  ✓ seed_tour_plu            → RAW schema                                │
- │  ✓ seed_retail_item_facility                                            │
- │  ✓ seed_retail_store_facility                                           │
+ │  ✓ 12 seed_* mapping/scope seeds (tour PLU, retail facility/scope/      │
+ │    exclusions, scan segments, gateway exclusions, service PLUs…)        │
+ │  ✓ 5 legacy ref_* reference tables                                      │
+ │  ✓ 2 report line-item catalogs (dpr_line_items, retail_line_items)      │
  └─────────────────────────────────────────────────────────────────────────┘
                     │
                     ▼
@@ -301,15 +318,15 @@
 
  ## Summary of Enabled Assets (July 2026)
 
- | Layer         | Enabled | Disabled | Notes                              |
- |---------------|---------|----------|------------------------------------|
- | Sources       | 2       | ~12      | Gateway + CounterPoint only        |
- | Staging       | 21      | 0        | 16 gateway + 5 counterpoint        |
- | Intermediate  | 13      | 0        | All incremental merge              |
- | Dimensions    | 1       | 8        | dim_date only                      |
- | Facts         | 4       | 20       | DPR + ticket demand + availability |
- | Reports       | 1       | 8        | rpt_daily_performance_report       |
- | ML Features   | 2       | 0        | Ticket demand + visitor forecast   |
- | Seeds         | 3       | 0        | tour_plu, retail item/store        |
- | Snapshots     | 0       | 0        | None configured                    |
- | **Tests**     | **8**   | **8**    | See gates A/B/C above              |
+ | Layer         | Enabled | Disabled | Notes                                          |
+ |---------------|---------|----------|------------------------------------------------|
+ | Source groups | 4       | ~10      | gateway / counterpoint / report_estate + budget_seeds |
+ | Staging       | 34      | 0        | 17 gateway, 7 counterpoint, 2 budget, 2 sensource, 3 shopify, 1 each dpr/ecommerce/wifi |
+ | Intermediate  | 21      | 8        | Views + 4 tables (not incremental merge)       |
+ | Dimensions    | 13      | 4        | See Step 4                                     |
+ | Facts         | 11      | 20       | DPR + report estate + budget + demand          |
+ | Reports       | 21      | 9 (+2 gated) | 23 files; 2 narrative sources enabled=false |
+ | ML Features   | 2       | 12       | Ticket demand + visitor forecast               |
+ | Seeds         | 19      | 0        | → SEEDS schema                                 |
+ | Snapshots     | 0       | 0        | None configured                                |
+ | **Singular tests** | **12** | **8** | 7 business rules / 4 reconciliation / 1 ref. integrity |

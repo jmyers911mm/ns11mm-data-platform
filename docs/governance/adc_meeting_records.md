@@ -28,22 +28,10 @@
 ════════════════════════════════════════════════════════════════════════════
 -->
 
-<!-- Date inferred: Mike marks his one-year anniversary and Jeremy is "a few weeks" in;
-     the charter is dated May 2026. Confirm and correct the date below. -->
-
-## 2026-07-23 - DGAI Committee - Inaugural Session: Charter Review and Decisions
+## 2026-07-23 · DGAI Committee — Inaugural Session: Charter Review and Decisions
 
 - Location: Video call
-- Attendees: 
-- Summary: 
-
-### Agenda
-- 
-### Decisions
-- 
-
-### Action Items
-- [ ] 
+- Summary: Minutes pending — placeholder retained so the record stays contiguous (owner: Jeremy).
 
 ## 2026-06-19 · AI Committee — Updated AI Policy and Draft AI & Data Charter
 

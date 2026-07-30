@@ -295,7 +295,7 @@ SELECT
     ROUND(SUM(credits_used_cloud_services), 4) AS cloud_credits
 FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
 WHERE start_time >= DATEADD('day', -30, CURRENT_DATE())
-  AND query_tag LIKE 'dbt_museum%'
+  AND query_tag LIKE 'dbt_ns11mm%'
 GROUP BY query_tag
 ORDER BY total_exec_hours DESC;
 ```

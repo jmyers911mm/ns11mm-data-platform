@@ -1,7 +1,7 @@
 # Generative AI Usage Policy
 
 **National September 11 Memorial & Museum at the World Trade Center**
-Version 1.1 · Developed by the interdepartmental AI Steering Committee
+Version 1.1 · Developed by the interdepartmental AI & Data Committee (formerly AI Steering Committee; rename per 2026-06-19 minutes)
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ Version 1.1 · Developed by the interdepartmental AI Steering Committee
 
 The purpose of the National September 11 Memorial & Museum at the World Trade Center’s Generative AI Usage policy is to ensure legal and ethical use of Generative AI (GenAI) technology. The guidance below defines acceptable and prohibited uses and outlines employee obligations related to the use or development of GenAI models and applications in connection with their work on behalf of the 9/11 Memorial & Museum at the World Trade Center. 
 
-This policy was developed by the organization’s interdepartmental AI Steering Committee.
+This policy was developed by the organization’s interdepartmental AI & Data Committee (formerly AI Steering Committee; rename per 2026-06-19 minutes).
 
 ## 2. Scope
 
@@ -30,7 +30,7 @@ This policy applies to all employees, contractors, and third parties who develop
 
 Any use of GenAI, via platforms, tools, and software must be consistent with our Code of Conduct & Ethics, company policy, and applicable law. Use of GenAI on company devices must be limited to business purposes. Use of GenAI on personal devices to circumvent company policies or safeguards is strictly prohibited.
 
-Individual managers may have concerns about their employees’ use of GenAI and may restrict their employees’ use of GenAI for business purposes. If an individual manager restricts their employees’ use of GenAI, the manager is required to inform the AI Policy Steering Committee by emailing <AIpolicy@911memorial.org>.
+Individual managers may have concerns about their employees’ use of GenAI and may restrict their employees’ use of GenAI for business purposes. If an individual manager restricts their employees’ use of GenAI, the manager is required to inform the AI & Data Committee by emailing <AIpolicy@911memorial.org>.
 
 Any violation of this policy or use of unauthorized GenAI not listed in the table below or otherwise pre-authorized in writing, will result in disciplinary action, up to and including termination.
 
@@ -59,9 +59,9 @@ The following applications are permitted:
 
 **All Other Use**
 
-Most employees would benefit from using the free version of GenAI listed above. Certain employees with pre-authorized approval by the AI Steering Committee will be granted access to the licensed version of the GenAI listed above if the employee demonstrates why they need this tool to perform their job responsibilities. For example, an employee that is required to analyze data as part of their job responsibilities could apply for the Anthropic Professional Plan.
+Most employees would benefit from using the free version of GenAI listed above. Certain employees with pre-authorized approval by the AI & Data Committee will be granted access to the licensed version of the GenAI listed above if the employee demonstrates why they need this tool to perform their job responsibilities. For example, an employee that is required to analyze data as part of their job responsibilities could apply for the Anthropic Professional Plan.
 
-To ensure responsible use, mitigate data privacy risks, and maintain compliance with organizational standards, all GenAI applications outside of approved platforms must receive preauthorized approval before use. In other words, if you want to use GenAI other than the GenAI listed above, you must seek preauthorized approval from the AI Steering Committee.
+To ensure responsible use, mitigate data privacy risks, and maintain compliance with organizational standards, all GenAI applications outside of approved platforms must receive preauthorized approval before use. In other words, if you want to use GenAI other than the GenAI listed above, you must seek preauthorized approval from the AI & Data Committee.
 
 To request approval please email: <AIpolicy@911memorial.org>
 
@@ -145,7 +145,7 @@ If monitoring systems and processes detect a possible policy violation or if a U
 
 ## 8. Contact Information
 
-The AI Steering Committee can be reached by emailing <AIpolicy@911memorial.org>.
+The AI & Data Committee (formerly AI Steering Committee) can be reached by emailing <AIpolicy@911memorial.org>.
 
 ## 9. Amendments/Updates
 

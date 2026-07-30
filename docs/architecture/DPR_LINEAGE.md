@@ -36,12 +36,14 @@ graph LR
     stp[/"seed_tour_plu"/]
     ssf[/"seed_retail_store_facility"/]
     sif[/"seed_retail_item_facility"/]
+    srs[/"seed_retail_store_scope"/]
 
     %% ---------- INTERMEDIATE: conformance ----------
     subgraph CONF["INTERMEDIATE — conformance (shared joins + cross-cutting rules)"]
-        tjl["int_gateway__ticket_journal_lines<br/>jnl_code 101 · key_date · ga_flag"]
-        ijl["int_gateway__item_journal_lines<br/>jnl_code 102-104 · key_date = tran_date"]
-        crl["int_counterpoint__retail_lines<br/>store scope · facility resolution"]
+        ia["int_gateway__item_attributes<br/>conformed vattribute (1 row/avg_id)"]
+        tjl["int_gateway__ticket_journal_lines<br/>jnl_code 101 · date_key · ga_flag"]
+        ijl["int_gateway__item_journal_lines<br/>jnl_code 102-104 · date_key = tran_date"]
+        crl["int_counterpoint__retail_lines<br/>seed-driven store scope · facility resolution"]
         scn["int_ticket_scans<br/>valid gate scans"]
     end
 
@@ -63,11 +65,14 @@ graph LR
         sem["MARTS.DPR semantic view<br/>dpr.yaml · Cortex Analyst · Power BI"]
     end
 
+    %% ---------- Attribute conformance ----------
+    va --> ia
+
     %% ---------- Ticket journal join ----------
     jd -->|"101"| tjl
     jt --> tjl
     it --> tjl
-    va --> tjl
+    ia --> tjl
     coa --> tjl
     dd --> tjl
     rme --> tjl
@@ -77,13 +82,14 @@ graph LR
     ji --> ijl
     jh --> ijl
     it --> ijl
-    va --> ijl
+    ia --> ijl
 
     %% ---------- CounterPoint ----------
     cpl --> crl
     cpi --> crl
     ssf --> crl
     sif --> crl
+    srs --> crl
 
     %% ---------- Scans ----------
     us --> scn
@@ -112,7 +118,7 @@ graph LR
     dim --> sem
 
     classDef seed fill:#F4ECDD,stroke:#C05621,color:#1F3864
-    class stp,ssf,sif seed
+    class stp,ssf,sif,srs seed
 ```
 
 Reading the graph: each staging node collapses its 1:1 chain (source table → `seed_*` →
@@ -159,14 +165,18 @@ This is where the shared join topology and cross-cutting business rules live, so
 ```
 jnldetails (101) ──┬── inner join jnltickets   on jd.aux_table_id = jt.jnl_detail_id   (ticket bridge: plu, order, event, dates)
                    ├── inner join items        on jt.plu = it.plu                      (catalog: description, kind, cost, price)
-                   ├── inner join vattribute   on it.attribute_value_group_id = va.avg_id  (matrix code, recognize basis, default customer)
+                   ├── inner join int_gateway__item_attributes                          (conformed vattribute — matrix code,
+                   │              on it.attribute_value_group_id = va.avg_id            recognize basis, default customer)
                    ├── inner join coa          on jd.account_id = c.account_id         (GL context)
                    ├── left  join disbursement (via coa gl/company/category keys)      (GEN ADM name)
                    └── left  join rmevents     on rme.event_id = jt.event_no           (event start date)
 ```
 
+The vattribute join goes through **`int_gateway__item_attributes`** (one row per
+`avg_id`), which conforms `stg_gateway__vattribute` once for both journal models.
+
 Derivations:
-- **`key_date`** — the recognized reporting date, via the `gateway_recognized_date` macro.
+- **`date_key`** — the recognized reporting date, via the `gateway_recognized_date` macro.
   Recreates Galaxy recognize-basis logic with visit-date fallbacks (all bases coalesce to
   `end_of_life_date` because `rme.start_at` and `ticketdate` are unreliable in the extract):
   basis 182 → `coalesce(start_at, end_of_life_date, ticket_date)`; 185/else →
@@ -174,7 +184,7 @@ Derivations:
 - **`ga_flag`** — general admission (1) vs tour/other (0), via
   `gateway_general_admission_flag`: `disbursement_id = 0` + matrix `GAD%` → GA. (The
   second branch — tour ticket sold with GA — is dead while `disbursement_id` is zeroed.)
-- **Row filters** — drop `key_date is null` (voids/sentinels with no usable date), the
+- **Row filters** — drop `date_key is null` (voids/sentinels with no usable date), the
   `EXTEVENTAD001` placeholder, and comp customers 20056/23361 (intended legacy exclusion).
 
 Verified conservation (July 2026 extract): raw 101 journal = 127,694 qty / $3.68M →
@@ -183,12 +193,15 @@ sentinels) → GA 96,326 / $2.68M + tours/passes 9,455 / $262K, **a clean partit
 penny**. Any future drift between these stages is a bug, not a definition change.
 
 **`int_gateway__item_journal_lines`** — one row per item line (`jnl_code_id` 102–104).
-Same catalog joins via the `jnlitems` bridge (`jd.aux_table_id = ji.jnl_item_id`);
-`key_date = jnlheaders.tran_date` (transaction/fiscal date — item lines do not use
+Same catalog joins (via the `jnlitems` bridge `jd.aux_table_id = ji.jnl_item_id`, and
+`int_gateway__item_attributes` for the attribute set);
+`date_key = jnlheaders.tran_date` (transaction/fiscal date — item lines do not use
 recognize-basis logic).
 
-**`int_counterpoint__retail_lines`** — one row per CP sale/return line, store scope
-`('1','3','8'..'14')`. Derives `key_facility` with legacy `t_fact_retail` precedence:
+**`int_counterpoint__retail_lines`** — one row per CP sale/return line. Store scope is
+**seed-driven**: `where store_id in (select store_id from seed_retail_store_scope)`
+(currently stores 1, 3, 8–14 — edit the seed, not the model, to change scope).
+Derives `key_facility` with legacy `t_fact_retail` precedence:
 **item override first** (`seed_retail_item_facility`: e.g. `201114 → 1040` MAG,
 `201197 → 1060` MUS AG), **then store fallback** (`seed_retail_store_facility`:
 8/9/10 → 1003 Museum Store, 11–14 → 1020 Carts, 3 → 1234 Ecom, 1 → 4007 Cafe). Splits
@@ -211,12 +224,18 @@ where a metric's definition lives** (ADR-004: nothing in Power BI, ADR-005: metr
 | `int_dpr__retail` | CP retail lines | facility 1003 → store profit + donations (excl. exit-box item); 1020 + item `7-999` → `cart_donation_ask`; item `101375` → `mus_exit_donations`; items `200704` / `101165` → `mask_donations` / `donation_box`; 4007 → cafe; 1234 → ecom ask; 1040 → `mag_cp_revenue`; 1060 → MUS AG |
 | `int_dpr__attendance` | ticket scans | facility classification → `mem_attendance`, `mus_attendance_scanned` |
 
-Aggregation grain everywhere: **one row per `key_date`**, all measures additive `SUM`s.
+Aggregation grain everywhere: **one row per `date_key`**, all measures additive `SUM`s.
+
+> **Naming note (honest):** model outputs standardize on `date_key`; the legacy
+> `key_date` name survives only as the **source column** in the 911dw-style budget
+> seed tables (`int_budget__*` cast `KEY_DATE` → `date_key`), and the legacy `key_`
+> prefix lives on in `key_facility` (the 911dw selling-area surrogate). Earlier
+> revisions of this doc used `key_date` for the model outputs — that was stale.
 
 ### 5. `int_dpr__*` → Fact → Report → Semantic
 
 - **`fct_daily_performance`** — full-outer joins the six `int_dpr__*` models on
-  `key_date`, inner joins `dim_date` (2000–2035), `coalesce(…, 0)` on every measure.
+  `date_key`, inner joins `dim_date` (2000–2035), `coalesce(…, 0)` on every measure.
   One row per day, ~45 additive measures. Cross-source combinations happen here (e.g.
   `mem_audio_guide_revenue` = Galaxy `%MAG%` + CP `mag_cp_revenue`;
   `audio_tour_headset` = Galaxy units + CP fac-1060). **No ratios** — additive only.
@@ -237,7 +256,7 @@ Aggregation grain everywhere: **one row per `key_date`**, all measures additive 
 `donation_box` = **CounterPoint** `ps_tkt_hist_lin` → `seed_cp_pstkthistlin` →
 `stg_counterpoint__pstkthistlin` (rename/dedup) → `int_counterpoint__retail_lines`
 (store scope + facility resolution + sale/return split) → `int_dpr__retail`
-(`item_no = '101165'` → measure, summed per `key_date`) → `fct_daily_performance`
+(`item_no = '101165'` → measure, summed per `date_key`) → `fct_daily_performance`
 (coalesced onto the day spine) → `rpt_` / `MARTS.DPR`.
 
 The reconciliation audit workbook carries this crosswalk for every metric, including the

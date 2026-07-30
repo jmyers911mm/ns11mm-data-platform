@@ -1,15 +1,17 @@
 # Data Platform Source Integration Plan
 
-> **Current scope (July 2026):** only the Gateway (ticketing) and CounterPoint (retail POS)
-> sources are connected, feeding the Daily Performance Report. Other sources, models, and
-> domains described below are part of the target design but are currently `enabled=false` /
-> not yet ingested. See the `models/*/README.md` files for the exact enabled-vs-disabled list.
+> **Current scope (July 2026):** Gateway (ticketing), CounterPoint (retail POS), the
+> 911dw report-estate tables (Sensource, same-day retail, Drupal-commerce recurring,
+> Shopify exports, WiFi), and the budget seeds are connected via seed/stage loads,
+> feeding the DPR and the migrated report estate. Other sources described below are part
+> of the target design but are currently `enabled=false` / not yet ingested. See the
+> `models/*/README.md` files for the exact enabled-vs-disabled list.
 
 **Project:** NS11MM Data Platform Modernization
 
-** Integration of all identified source systems into the Snowflake RAW schema and through the dbt staging layer (STAGING schema)
+**Scope:** Integration of all identified source systems into the Snowflake RAW schema and through the dbt staging layer (STAGING schema)
 
-**Status:** Active v1.0 — 14 sources confirmed; Azure pipeline build in progress
+**Status:** Active v1.1 — 16 sources identified (see §2); Azure pipeline build in progress (deploy YAMLs parked in `disabled/`)
 
 **Grounded against:** vendor API documentation plus `ns11mm/ns11mm-data-platform` structure (sample schemas only, not the real feeds)
 
@@ -26,12 +28,12 @@ Two non-negotiable rules still frame the work. RAW is immutable, so this is land
 
 ## 2. Source coverage snapshot
 
-The eight canonical source systems mapped to their real vendor products, with the two paid-media feeds and the derived identity graph included. Vendor names flagged "confirm" are inferred from our naming and should be verified.
+The canonical source systems mapped to their real vendor products, with the two paid-media feeds and the derived identity graph included. Vendor names flagged "confirm" are inferred from our naming and should be verified.
 
 | Source system | Real product | Primary access method | Auth model |
 |---|---|---|---|
-| Ticketing / Gateway | Gateway Ticketing Galaxy (confirm) | Galaxy SQL Server database extract | SQL login |
-| Retail POS | Galaxy retail module (confirm) or separate store POS | Same Galaxy database, or separate POS API | SQL login or API |
+| Ticketing / Gateway | Gateway Ticketing Galaxy | Galaxy SQL Server database extract | SQL login |
+| Retail POS | **NCR CounterPoint** (confirmed — modeled extensively: 7 `stg_counterpoint__*` models) | CounterPoint SQL Server database extract | SQL login |
 | Salesforce CRM | Salesforce (NPSP or Nonprofit Cloud, confirm) | REST plus Bulk API 2.0 | OAuth 2.0 |
 | Salesforce Marketing Cloud | Marketing Cloud Engagement | REST plus SOAP, or Data Extract to SFTP | OAuth 2.0 server-to-server |
 | GA4 / Google Analytics | Google Analytics 4 | BigQuery export or GA4 Data API | Service account OAuth 2.0 |
@@ -42,6 +44,9 @@ The eight canonical source systems mapped to their real vendor products, with th
 | General Ledger / NXT | Blackbaud Financial Edge NXT | SKY API General Ledger | OAuth 2.0 plus subscription key |
 | Wufoo (forms) | Wufoo online forms | REST API v3 entries, or webhooks | HTTP Basic API key |
 | Clicky (web analytics) | Clicky analytics | Stats API v4 | site_id plus sitekey |
+| Shopify (e-commerce) | Shopify | Admin API (currently: export tables landed via report_estate stage load, staged as `stg_shopify__*`) | OAuth access token |
+| Drupal (website commerce) | Drupal CMS commerce | DB read or JSON:API — path decision needs an ADR (currently: recurring-revenue table landed via report_estate stage load, staged as `stg_ecommerce__website_recurring`) | varies |
+| Sensource (people counting) | Sensource visitor counting | Vendor export (currently: visitor/attendance tables landed via report_estate stage load, staged as `stg_sensource__*`) | API key |
 | Identity graph | Derived, internal | Built in dbt from other feeds | none |
 
 **Headline unchanged:** the finance and fundraising spine (GoFundMe Pro, Financial Edge NXT, and Salesforce gifts) remains the principal gap. What this version adds is that two of those three have clean, documented APIs, so the build effort is well defined rather than open.
@@ -77,11 +82,11 @@ The common integration contract per feed. A feed is "integrated" only when all o
 - **Landing path:** Azure Functions copy activity from Galaxy SQL Server into Snowflake Bronze.
 - **To confirm:** whether Gateway offers a supported data or reporting API as an alternative to direct DB access, since direct DB reads have vendor-support implications; and whether retail and membership truly live in the same Galaxy database.
 
-### 4.2 Retail POS — likely the Galaxy retail module
+### 4.2 Retail POS — NCR CounterPoint (confirmed)
 
-- **Product:** most likely Galaxy's retail module, which would make this the same source and database as 4.1 rather than a separate system. If the museum store runs a separate POS, that vendor needs to be identified.
-- **What we need:** if Galaxy, fold retail transactions and a product or SKU master into the Galaxy extract. If separate, capture vendor, API or DB access, and the product dimension that the Retail Performance dashboard needs for category rollups.
-- **To confirm:** Galaxy module versus separate POS vendor. This is the single fastest item to close.
+- **Product:** NCR CounterPoint — a separate POS system, not a Galaxy module. **Confirmed and modeled extensively:** 7 `stg_counterpoint__*` staging models (item master, ticket history headers/lines, enriched views, same-day retail) feed `int_counterpoint__retail_lines` and the retail facts, with `dim_product`/`dim_store` built from the CounterPoint item and store masters.
+- **Extraction:** SQL Server read of the CounterPoint database (`im_item`, `ps_tkt_hist`, `ps_tkt_hist_lin`, `vi_tkt_hist*`), currently landed as CSV extracts into `RAW` (`counterpoint_seed`); production path is the same in-network SQL extract as Galaxy (§4.1).
+- ~~To confirm: Galaxy module versus separate POS vendor.~~ **Closed** — vendor identified and integrated.
 
 ### 4.3 Salesforce CRM — membership, donors, gifts
 
@@ -195,8 +200,8 @@ Three independent revenue feeds need to tie back to one system of record. Ticket
 | GoFundMe Pro | OAuth 2.0 client credentials | REST transactions and campaigns | API pull |
 | Vena | HTTP Basic application token | Export API, or Azure Functions integration | Azure Functions integration preferred |
 | Financial Edge NXT | OAuth 2.0 plus subscription key | SKY API GL, or Power Platform connector | API pull or connector |
-| Wufoo | HTTP Basic API key | REST v3 entries, incremental by DateCreated | Fabric pull, webhooks optional |
-| Clicky | site_id plus sitekey in query | Stats API v4, daily by date range | Fabric pull, HTTPS only |
+| Wufoo | HTTP Basic API key | REST v3 entries, incremental by DateCreated | Azure Functions pull (ADR-003), webhooks optional |
+| Clicky | site_id plus sitekey in query | Stats API v4, daily by date range | Azure Functions pull (ADR-003), HTTPS only |
 
 Every credential above lands in Azure Key Vault. No source uses hardcoded secrets.
 
@@ -238,7 +243,7 @@ Resolved in this version: Financial Edge NXT confirmed as the GL product; auth m
 Still open:
 
 1. **Galaxy access:** direct SQL Server read versus a supported Gateway data API, given vendor-support implications.
-2. **Retail POS:** Galaxy module or a separate store POS vendor.
+2. ~~**Retail POS:** Galaxy module or a separate store POS vendor.~~ **Resolved:** NCR CounterPoint (see §4.2).
 3. **Salesforce:** NPSP versus Nonprofit Cloud, and the final object list beyond Contact.
 4. **GA4:** BigQuery export versus Data API.
 5. **Marketing Cloud:** authoritative subdomain and business unit MID.

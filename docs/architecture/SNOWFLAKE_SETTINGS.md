@@ -1,7 +1,7 @@
 # Snowflake Settings — NS11MM Data Platform
 
 
-> Last updated: June 25, 2026
+> Last updated: 2026-07-29
 
 ## Databases
 
@@ -10,6 +10,9 @@
 
 | `NS11MM_DW_DEV` | Shared dev — promotion target; hosts RAW ingestion + deployed dbt project | ACCOUNTADMIN |
 | `NS11MM_DW_DEV_JMYERS` | Jeremy personal dev sandbox (TRANSFORMER_ROLE writes here) | ACCOUNTADMIN |
+| `NS11MM_DW_DEV_DSUN` | Diana personal dev sandbox | ACCOUNTADMIN |
+| `NS11MM_DW_DEV_KRAMSEY` | Kalea personal dev sandbox | ACCOUNTADMIN |
+| `NS11MM_DW_DEV_CI` | Dedicated CI database — GitHub Actions dbt builds land here | ACCOUNTADMIN |
 | `NS11MM_DW_PROD` | Production — Power BI reads from here | ACCOUNTADMIN |
 
 ## Schemas (consistent across DEV and PROD)
@@ -17,11 +20,12 @@
 | Schema | Purpose | dbt folder |
 |---|---|---|
 
-| `RAW` | Immutable raw data + `_extracted_at` load timestamp — append-only | (not dbt-managed) |
+| `RAW` | Immutable raw data + `_loaded_at` load timestamp — append-only | (not dbt-managed) |
 | `STAGING` | Cleansed/standardized views (`stg_*`) — rename, cast, deduplicate | `models/raw/` |
-| `INTERMEDIATE` | Silver incremental models (`silver_*`) — business logic, joins | `models/intermediate/` |
+| `INTERMEDIATE` | Silver-layer models (`int_*`) — business logic, joins; views + 4 tables | `models/intermediate/` |
 | `MARTS` | Gold dimensions, facts, reports (`dim_*`, `fct_*`, `rpt_*`) | `models/marts/` |
 | `ML_FEATURES` | ML feature tables for model training and inference | `models/ml_features/` |
+| `SEEDS` | dbt seed tables (19 CSVs) + budget workbook CSV loads (`budget_seeds` source) | `seeds/` |
 | `MONITORING` | Alerts, tasks, audit views (DEV only) | (not dbt-managed) |
 
 ## Roles
@@ -54,22 +58,30 @@
 | Monitor | Warehouse | Limit | Notify/Suspend |
 |---|---|---|---|
 
-| `DBT_DEV_MONITOR` | DBT_DEV_WH | 5 credits/month | 75% / 90% / 100% |
+| `DBT_DEV_MONITOR` | DBT_DEV_WH | 10 credits/month | 75% / 90% / 100% |
 | `DBT_PROD_MONITOR` | DBT_PROD_WH | 50 credits/month | 75% / 90% / 100% |
 | `ML_STUDIO_MONITOR` | ML_STUDIO_WH | 30 credits/month | 75% / 90% / 100% |
 | `MONITORING_WH_MONITOR` | MONITORING_WH | 20 credits/month | 75% / 90% / 100% |
 | `SOURCES_MONITOR` | (account-level) | 75 credits/month | 75% / 90% / 100% |
-| `TRANSFORM_WH_MONITOR` | TRANSFORM_WH | 100 credits/month | 75% / 90% / 100% |
+
+> The former `TRANSFORM_WH_MONITOR` row referenced a `TRANSFORM_WH` warehouse that
+> does not exist (terraform manages only `DBT_DEV_WH` / `DBT_PROD_WH` per
+> environment) — it has been removed. The dbt warehouses are covered by
+> `DBT_DEV_MONITOR` / `DBT_PROD_MONITOR` above.
 
 ## Alerts (NS11MM_DW_DEV.MONITORING)
 
-| Alert | Schedule | Triggers |
-|---|---|---|
-| `ALERT_SOURCE_FRESHNESS` | 60 min | RAW table not updated in 6+ hours |
-| `ALERT_DBT_RUN_FAILURES` | 30 min | dbt-tagged query fails |
-| `ALERT_WAREHOUSE_UTILIZATION` | 120 min | Queries queuing (overloaded WH) |
-| `ALERT_CREDIT_CONSUMPTION` | Daily | >10 credits in 24 hours |
-| `ALERT_LONG_RUNNING_QUERIES` | 60 min | Any query >10 minutes |
+> **All 5 alerts are SUSPENDED as of 6.1.0** (see CHANGELOG 6.1.0 and
+> `scripts/alert_management.sql`) pending validation of the resource-monitor fix.
+> Resume deliberately via `MANAGE_ALERTS('RESUME', …)` once validated.
+
+| Alert | Schedule | Triggers | Status |
+|---|---|---|---|
+| `ALERT_SOURCE_FRESHNESS` | 60 min | RAW table not updated in 6+ hours | SUSPENDED |
+| `ALERT_DBT_RUN_FAILURES` | 30 min | dbt-tagged query fails | SUSPENDED |
+| `ALERT_WAREHOUSE_UTILIZATION` | 120 min | Queries queuing (overloaded WH) | SUSPENDED |
+| `ALERT_CREDIT_CONSUMPTION` | Daily | >10 credits in 24 hours | SUSPENDED |
+| `ALERT_LONG_RUNNING_QUERIES` | 60 min | Any query >10 minutes | SUSPENDED |
 
 ## Tasks (NS11MM_DW_DEV.MONITORING)
 

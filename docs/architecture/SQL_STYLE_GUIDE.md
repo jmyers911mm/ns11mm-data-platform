@@ -13,20 +13,24 @@ Conventions for SQL in the `ns11mm-data-platform` project. These are enforced wh
 | Prefix | Layer | Example | Notes |
 | --- | --- | --- | --- |
 
-| `stg_<source>__<object>` | Staging | `stg_gateway__transactions` | One staging model per source table. Views in STAGING schema. |
-| `silver_` | Silver / Intermediate | `silver_pos_tickets` | Cleansed, business-logic-applied, incremental in INTERMEDIATE schema. |
+| `stg_<source>__<object>` | Staging | `stg_gateway__tickets` | One staging model per source table. Views in STAGING schema. |
+| `int_<domain>__<entity>` | Silver / Intermediate | `int_gateway__ticket_journal_lines` | Cleansed, business-logic-applied. Views (4 hot models are tables) in INTERMEDIATE schema. Three legacy models (`int_pos_tickets`, `int_ticket_inventory`, `int_ticket_scans`) predate the `__` form and are kept to avoid churning refs. |
 | `dim_` | Gold dimension | `dim_customer` | One row per entity (customer, date, product…). Table in MARTS. |
-| `fct_` | Gold fact | `fct_ticket_sales` | One row per event/grain. In MARTS. |
-| `rpt_` | Gold report | `rpt_daily_operations` | Pre-joined, denormalized. **The only MARTS surface Power BI should consume.** |
-| `ml_` | ML feature | `ml_donor_churn_features` | Feature-engineered tables in ML_FEATURES schema. |
+| `fct_` | Gold fact | `fct_daily_performance` | One row per event/grain. In MARTS. |
+| `rpt_` | Gold report | `rpt_daily_performance_report` | Pre-joined, denormalized. **The only MARTS surface Power BI should consume.** |
+| `ml_` | ML feature | `ml_ticket_demand_features` | Feature-engineered tables in ML_FEATURES schema. |
 
 ### Columns
 
 - `snake_case` for everything.
-- Primary keys end in `_id` (`customer_id`, `gate_id`).
-- Booleans start with `is_` or `has_` (`is_weekend`, `is_discounted`).
-- Dates end in `_date`; timestamps in `_at`; counts in `_count`; rates/percentages in `_pct` or `_rate`.
-- Monetary columns are unqualified by currency (single-currency platform) but named for what they are (`gross_revenue`, `net_revenue`).
+- Key naming, as practiced in this repo: **dimension/fact join keys end in `_key`**
+  (`date_key`, `key_facility` for the legacy 911dw surrogate); staging and
+  intermediate models **carry the source system's natural ids as-is**
+  (`ticket_id`, `doc_id`, `plu`, `item_no`). Don't rename a natural key to force
+  an `_id` suffix.
+- Booleans start with `is_` or `has_` (`is_weekend`, `is_commemoration_day`) — plus the legacy `ga_flag`.
+- Dates end in `_date` or `_key` when they are the day-grain join key; timestamps in `_at`; counts in `_count`; rates/percentages in `_pct` or `_rate`.
+- Monetary columns are unqualified by currency (single-currency platform) but named for what they are (`gross_revenue`, `net_sales`, `net_profit`).
 
 ---
 
@@ -49,7 +53,7 @@ Use CTEs, top to bottom, in a predictable order:
 with
 
 source as (
-    select * from {{ ref('stg_pos_tickets') }}
+    select * from {{ ref('stg_gateway__tickets') }}
 ),
 
 renamed as (
@@ -80,9 +84,22 @@ select * from final
 
 ## Formatting
 
-`.sqlfluff` enforces most of this; when in doubt, run the linter.
+The repo `.sqlfluff` **exists and is enforced in CI** (the lint job fails the PR).
+What it enforces, exactly:
 
-- **Keywords lowercase** (`select`, `from`, `where`, `join`).
+- **Capitalisation rules** — lowercase policy for keywords, identifiers, functions,
+  literals, and types.
+- **Convention rules** — all except CV11 (casting style: Snowflake `::` and
+  `cast()` are both in use, so CV11 is excluded).
+- **Jinja rules.**
+- **Excluded wholesale:** `layout`, `aliasing`, `structure`, `references`,
+  `ambiguous` — judged too noisy against the existing (readable, reviewed) model
+  formatting. Those aspects are reviewed in PRs instead.
+- Dialect `snowflake`, jinja templater with dbt builtins, no max line length, no
+  large-file skip (the biggest staging model is linted too).
+
+House style the linter does not enforce (PR review does):
+
 - **One column per line** in select lists; trailing commas are fine if the linter allows, otherwise lead.
 - **Indent** CTE bodies one level.
 - **Explicit joins** — always state the join type (`left join`, `inner join`); never rely on implicit comma joins.
@@ -104,9 +121,9 @@ sqlfluff fix models/    # auto-fixes what it can
 - **Every model needs a `schema.yml` entry** with a description and at least primary-key tests (`not_null`, `unique`).
 - **Add a `group`** config for models that belong to a domain (see Ownership Zones in CONTRIBUTING).
 - **Use `accepted_values`** on categorical columns (ticket types, statuses, tiers).
-- **Use the custom generics** where they apply (`hashdiff_integrity`, `daily_volume_bounds`, `cardinality_change`, etc.) — see the README's testing strategy.
-- **Contracts** are enforced on dimension tables; if you change a dimension's shape, update the contract.
-- **Incremental models use merge**; set a sensible `unique_key` and respect the `append_new_columns` schema-change policy.
+- **Use the custom generics** where they apply (`hashdiff_integrity`, `daily_volume_bounds`, `cardinality_change`, etc.) — the library in `macros/generic_tests/` is available but not yet adopted by any `schema.yml`; adopt via `data_tests:` as sources are verified.
+- **Contracts** are **not yet enforced** — no model carries a `contract:` config today. Planned: enforce on dimension tables once shapes stabilize.
+- **Models that opt into incremental use merge**; set a sensible `unique_key` and respect the `append_new_columns` schema-change policy (both are opt-in defaults in `dbt_project.yml` — the layer defaults are views/tables, not incremental).
 - **Document new business logic with a test.** If a rule matters (no negative revenue, rates ≤ 100%), assert it.
 
 ---
