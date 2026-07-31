@@ -4,13 +4,13 @@
 -- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the
 -- Cortex project; use whichever path you have. Custom instructions and verified
 -- queries in the YAML deploy via the Cortex project path, not this DDL.
-CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.UNIFIED
+CREATE OR REPLACE SEMANTIC VIEW MARTS.UNIFIED
   TABLES (
-    date AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Conformed calendar/date dimension. The single shared axis every live fact reconciles against.',
-    dpr AS NS11MM_DW_DEV.MARTS.FCT_DAILY_PERFORMANCE PRIMARY KEY (DATE_KEY) COMMENT = 'Ticketing / DPR additive day-grain fact. One row per calendar day.',
-    retail_daily AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_DAILY PRIMARY KEY (DATE_KEY, KEY_FACILITY) COMMENT = 'Retail facility-grain fact. One row per day per selling area. Base for retail ratios.',
-    retail_category AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_PERFORMANCE PRIMARY KEY (DATE_KEY, KEY_FACILITY, CATEGORY_CODE) COMMENT = 'Retail category-grain fact. One row per day per selling area per product category.',
-    daily_scan AS NS11MM_DW_DEV.MARTS.FCT_DAILY_SCAN PRIMARY KEY (DATE_KEY, SEGMENT_KEY) COMMENT = 'Gate-scan fact. One row per day per market segment. Scan component only.'
+    date AS MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Conformed calendar/date dimension. The single shared axis every live fact reconciles against.',
+    dpr AS MARTS.FCT_DAILY_PERFORMANCE PRIMARY KEY (DATE_KEY) COMMENT = 'Ticketing / DPR additive day-grain fact. One row per calendar day.',
+    retail_daily AS MARTS.FCT_RETAIL_DAILY PRIMARY KEY (DATE_KEY, KEY_FACILITY) COMMENT = 'Retail facility-grain fact. One row per day per selling area. Base for retail ratios.',
+    retail_category AS MARTS.FCT_RETAIL_PERFORMANCE PRIMARY KEY (DATE_KEY, KEY_FACILITY, CATEGORY_CODE) COMMENT = 'Retail category-grain fact. One row per day per selling area per product category.',
+    daily_scan AS MARTS.FCT_DAILY_SCAN PRIMARY KEY (DATE_KEY, SEGMENT_KEY) COMMENT = 'Gate-scan fact. One row per day per market segment. Scan component only.'
   )
   RELATIONSHIPS (
     dpr_to_date AS dpr (DATE_KEY) REFERENCES date (DATE_KEY),
@@ -59,7 +59,6 @@ CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.UNIFIED
     dpr.total_mus_store_gross_profit AS SUM(MUS_STORE_GROSS_PROFIT) WITH SYNONYMS = ('museum store profit', 'store gross profit'),
     dpr.total_ticketing_donations AS SUM(TICKETING_DONATIONS) WITH SYNONYMS = ('ticketing donations'),
     dpr.total_donations AS SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MEM_DON) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MASK_DONATIONS) + SUM(DONATION_BOX) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CART_DONATION_ASK) + SUM(ECOM_DONATION_ASK) + SUM(CAFE1_DONATIONS) WITH SYNONYMS = ('total donations', 'all donations', 'donation revenue') COMMENT = 'Sum of every DPR donation line.',
-    dpr.avg_ticket_price AS SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0) WITH SYNONYMS = ('average ticket price', 'avg admission price') COMMENT = 'Non-additive: admission revenue / tickets sold, recomputed at the query grain.',
     dpr.mus_store_profit_per_visitor AS SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0) WITH SYNONYMS = ('store profit per visitor', 'per-cap store profit', 'store per cap') COMMENT = 'Non-additive: Museum Store GROSS PROFIT (not sales revenue) / museum visitors, recomputed at the query grain.',
     retail_daily.total_net_sales AS SUM(NET_SALES) WITH SYNONYMS = ('retail sales', 'net sales', 'store sales') COMMENT = 'Net retail sales (gross less returns and discounts) from CounterPoint POS, by selling area.',
     retail_daily.total_net_profit AS SUM(NET_PROFIT) WITH SYNONYMS = ('retail profit', 'net profit', 'store net profit'),

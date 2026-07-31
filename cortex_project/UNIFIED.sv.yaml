@@ -155,10 +155,6 @@ tables:
         synonyms: ["total donations", "all donations", "donation revenue"]
         description: Sum of every DPR donation line.
         expr: SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MEM_DON) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MASK_DONATIONS) + SUM(DONATION_BOX) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CART_DONATION_ASK) + SUM(ECOM_DONATION_ASK) + SUM(CAFE1_DONATIONS)
-      - name: avg_ticket_price
-        synonyms: ["average ticket price", "avg admission price"]
-        description: "Non-additive: admission revenue / tickets sold, recomputed at the query grain."
-        expr: SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)
       - name: mus_store_profit_per_visitor
         synonyms: ["store profit per visitor", "per-cap store profit", "store per cap"]
         description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) / museum visitors, recomputed at the query grain."

@@ -4,7 +4,10 @@ description: Attendance analytics model for museum operations. Covers daily scan
   real-time ticket capacity/utilization. Supports attendance budgeting, demand planning,
   and visitor flow analysis.
 tables:
-  - name: FCT_DAILY_SCAN
+  - name: DS
+    synonyms:
+      - daily scan
+      - fct_daily_scan
     base_table:
       database: NS11MM_DW_DEV
       schema: MARTS
@@ -56,7 +59,10 @@ tables:
         expr: SUM(PASSES_BUDGET)
         data_type: NUMBER
         description: Total forecast passes (DSR forecast). Added 1.6.0 for the Daily Scan Report forecast/variance columns.
-  - name: FCT_TICKET_DEMAND_FORECAST
+  - name: TD
+    synonyms:
+      - ticket demand
+      - fct_ticket_demand_forecast
     description: Ticket demand aggregated for forecasting and presale analysis
     base_table:
       database: NS11MM_DW_DEV
@@ -164,7 +170,10 @@ tables:
         expr: SUM(TOTAL_QUANTITY)
         data_type: NUMBER
         description: Total ticket quantity sold
-  - name: FCT_TICKET_AVAILABILITY
+  - name: TA
+    synonyms:
+      - ticket availability
+      - fct_ticket_availability
     description: Real-time ticket capacity and utilization by date/window/type
     base_table:
       database: NS11MM_DW_DEV
@@ -231,7 +240,10 @@ tables:
         expr: SUM(TICKETS_RESERVED)
         data_type: NUMBER
         description: Total tickets reserved
-  - name: FCT_TODAY_SALES_HOURLY
+  - name: TS
+    synonyms:
+      - today sales
+      - fct_today_sales_hourly
     description: Intraday retail sales by hour x facility (Today's Sales Report). Additive sales/profit/units/transactions. Added 1.6.0.
     base_table:
       database: NS11MM_DW_DEV
@@ -287,7 +299,11 @@ tables:
         expr: SUM(TRANSACTIONS)
         data_type: NUMBER
         description: Total intraday transactions (ticket count)
-  - name: DIM_DATE
+  - name: DT
+    synonyms:
+      - date
+      - dim_date
+      - calendar
     description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
       database: NS11MM_DW_DEV
@@ -351,7 +367,11 @@ tables:
       - name: DATE_DAY
         expr: DATE_DAY
         data_type: DATE
-  - name: SEED_SCAN_MARKET_SEGMENT
+  - name: SM
+    synonyms:
+      - segment
+      - market segment
+      - seed_scan_market_segment
     description: Market segment reference for scan/attendance classification
     base_table:
       database: NS11MM_DW_DEV
@@ -378,22 +398,22 @@ tables:
         data_type: VARCHAR
 relationships:
   - name: SCAN_TO_DATE
-    left_table: FCT_DAILY_SCAN
-    right_table: DIM_DATE
+    left_table: DS
+    right_table: DT
     join_type: many_to_one
     relationship_columns:
       - left_column: DATE_KEY
         right_column: DATE_KEY
   - name: SCAN_TO_SEGMENT
-    left_table: FCT_DAILY_SCAN
-    right_table: SEED_SCAN_MARKET_SEGMENT
+    left_table: DS
+    right_table: SM
     join_type: many_to_one
     relationship_columns:
       - left_column: SEGMENT_KEY
         right_column: SEGMENT_KEY
   - name: TODAY_SALES_TO_DATE
-    left_table: FCT_TODAY_SALES_HOURLY
-    right_table: DIM_DATE
+    left_table: TS
+    right_table: DT
     join_type: many_to_one
     relationship_columns:
       - left_column: DATE_KEY

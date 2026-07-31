@@ -16,6 +16,7 @@ clean-targets:
 
 vars:
   skip_circuit_breaker: false
+  seed_database: NS11MM_DW_DEV
 
 
 on-run-end:

@@ -26,7 +26,7 @@ tables:
           - average ticket price
           - avg admission price
         description: "Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days)."
-        expr: "SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)"
+        expr: "TOTAL_ADMISSION_REVENUE / TICKETS_SOLD"
         access_modifier: public_access
       - name: MUS_STORE_PROFIT_PER_VISITOR
         synonyms:
@@ -34,7 +34,7 @@ tables:
           - per-cap store profit
           - store per cap
         description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain."
-        expr: "SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)"
+        expr: "MUS_STORE_GROSS_PROFIT / MUS_ATTENDANCE"
         access_modifier: public_access
       - name: TOTAL_ADMISSION_REVENUE
         synonyms:

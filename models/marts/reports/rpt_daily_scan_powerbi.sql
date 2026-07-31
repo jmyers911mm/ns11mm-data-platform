@@ -21,14 +21,14 @@ select * from semantic_view(
     {{ source('attendance_semantic', 'ATTENDANCE') }}
 
     dimensions
-        dim_date.report_date                 as report_date,
-        dim_date.day_of_week_name            as day_name,
-        fct_daily_scan.segment_key           as segment_key,
-        fct_daily_scan.segment_name          as segment_name,
-        fct_daily_scan.is_commemoration_day  as is_commemoration_day
+        dt.report_date                 as report_date,
+        dt.day_of_week_name            as day_name,
+        ds.segment_key                 as segment_key,
+        ds.segment_name                as segment_name,
+        ds.is_commemoration_day        as is_commemoration_day
 
     metrics
-        fct_daily_scan.total_tickets_scanned as tickets_sold,
-        fct_daily_scan.total_passes_scanned  as passes_scanned,
-        fct_daily_scan.total_passes_budget   as forecast_tickets_sold
+        ds.total_tickets_scanned       as tickets_sold,
+        ds.total_passes_scanned        as passes_scanned,
+        ds.total_passes_budget         as forecast_tickets_sold
 )

@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+# Generate native Snowflake semantic-view DDL from the Cortex semantic view specs.
+# Co-authored with CoCo
 """
 Generate native Snowflake semantic-view DDL from the Cortex semantic view specs.
 
@@ -9,9 +10,9 @@ GENERATED ARTIFACTS rendered from those specs — never hand-edit them; edit the
 .sv.yaml and rerun this script.
 
 Usage:
-    python3 scripts/generate_semantic_view_ddl.py                      # all cortex_project/*.sv.yaml
+    python3 scripts/generate_semantic_view_ddl.py                      # all cortex_project/*.sv.yaml (schema-qualified, no DB prefix)
     python3 scripts/generate_semantic_view_ddl.py cortex_project/DPR.sv.yaml
-    python3 scripts/generate_semantic_view_ddl.py --database NS11MM_DW_PROD
+    python3 scripts/generate_semantic_view_ddl.py --database NS11MM_DW_PROD  # explicit DB prefix
     python3 scripts/generate_semantic_view_ddl.py --check              # exit 1 if any .sql drifted
 
 Notes:
@@ -62,8 +63,10 @@ def comment_sql(item: dict) -> str:
     return f" COMMENT = {q(desc)}"
 
 
-def fqn(base_table: dict, database: str) -> str:
-    return f"{database}.{base_table['schema']}.{base_table['table']}"
+def fqn(base_table: dict, database: str | None) -> str:
+    if database:
+        return f"{database}.{base_table['schema']}.{base_table['table']}"
+    return f"{base_table['schema']}.{base_table['table']}"
 
 
 def render_member(table_name: str, item: dict) -> str:
@@ -72,10 +75,11 @@ def render_member(table_name: str, item: dict) -> str:
     return f"    {table_name}.{item['name']} AS {expr}{synonyms_sql(item)}{comment_sql(item)}"
 
 
-def build(model: dict, database: str, source_rel: str) -> str:
+def build(model: dict, database: str | None, source_rel: str) -> str:
     tables = model["tables"]
     schema = tables[0]["base_table"]["schema"]
     view_name = model["name"]
+    view_fqn = f"{database}.{schema}.{view_name}" if database else f"{schema}.{view_name}"
 
     lines = []
     lines.append("-- GENERATED FILE -- do not edit by hand.")
@@ -84,7 +88,7 @@ def build(model: dict, database: str, source_rel: str) -> str:
     lines.append("-- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the")
     lines.append("-- Cortex project; use whichever path you have. Custom instructions and verified")
     lines.append("-- queries in the YAML deploy via the Cortex project path, not this DDL.")
-    lines.append(f"CREATE OR REPLACE SEMANTIC VIEW {database}.{schema}.{view_name}")
+    lines.append(f"CREATE OR REPLACE SEMANTIC VIEW {view_fqn}")
 
     # ---- TABLES ----
     tbl_entries = []
@@ -165,7 +169,8 @@ def main() -> int:
                     help="One or more .sv.yaml files (default: all in cortex_project/, "
                          "skipping disabled/).")
     ap.add_argument("--database", default=None,
-                    help="Override the target database (default: from each YAML's base_table).")
+                    help="Explicit database qualifier for all DDL references. "
+                         "Default: omit (schema-qualified only; resolves from session).")
     ap.add_argument("--check", action="store_true",
                     help="Exit non-zero if any committed .sql differs from freshly "
                          "generated output (nothing is written).")
@@ -179,7 +184,7 @@ def main() -> int:
     stale = []
     for yaml_path in targets:
         model = load_model(yaml_path)
-        database = args.database or model["tables"][0]["base_table"]["database"]
+        database = args.database  # None when omitted → schema-qualified (session DB)
         try:
             source_rel = yaml_path.relative_to(REPO).as_posix()
         except ValueError:

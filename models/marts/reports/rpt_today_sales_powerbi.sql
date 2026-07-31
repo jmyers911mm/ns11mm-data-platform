@@ -21,15 +21,15 @@ select * from semantic_view(
     {{ source('attendance_semantic', 'ATTENDANCE') }}
 
     dimensions
-        dim_date.report_date                    as report_date,
-        dim_date.day_of_week_name               as day_name,
-        fct_today_sales_hourly.hour_of_day      as hour_of_day,
-        fct_today_sales_hourly.key_facility     as key_facility,
-        fct_today_sales_hourly.area_name        as area_name
+        dt.report_date                    as report_date,
+        dt.day_of_week_name               as day_name,
+        ts.hour_of_day                    as hour_of_day,
+        ts.key_facility                   as key_facility,
+        ts.area_name                      as area_name
 
     metrics
-        fct_today_sales_hourly.total_today_sales        as sales,
-        fct_today_sales_hourly.total_today_profit       as profit,
-        fct_today_sales_hourly.total_today_units        as units,
-        fct_today_sales_hourly.total_today_transactions as transactions
+        ts.total_today_sales              as sales,
+        ts.total_today_profit             as profit,
+        ts.total_today_units              as units,
+        ts.total_today_transactions       as transactions
 )

@@ -4,12 +4,12 @@
 -- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the
 -- Cortex project; use whichever path you have. Custom instructions and verified
 -- queries in the YAML deploy via the Cortex project path, not this DDL.
-CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.RETAIL
+CREATE OR REPLACE SEMANTIC VIEW MARTS.RETAIL
   TABLES (
-    FCT_RETAIL_PERFORMANCE AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_PERFORMANCE COMMENT = 'Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.',
-    FCT_RETAIL_DAILY AS NS11MM_DW_DEV.MARTS.FCT_RETAIL_DAILY COMMENT = 'Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups of sales/profit/units/donations. This is the single-fact projection the Retail Performance Power BI wrapper (RPT_RETAIL_POWERBI) reads.',
-    DIM_DATE AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)',
-    SEED_FACILITY_AREA AS NS11MM_DW_DEV.SEEDS.SEED_FACILITY_AREA PRIMARY KEY (KEY_FACILITY) COMMENT = 'Retail selling-area facility reference'
+    FCT_RETAIL_PERFORMANCE AS MARTS.FCT_RETAIL_PERFORMANCE COMMENT = 'Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.',
+    FCT_RETAIL_DAILY AS MARTS.FCT_RETAIL_DAILY COMMENT = 'Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups of sales/profit/units/donations. This is the single-fact projection the Retail Performance Power BI wrapper (RPT_RETAIL_POWERBI) reads.',
+    DIM_DATE AS MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)',
+    SEED_FACILITY_AREA AS SEEDS.SEED_FACILITY_AREA PRIMARY KEY (KEY_FACILITY) COMMENT = 'Retail selling-area facility reference'
   )
   RELATIONSHIPS (
     RETAIL_PERF_TO_DATE AS FCT_RETAIL_PERFORMANCE (DATE_KEY) REFERENCES DIM_DATE (DATE_KEY),

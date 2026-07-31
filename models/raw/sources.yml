@@ -4,7 +4,7 @@ sources:
 
   - name: gateway_seed
     description: Gateway Ticketing Galaxy — seed data from Galaxy SQL Server export
-    database: "{{ target.database }}"
+    database: "{{ var('seed_database') }}"
     schema: RAW
     loaded_at_field: _loaded_at
     freshness:
@@ -46,7 +46,7 @@ sources:
 
   - name: counterpoint_seed
     description: NCR CounterPoint POS — seed data from SQL Server export
-    database: "{{ target.database }}"
+    database: "{{ var('seed_database') }}"
     schema: RAW
     loaded_at_field: _loaded_at
     freshness:
@@ -66,7 +66,7 @@ sources:
 
   - name: report_estate_seed
     description: Report-estate 911dw tables loaded from stage (attendance, today's sales, ecommerce)
-    database: "{{ target.database }}"
+    database: "{{ var('seed_database') }}"
     schema: RAW
     loaded_at_field: _loaded_at
     freshness:

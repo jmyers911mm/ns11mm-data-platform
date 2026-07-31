@@ -4,10 +4,10 @@
 -- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the
 -- Cortex project; use whichever path you have. Custom instructions and verified
 -- queries in the YAML deploy via the Cortex project path, not this DDL.
-CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.DPR
+CREATE OR REPLACE SEMANTIC VIEW MARTS.DPR
   TABLES (
-    DP AS NS11MM_DW_DEV.MARTS.FCT_DAILY_PERFORMANCE WITH SYNONYMS = ('daily performance', 'DPR fact', 'daily numbers') COMMENT = 'One row per calendar day of DPR additive measures.',
-    DT AS NS11MM_DW_DEV.MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) WITH SYNONYMS = ('calendar', 'date dimension') COMMENT = 'Calendar date spine with the September 11 commemoration flag. Calendar attributes only — no fiscal columns yet; the fiscal calendar is pending Data & AI Committee definition.'
+    DP AS MARTS.FCT_DAILY_PERFORMANCE WITH SYNONYMS = ('daily performance', 'DPR fact', 'daily numbers') COMMENT = 'One row per calendar day of DPR additive measures.',
+    DT AS MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) WITH SYNONYMS = ('calendar', 'date dimension') COMMENT = 'Calendar date spine with the September 11 commemoration flag. Calendar attributes only — no fiscal columns yet; the fiscal calendar is pending Data & AI Committee definition.'
   )
   RELATIONSHIPS (
     DPR_TO_DATE AS DP (DATE_KEY) REFERENCES DT (DATE_KEY)
@@ -29,8 +29,6 @@ CREATE OR REPLACE SEMANTIC VIEW NS11MM_DW_DEV.MARTS.DPR
     DT.WEEK_OF_YEAR AS WEEK_OF_YEAR WITH SYNONYMS = ('week', 'week number') COMMENT = 'Week of the year.'
   )
   METRICS (
-    DP.AVG_TICKET_PRICE AS SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0) WITH SYNONYMS = ('average ticket price', 'avg admission price') COMMENT = 'Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days).',
-    DP.MUS_STORE_PROFIT_PER_VISITOR AS SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0) WITH SYNONYMS = ('store profit per visitor', 'per-cap store profit', 'store per cap') COMMENT = 'Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain.',
     DP.TOTAL_ADMISSION_REVENUE AS SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) WITH SYNONYMS = ('total admission revenue') COMMENT = 'Ticket revenue plus pass revenue.',
     DP.TOTAL_ASK_EDUCATOR_REVENUE AS SUM(ASK_EDUCATOR_REVENUE) WITH SYNONYMS = ('ask an educator revenue', 'ask educator revenue') COMMENT = 'Ask An Educator program revenue.',
     DP.TOTAL_AUDIO_REVENUE AS SUM(AUDIO_TOUR_HEADSET) + SUM(MEM_AUDIO_GUIDE_REVENUE) WITH SYNONYMS = ('audio guide revenue', 'all audio revenue') COMMENT = 'Museum audio/headset plus memorial audio guide revenue.',
