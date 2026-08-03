@@ -37,8 +37,8 @@ models:
       # presale_bucket + purchase_channel. The in-model GROUP BY spans 14
       # columns, so 5-column uniqueness is asserted (not enforced) — warn per
       # the inherited/unverified-grain rule; promote once confirmed on live data.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [entry_date, plu, ticket_type_name, presale_bucket, purchase_channel]
+      - unique:
+          column_name: "entry_date || '~' || plu || '~' || ticket_type_name || '~' || presale_bucket || '~' || purchase_channel"
           name: fct_ticket_demand_forecast_grain_unique
           config: { severity: warn }
     columns:
@@ -120,8 +120,8 @@ models:
         description: "Sale minus return amount, non-donation lines."
         data_tests: [not_null]
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility, category_code]
+      - unique:
+          column_name: "date_key || '~' || key_facility || '~' || category_code"
           name: fct_retail_performance_grain_unique
           config:
             where: "category_code is not null"
@@ -146,8 +146,8 @@ models:
         description: "FK to seed_facility_area.key_facility."
         data_tests: [not_null]
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
           name: fct_retail_daily_grain_unique
 
   - name: fct_daily_performance
@@ -205,8 +205,8 @@ models:
       - name: tickets_sold
         data_tests: [not_null]
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, segment_key]
+      - unique:
+          column_name: "date_key || '~' || segment_key"
           name: fct_daily_scan_grain_unique
 
   - name: fct_today_sales_hourly
@@ -217,8 +217,8 @@ models:
       ATTENDANCE semantic view / rpt_today_sales_powerbi.
     data_tests:
       # Grain enforced by the in-model GROUP BY — error.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, hour_of_day, key_facility]
+      - unique:
+          column_name: "date_key || '~' || hour_of_day || '~' || key_facility"
           name: fct_today_sales_hourly_grain_unique
     columns:
       - name: date_key
@@ -279,8 +279,8 @@ models:
       - name: key_facility
         data_tests: [not_null]
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
           name: fct_budget_admissions_forecasts_grain_unique
           # Inherited seed grain -> warn (severity rule; matches the int twin)
           config: { severity: warn }
@@ -304,8 +304,8 @@ models:
       - name: key_facility
         data_tests: [not_null]
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
           name: fct_budget_retail_forecasts_grain_unique
           # Inherited seed grain -> warn (severity rule; matches the int twin)
           config: { severity: warn }

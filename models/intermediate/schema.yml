@@ -164,8 +164,8 @@ models:
       mapping. Line grain (one row per ps_tkt_hist_lin sale/return line).
       Emits facility_group / is_donation for downstream DPR marts.
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [doc_id, line_seq_no]
+      - unique:
+          column_name: "doc_id || '~' || line_seq_no"
           config: { severity: warn }
     columns:
       - name: doc_id
@@ -244,8 +244,8 @@ models:
       Feeds fct_ticket_availability and ml_ticket_demand_features.
     data_tests:
       # Grain enforced by the in-model GROUP BY (entry_date, plu) — error.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [entry_date, ticket_type_id]
+      - unique:
+          column_name: "entry_date || '~' || ticket_type_id"
     columns:
       - name: inventory_key
         description: "PK. Surrogate for the entry_date + ticket_type_id grain."
@@ -265,8 +265,8 @@ models:
     description: "Retail transaction counts per business_date x key_facility."
     data_tests:
       # Grain enforced by the in-model GROUP BY — error.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
     columns:
       - name: date_key
         data_tests:
@@ -281,8 +281,8 @@ models:
       # Grain enforced by the in-model GROUP BY (date, facility, category) — error.
       # key_facility added: the model grain is date x facility x category, so the
       # previous [date_key, category_code] combination under-specified the grain.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility, category_code]
+      - unique:
+          column_name: "date_key || '~' || key_facility || '~' || category_code"
     columns:
       - name: date_key
         data_tests:
@@ -295,8 +295,8 @@ models:
     description: "Visitor counts and ecom orders per business_date x key_facility."
     data_tests:
       # Grain enforced in-model (grouped CTEs full-outer-joined on the grain keys) — error.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
     columns:
       - name: date_key
         data_tests:
@@ -345,8 +345,8 @@ models:
     data_tests:
       # Grain inherited from the Excel-shaped budget seed (not enforced
       # in-model) — warn per the severity rule.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
           name: int_budget_admissions_forecasts_grain_unique
           config: { severity: warn }
 
@@ -363,7 +363,7 @@ models:
     data_tests:
       # Grain inherited from the Excel-shaped budget seed (not enforced
       # in-model) — warn per the severity rule.
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_key, key_facility]
+      - unique:
+          column_name: "date_key || '~' || key_facility"
           name: int_budget_retail_forecasts_grain_unique
           config: { severity: warn }

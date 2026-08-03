@@ -214,8 +214,8 @@ models:
     data_tests:
       # Inherited from the semantic-view projection -> warn (severity rule;
       # matches the warn'd uniqueness on the DPR sibling wrapper)
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [report_date, key_facility]
+      - unique:
+          column_name: "report_date || '~' || key_facility"
           name: rpt_retail_powerbi_grain_unique
           config: { severity: warn }
     columns:
@@ -362,8 +362,8 @@ models:
       Visitor-based KPIs NULL until Sensource lands.
     data_tests:
       # Grain enforced by the in-model GROUP BY -> error (severity rule)
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [calendar_year, calendar_month, key_facility]
+      - unique:
+          column_name: "calendar_year || '~' || calendar_month || '~' || key_facility"
           name: rpt_monthly_retail_kpi_grain_unique
 
   - name: rpt_retail_carts_analysis
@@ -395,8 +395,8 @@ models:
       stg_ecommerce__website_recurring.
     data_tests:
       # Grain enforced by the in-model GROUP BY -> error (severity rule)
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [month_of_year, revenue_type, revenue_year]
+      - unique:
+          column_name: "month_of_year || '~' || revenue_type || '~' || revenue_year"
           name: rpt_website_commerce_grain_unique
 
   # ─── Reports 2–4 serving stacks (2026-07-31): Today's Sales, Daily Scan,

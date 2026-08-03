@@ -98,8 +98,8 @@ tables:
         expr: SUM(PASS_REVENUE)
       - name: total_admission_revenue
         synonyms: ["total admission revenue"]
-        description: Governed admission-revenue numerator (ticket + pass revenue), summed from the fct column — never re-derived from components.
-        expr: SUM(TOTAL_ADMISSION_REVENUE)
+        description: Governed admission-revenue numerator (ticket + pass revenue). Definition of record is the fct column TOTAL_ADMISSION_REVENUE; components restated here because the metric name shadows the same-named column (engine limitation) — guarded by assert_sv_admission_revenue_matches_fct on the DPR twin.
+        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
       - name: total_museum_attendance
         synonyms: ["museum attendance", "museum visitors"]
         description: Museum attendance (scanned GA component; full Sensource blend not yet staged).

@@ -25,25 +25,30 @@ tables:
         synonyms:
           - average ticket price
           - avg admission price
-        description: "Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days)."
-        expr: "SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)"
+        description: "Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days). Authored metric-over-metric per Snowflake semantic-view rules; identical to SUM(TOTAL_ADMISSION_REVENUE)/NULLIF(SUM(TICKETS_SOLD),0)."
+        expr: "TOTAL_ADMISSION_REVENUE / NULLIF(TOTAL_TICKETS_SOLD, 0)"
         access_modifier: public_access
       - name: MUS_STORE_PROFIT_PER_VISITOR
         synonyms:
           - store profit per visitor
           - per-cap store profit
           - store per cap
-        description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain."
-        expr: "SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)"
+        description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain. Authored metric-over-metric per Snowflake semantic-view rules; identical to the SUM/SUM ratio."
+        expr: "TOTAL_MUS_STORE_GROSS_PROFIT / NULLIF(TOTAL_MUSEUM_ATTENDANCE, 0)"
         access_modifier: public_access
       - name: TOTAL_ADMISSION_REVENUE
         synonyms:
           - total admission revenue
         description: >-
-          Governed admission-revenue numerator (ticket + pass revenue) — defined ONCE
-          as the TOTAL_ADMISSION_REVENUE column on FCT_DAILY_PERFORMANCE and summed
-          here; never re-derived from components.
-        expr: SUM(TOTAL_ADMISSION_REVENUE)
+          Governed admission-revenue numerator (ticket + pass revenue). The
+          definition of record is the TOTAL_ADMISSION_REVENUE column on
+          FCT_DAILY_PERFORMANCE; this metric MUST equal SUM of that column.
+          ENGINE LIMITATION: a semantic-view metric name shadows the same-named
+          base column in every expression (referencing it is invalid or cyclic),
+          so the components are restated here. Drift is guarded by the dbt test
+          assert_sv_admission_revenue_matches_fct — if the fct definition ever
+          changes, this expression must change with it.
+        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
         access_modifier: public_access
       - name: TOTAL_ASK_EDUCATOR_REVENUE
         synonyms:

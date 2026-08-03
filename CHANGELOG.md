@@ -4,6 +4,73 @@ All notable changes to the ns11mm-data-platform project will be documented in th
 
 This is the production repository (`ns11mm/ns11mm-data-platform`).
 
+## [7.11.2] — 2026-07-31 — Patch: Semantic-View Name Shadowing (supersedes 7.11.1's alias)
+
+7.11.1's fact alias failed with "Cyclic reference of expressions is not allowed:
+[DP.ADMISSION_REVENUE_VALUE, DP.TOTAL_ADMISSION_REVENUE]" — proving the full rule: a
+semantic-view **metric name shadows the same-named base column in EVERY expression in
+the view** (facts included), so no expression can reach the column while the metric
+carries its name. The metric name is public (Power BI wrapper, Cortex queries), so the
+name stays and the view restates the components — with a dbt reconciliation test as the
+drift guard the review originally wanted.
+
+### Fixed
+
+- **DPR.sv.yaml** — fact alias removed; `TOTAL_ADMISSION_REVENUE` authored as
+  `SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)` with the engine limitation and the guard
+  test documented in the metric description. `AVG_TICKET_PRICE` stays metric-over-metric
+  (unchanged from 7.11.1 — that part deployed correctly).
+- **UNIFIED.sv.yaml** — `total_admission_revenue` reverted to the component sum for the
+  same reason (identifiers are case-insensitive, so its lowercase metric name collides
+  with the column too; 7.8.0's `SUM(TOTAL_ADMISSION_REVENUE)` there would have failed
+  the same way on deploy).
+- **New test `assert_sv_admission_revenue_matches_fct`** (error): day-grain equality
+  between `rpt_dpr_powerbi.admission_revenue` (via the deployed semantic view) and the
+  governed `fct_daily_performance.total_admission_revenue`. This is the enforcement
+  that replaces "sum the column": if the fct definition ever changes, this test fails
+  the same day and points at the two sv.yamls.
+- Both DDLs regenerated; `--check` green.
+
+### Migration notes
+
+Re-run `scripts/deploy_semantic_view_dpr.sql` and `deploy_semantic_view_unified.sql`
+(after `USE DATABASE <target>`) per database. Then `dbt test --select
+assert_sv_admission_revenue_matches_fct` to confirm the guard passes.
+
+---
+
+## [7.11.1] — 2026-07-31 — Patch: DPR Semantic View Deploy Failure
+
+`CREATE SEMANTIC VIEW` for DPR failed with "Invalid metric definition for
+'DP.AVG_TICKET_PRICE': A metric must directly refer to another aggregate-level
+expression ... without an aggregate." Root cause: in 7.8.0 the ratio was authored as
+`SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)`, but
+`TOTAL_ADMISSION_REVENUE` is BOTH a fct column and a metric name in the DPR view — and
+inside metric expressions Snowflake resolves the name to the METRIC, producing an
+aggregate-of-an-aggregate.
+
+### Fixed (DPR.sv.yaml + regenerated deploy_semantic_view_dpr.sql)
+
+- New fact **`ADMISSION_REVENUE_VALUE`** — row-grain alias of the governed
+  `TOTAL_ADMISSION_REVENUE` column, so the same-named metric can sum it unambiguously:
+  `TOTAL_ADMISSION_REVENUE AS SUM(ADMISSION_REVENUE_VALUE)`. Still the
+  defined-once column; still never re-derived from components.
+- **`AVG_TICKET_PRICE`** authored metric-over-metric (Snowflake's required form for
+  ratios): `TOTAL_ADMISSION_REVENUE / NULLIF(TOTAL_TICKETS_SOLD, 0)` — mathematically
+  identical to the locked ratio-of-sums, recomputed at query grain.
+- **`MUS_STORE_PROFIT_PER_VISITOR`** same form:
+  `TOTAL_MUS_STORE_GROSS_PROFIT / NULLIF(TOTAL_MUSEUM_ATTENDANCE, 0)`.
+  (UNIFIED's SUM-of-columns form stays as-is — its metric names don't collide with
+  column names, so it deploys; both forms are the same ratio-of-sums.)
+- `--check` green; 49 metrics.
+
+### Migration notes
+
+Re-run `scripts/deploy_semantic_view_dpr.sql` (after `USE DATABASE <target>`) in every
+database you deploy to. No dbt model changes.
+
+---
+
 ## [7.11.0] — 2026-07-31 — Hygiene & Docs Sweep
 
 Closes the remaining medium/low findings from the post-build review.

@@ -164,15 +164,15 @@ models:
   - name: stg_counterpoint__todays_retail
     description: "Intraday CounterPoint retail tickets per store_id x doc_id x hour_of_day."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [store_id, doc_id, hour_of_day]
+      - unique:
+          column_name: "store_id || '~' || doc_id || '~' || hour_of_day"
           config: { severity: warn }
 
   - name: stg_counterpoint__todays_retail_product
     description: "Intraday CounterPoint retail lines per store_id x doc_id x item_no x hour_of_day."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [store_id, doc_id, item_no, hour_of_day]
+      - unique:
+          column_name: "store_id || '~' || doc_id || '~' || item_no || '~' || hour_of_day"
           config: { severity: warn }
 
   - name: stg_dpr__daily_metrics_wide
@@ -186,15 +186,15 @@ models:
   - name: stg_ecommerce__website_recurring
     description: "Recurring online revenue per order_id x sku."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [order_id, sku]
+      - unique:
+          column_name: "order_id || '~' || sku"
           config: { severity: warn }
 
   - name: stg_gateway__passes_by_hour
     description: "Hourly gate passes per business_date x hour_of_day."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [business_date, hour_of_day]
+      - unique:
+          column_name: "business_date || '~' || hour_of_day"
           config: { severity: warn }
 
   - name: stg_sensource__attendance
@@ -208,8 +208,8 @@ models:
   - name: stg_sensource__visitors
     description: "Sensource visitor counts per business_date x key_facility x acp_id."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [business_date, key_facility, acp_id]
+      - unique:
+          column_name: "business_date || '~' || key_facility || '~' || acp_id"
           config: { severity: warn }
 
   - name: stg_shopify__cost_values
@@ -223,15 +223,15 @@ models:
   - name: stg_shopify__discounts
     description: "Shopify discounts per order_id x discount_code."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [order_id, discount_code]
+      - unique:
+          column_name: "order_id || '~' || discount_code"
           config: { severity: warn }
 
   - name: stg_shopify__orders
     description: "Shopify order lines per order_id x order_line_id."
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [order_id, order_line_id]
+      - unique:
+          column_name: "order_id || '~' || order_line_id"
           config: { severity: warn }
 
   - name: stg_wifi__audience
@@ -240,6 +240,6 @@ models:
       mac_address x logged_at. Contains email_address and names — no value-level
       PII tests.
     data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [mac_address, logged_at]
+      - unique:
+          column_name: "mac_address || '~' || logged_at"
           config: { severity: warn }

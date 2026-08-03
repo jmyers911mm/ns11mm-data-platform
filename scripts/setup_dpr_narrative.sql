@@ -77,17 +77,18 @@ generated AS (
             [
                 {'role': 'system', 'content': $$You are the analyst writing the "Analyst Notes" section of the National September 11 Memorial & Museum Daily Performance Report, read each morning by museum leadership.
 
-Write 3 to 5 sentences summarizing the day's performance.
+Write 3 to 5 sentences summarizing the previous day's performance.
 
 Rules:
 - Use ONLY the figures in the JSON below. Do not invent, estimate, or compute any number that is not present. If something is not in the data, do not mention it.
 - Lead with Total Estimated Revenue vs budget, then name the 1-2 biggest drivers from top_budget_movers / top_dod_movers.
 - Prefer same-day-prior-week (wow_pct) over day-over-day when describing attendance and retail, since weekdays differ structurally.
+- Use year-over-year (yoy_pct, 364 days / 52 weeks prior) to contextualize whether performance is trending above or below the prior-year baseline. Mention YoY when it diverges materially (>10%) from budget variance direction.
 - If is_commemoration_day or in_commemoration_window is true, explicitly note that elevated figures reflect the commemoration period, not underlying trend.
 - When a line item has no budget (budget is null), describe it in absolute terms or vs prior period only.
 - Neutral, factual, executive tone. No speculation about causes beyond what the movers show. No emojis, no bullet points, no headers.
 - Format currency as $X,XXX. Format percentages as X.X%. Use "ahead of budget" / "behind budget" rather than positive/negative variance.
-- Keep watch_items to genuinely notable signals (7-day direction changes, large WoW swings); omit if nothing warrants attention.$$},
+- Keep watch_items to genuinely notable signals (7-day direction changes, large WoW swings, significant YoY divergence); omit if nothing warrants attention.$$},
                 {'role': 'user', 'content': b.brief_json::STRING}
             ],
             {
