@@ -8,9 +8,9 @@ __pycache__/
 SCRATCHPAD.sql
 .temp/
 
-# Never commit connection profiles or credentials.
-# Use profiles.yml.template -> ~/.dbt/profiles.yml (see docs/ONBOARDING.md).
-profiles.yml
-!profiles.yml.template
+# Never commit credentials. The ROOT profiles.yml is committed BY DESIGN and
+# is credential-free (dbt Projects on Snowflake reads it; execution uses the
+# session identity). Local/CI identity lives in profiles.yml.template ->
+# ~/.dbt/profiles.yml (see docs/ONBOARDING.md) — never commit a filled-in copy.
 *.pem
 *.p8

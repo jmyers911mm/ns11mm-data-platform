@@ -1,0 +1,58 @@
+# dbt connection profile TEMPLATE for ns11mm-data-platform
+# ---------------------------------------------------------------------------
+# Copy to ~/.dbt/profiles.yml (NOT the repo root) and fill in via env vars.
+# The real profiles.yml is gitignored and must never be committed — it holds
+# your identity and, in CI, credentials. See docs/ONBOARDING.md.
+#
+# Required environment variables:
+#   SNOWFLAKE_ACCOUNT     e.g. <org>-<account> or <locator>.<region>.azure
+#   SNOWFLAKE_USER        your @911memorial.org login
+#   DBT_DEV_DATABASE      your personal dev DB, e.g. NS11MM_DW_DEV_<NAME>
+#                         (created via scripts/setup_developer_workspace.sql)
+# Interactive developers authenticate via SSO (externalbrowser).
+# CI / scheduled runs use key-pair or password auth from secrets — see
+# .github/workflows/dbt-ci.yml.
+
+ns11mm_data_platform:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'unused') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'unused') }}"
+      authenticator: "{{ env_var('SNOWFLAKE_AUTHENTICATOR', 'snowflake') }}"
+      role: TRANSFORMER_ROLE
+      warehouse: DBT_DEV_WH
+      database: NS11MM_DW_DEV_JMYERS
+      schema: MARTS
+      threads: 4
+    dev_shared:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'unused') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'unused') }}"
+      authenticator: externalbrowser
+      role: DEPLOY_DEV_ROLE
+      warehouse: DBT_DEV_WH
+      database: NS11MM_DW_DEV
+      schema: MARTS
+      threads: 4
+    ci:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'unused') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'unused') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'unused') }}"
+      role: TRANSFORMER_ROLE
+      warehouse: DBT_DEV_WH
+      database: "{{ env_var('DBT_CI_DATABASE', 'NS11MM_DW_DEV_CI') }}"
+      schema: MARTS
+      threads: 4
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'unused') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'unused') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'unused') }}"
+      role: DEPLOY_PROD_ROLE
+      warehouse: DBT_PROD_WH
+      database: NS11MM_DW_PROD
+      schema: MARTS
+      threads: 8
