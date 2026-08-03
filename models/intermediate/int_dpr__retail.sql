@@ -42,19 +42,19 @@ daily as (
 
         -- Museum Store gross profit (non-donation summary category)
         sum(case when r.facility_group = 'museum_store' and not r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as mus_store_sales,
+                 then r.net_amount else 0 end)          as mus_store_sales,
         sum(case when r.facility_group = 'museum_store' and not r.is_donation
                  then r.sale_cost else 0 end)                              as mus_store_cost,
 
         -- Memorial Carts gross profit (non-donation)
         sum(case when r.facility_group = 'memorial_carts' and not r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as mem_cart_sales,
+                 then r.net_amount else 0 end)          as mem_cart_sales,
         sum(case when r.facility_group = 'memorial_carts' and not r.is_donation
                  then r.sale_cost else 0 end)                              as mem_cart_cost,
 
         -- Cafe gross profit (non-donation)
         sum(case when r.facility_group = 'museum_cafe' and not r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as cafe1_sales,
+                 then r.net_amount else 0 end)          as cafe1_sales,
         sum(case when r.facility_group = 'museum_cafe' and not r.is_donation
                  then r.sale_cost else 0 end)                              as cafe1_cost,
 
@@ -63,15 +63,15 @@ daily as (
         -- previously carved out of the carts but aggregated NOWHERE, so the
         -- mart undercounted mem_audio_guide_revenue (Galaxy %MAG% only).
         sum(case when r.facility_group = 'mag_cart' and not r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as mag_cp_revenue,
+                 then r.net_amount else 0 end)          as mag_cp_revenue,
 
         -- MUS AG profit + units for the audio_tour_headset roll-up
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as musag_sales,
+                 then r.net_amount else 0 end)          as musag_sales,
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
                  then r.sale_cost else 0 end)                              as musag_cost,
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
-                 then r.sale_quantity + r.return_quantity else 0 end)      as musag_units,
+                 then r.net_quantity else 0 end)      as musag_units,
 
         -- Retail-sourced donations (summary category 6 -> is_donation), donation
         -- SKUs resolved via seed_retail_donation_item.
@@ -79,31 +79,31 @@ daily as (
         -- double-count mus_exit_donations (legacy item list excludes 886).
         sum(case when r.facility_group = 'museum_store' and r.is_donation
                   and coalesce(di.donation_line, '') <> 'mus_exit'
-                 then r.sale_amount + r.return_amount else 0 end)          as mus_store_donations,
+                 then r.net_amount else 0 end)          as mus_store_donations,
         -- Cart ask narrowed to the Donation Ask item (legacy 483 at stores
         -- 11-14); the former all-cat-6 filter would double-count the plaza
         -- donation box now measured separately as donation_box.
         sum(case when r.facility_group = 'memorial_carts' and r.is_donation
                   and di.donation_line = 'cart_ask'
-                 then r.sale_amount + r.return_amount else 0 end)          as cart_donation_ask,
+                 then r.net_amount else 0 end)          as cart_donation_ask,
         sum(case when r.facility_group = 'museum_store' and di.donation_line = 'mus_exit'
-                 then r.sale_amount + r.return_amount else 0 end)          as mus_exit_donations,
+                 then r.net_amount else 0 end)          as mus_exit_donations,
         sum(case when r.facility_group = 'ecommerce' and r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as ecom_donation_ask,
+                 then r.net_amount else 0 end)          as ecom_donation_ask,
         sum(case when r.facility_group = 'museum_cafe' and r.is_donation
-                 then r.sale_amount + r.return_amount else 0 end)          as cafe1_donations,
+                 then r.net_amount else 0 end)          as cafe1_donations,
 
         -- Mask donations: CounterPoint item 200704 (legacy dim_item_descr 4618).
         -- Re-pointed from the Gateway item journal 2026-07-08; correct source
         -- per legacy spec. Dormant since 2021 so zeros are expected.
         sum(case when di.donation_line = 'mask'
-                 then r.sale_amount + r.return_amount else 0 end)          as mask_donations,
+                 then r.net_amount else 0 end)          as mask_donations,
 
         -- Plaza donation box: CounterPoint item 101165 (legacy dim_item_descr
         -- 3375). Re-pointed from the Gateway item journal 2026-07-08;
         -- verified live (PLAZA DONATION BOX, $2,059 net Jun-Jul 2026).
         sum(case when di.donation_line = 'plaza_box'
-                 then r.sale_amount + r.return_amount else 0 end)          as donation_box
+                 then r.net_amount else 0 end)          as donation_box
 
     from retail r
     left join donation_item di

@@ -10,25 +10,16 @@
 --
 -- Replaces legacy 911dw.fact_retail. ADR-004: additive measures only; ratios
 -- and per-cap metrics are computed in rpt_retail_performance.
--- Budget is left-joined from a stub seed (empty today) to preserve the seam
--- per ADR-005 (budget source gated).
+-- BUDGET (7.9.0): the retail forecast is FACILITY-grain; repeating it on every
+-- category row multiplied the budget under any category rollup. The category
+-- seam is therefore NULL by design, and the single budget surface is the
+-- fct_budget_retail_forecasts -> rpt_retail_budget_daily chain (one budget,
+-- one chain). A category-grain forecast, if one ever lands, re-opens the seam.
 
 {{ config(materialized='table') }}
 
 with perf as (
     select * from {{ ref('int_retail__performance') }}
-),
-
-budget as (
-    -- Real retail budget feed (fact_retail_forecasts): one row per facility/day
-    -- with metric columns. revenue_budget -> net_sales seam, profit_budget ->
-    -- net_profit seam. Already 1:1 at facility/day.
-    select
-        business_date                       as date_key,
-        key_facility,
-        revenue_budget                      as net_sales_budget,
-        profit_budget                       as net_profit_budget
-    from {{ ref('stg_budget__retail') }}
 ),
 
 final as (
@@ -48,14 +39,14 @@ final as (
         p.cost_of_goods,
         p.donations,
 
-        -- Budget seam (null until staged)
-        b.net_sales_budget,
-        b.net_profit_budget
+        -- Budget seam: NULL BY DESIGN at category grain (see header). Goals
+        -- live in rpt_retail_budget_daily (facility grain, one budget chain).
+        cast(null as number(18, 4))                         as net_sales_budget,
+        cast(null as number(18, 4))                         as net_profit_budget
 
     from perf p
     inner join {{ ref('dim_date') }} dd on p.date_key = dd.date_key
     left join {{ ref('dim_facility') }} f on p.key_facility = f.key_facility
-    left join budget b on p.date_key = b.date_key and p.key_facility = b.key_facility
 )
 
 select * from final

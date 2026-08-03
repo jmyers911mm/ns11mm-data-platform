@@ -68,7 +68,7 @@ retail as (
     select
         cast(r.business_date as date)                       as visit_date,
         count(distinct case when not r.is_donation then r.doc_id end)                     as retail_transactions,
-        sum(case when not r.is_donation then r.sale_amount + r.return_amount else 0 end)  as retail_revenue
+        sum(case when not r.is_donation then r.net_amount else 0 end)  as retail_revenue
     from {{ ref('int_counterpoint__retail_lines') }} r
     inner join {{ ref('dim_date') }} dd
         on cast(r.business_date as date) = dd.date_key

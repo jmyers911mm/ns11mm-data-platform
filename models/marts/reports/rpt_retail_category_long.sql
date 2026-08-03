@@ -10,8 +10,11 @@
 -- (Flown Flag, Water, T-shirt, Hoodie, Hats, Keychains, Magnets, Drinkware,
 -- Totes, Rubber Bracelet, Food, Beverage, MAG, ...) with the same period
 -- columns as page 1 — additive-only so DAX rolls up periods.
--- NOTE: budget is category-level NULL today (the retail forecast is
--- facility-grain, not category-grain); the seam is left open.
+-- NOTE: budget is category-level NULL BY DESIGN (the retail forecast is
+-- facility-grain; 7.9.0 removed the wrong-grain join that repeated the
+-- facility budget on every category row). Goals come from
+-- rpt_retail_budget_daily at facility grain; the seam here stays open for a
+-- category-grain forecast if one ever lands.
 --
 -- ADR-004: all business logic in dbt, never Power BI.
 

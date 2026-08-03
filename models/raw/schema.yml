@@ -161,13 +161,6 @@ models:
   # tests are severity: warn — they assert the documented grain over source data
   # (several are empty stubs until their feed lands). NOTE: a wrong column name
   # here is a COMPILE error that warn cannot suppress, so these are verified.
-  - name: stg_budget__retail
-    description: "Retail budget/goal values per business_date x key_facility."
-    data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [business_date, key_facility]
-          config: { severity: warn }
-
   - name: stg_counterpoint__todays_retail
     description: "Intraday CounterPoint retail tickets per store_id x doc_id x hour_of_day."
     data_tests:

@@ -206,6 +206,13 @@ models:
       Non-additive ratios are omitted and recomputed from summed components.
     config:
       materialized: view
+    data_tests:
+      # Inherited from the semantic-view projection -> warn (severity rule;
+      # matches the warn'd uniqueness on the DPR sibling wrapper)
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [report_date, key_facility]
+          name: rpt_retail_powerbi_grain_unique
+          config: { severity: warn }
     columns:
       - name: report_date
         data_tests: [not_null]
@@ -347,6 +354,11 @@ models:
       Monthly Retail KPI view: one row per calendar month x selling area, rolling
       up fct_retail_daily with ratio-of-sums KPIs recomputed at the month grain.
       Visitor-based KPIs NULL until Sensource lands.
+    data_tests:
+      # Grain enforced by the in-model GROUP BY -> error (severity rule)
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [calendar_year, calendar_month, key_facility]
+          name: rpt_monthly_retail_kpi_grain_unique
 
   - name: rpt_retail_carts_analysis
     description: >
@@ -375,6 +387,11 @@ models:
       Website Commerce Report view: one row per month x revenue type x revenue
       year of recurring online donation and membership revenue from
       stg_ecommerce__website_recurring.
+    data_tests:
+      # Grain enforced by the in-model GROUP BY -> error (severity rule)
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [month_of_year, revenue_type, revenue_year]
+          name: rpt_website_commerce_grain_unique
 
   - name: rpt_wifi_email_export
     description: >

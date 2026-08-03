@@ -168,7 +168,7 @@ from on the right.
 | `RevPerVis` / `MemCartsRevPerVis` | `rev_per_visitor` | `net_sales / visitor_count` (Sensource, staged) |
 | `visitor_counted_mus_store` | `visitor_count` | `stg_sensource__visitors` (staged) |
 | `ecom_total_orders` | `ecom_orders` | `stg_shopify__orders` (staged) |
-| `*_budget` | `net_sales_budget` / `net_profit_budget` | budget seeds via `stg_budget__retail` / `int_budget__retail_forecasts` |
+| `*_budget` | `net_sales_budget` / `net_profit_budget` | budget seed via `int_budget__retail_forecasts` (single chain, 7.9.0; category-grain seam NULL by design) |
 
 ### Retail Carts Analysis — `rpt_retail_carts_analysis`
 | Legacy field | New column | Logic |
@@ -213,7 +213,7 @@ changed, as designed:
 | `seed_fact_todays_retail_data` (+ `_product_data`) | `stg_counterpoint__todays_retail(_product)` | Today's Sales | `fact_todays_retail_data` |
 | `seed_fact_website_recurring_data`, `seed_fact_shopify_*` | `stg_ecommerce__website_recurring`, `stg_shopify__*` | Website Commerce, DPR ecom | `fact_shopify_orders` / recurring |
 | `seed_stage_acceptance_uap_daily` | `stg_wifi__audience` | WiFi export (PII) | Blue State audience table |
-| Budget workbooks (Excel→CSV seed loads: `budget_seeds` + `seed_retail_budget` / `seed_dsr_budget`) | `int_budget__*`, `stg_budget__*` | all `_budget`/variance columns | `fact_*_forecasts`, `fact_dpr_report_data` budgets |
+| Budget workbooks (Excel→CSV seed loads: `budget_seeds` + `seed_dsr_budget`) | `int_budget__*`, `stg_budget__*` | all `_budget`/variance columns | `fact_*_forecasts`, `fact_dpr_report_data` budgets |
 
 Still genuinely open: **automating the loads** (today these are manual stage/seed
 refreshes; production ingestion is the Azure Function estate, currently parked in

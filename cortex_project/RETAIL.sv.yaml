@@ -52,9 +52,11 @@ tables:
       - name: NET_SALES_BUDGET
         expr: NET_SALES_BUDGET
         data_type: NUMBER
+        description: NULL by design at category grain (7.9.0) — the retail forecast is facility-grain; goals live in the fct_budget_retail_forecasts chain.
       - name: NET_PROFIT_BUDGET
         expr: NET_PROFIT_BUDGET
         data_type: NUMBER
+        description: NULL by design at category grain (7.9.0) — the retail forecast is facility-grain; goals live in the fct_budget_retail_forecasts chain.
     metrics:
       - name: TOTAL_NET_SALES
         expr: SUM(NET_SALES)

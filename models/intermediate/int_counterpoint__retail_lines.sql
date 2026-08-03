@@ -110,7 +110,22 @@ mapped as (
              then case when zp.item_no is not null then 0 else l.ext_price end
              else 0 end                                                     as sale_amount,
         case when l.line_type = 'R' then l.ext_price else 0 end             as return_amount,
-        case when l.line_type = 'S' then l.ext_cost else 0 end              as sale_cost
+        case when l.line_type = 'S' then l.ext_cost else 0 end              as sale_cost,
+
+        -- NET measures — the ONE netting convention (7.9.0). CounterPoint 'R'
+        -- lines land with NEGATIVE ext_price / qty, so netting is ADDITION
+        -- (matches the legacy-reconciled DPR chain and the legacy donations
+        -- rule "nets sale + return"). Downstream models consume net_amount /
+        -- net_quantity and must NOT re-derive netting from the components.
+        -- CONFIRM against a CounterPoint 'R'-line extract (owner: Gennady);
+        -- if returns land positive, flip the sign HERE and nowhere else.
+        case when l.line_type = 'S'
+             then case when zp.item_no is not null then 0 else l.ext_price end
+             when l.line_type = 'R' then l.ext_price
+             else 0 end                                                     as net_amount,
+        case when l.line_type = 'S' then l.quantity_sold
+             when l.line_type = 'R' then l.quantity_returned
+             else 0 end                                                     as net_quantity
 
     from lines l
     left join item_master     im  on l.item_no  = im.item_no

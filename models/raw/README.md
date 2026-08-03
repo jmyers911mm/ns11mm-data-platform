@@ -64,7 +64,6 @@ every personal dev database, CI, and prod.
 | Model | Source Table | Domain |
 |-------|-------------|--------|
 | `stg_budget__daily_scan` | SEED_DSR_BUDGET (report_estate_seed) | Daily-scan budget by market segment |
-| `stg_budget__retail` | SEED_RETAIL_BUDGET (report_estate_seed) | Retail budget/forecast by facility/day |
 | `stg_dpr__daily_metrics_wide` | SEED_WIFI_AUDIENCE (report_estate_seed; misnamed wide-metrics table — see the source description) | Legacy DPR wide daily metrics |
 | `stg_ecommerce__website_recurring` | SEED_FACT_WEBSITE_RECURRING_DATA (report_estate_seed) | Recurring online donations/memberships (Website Commerce) |
 | `stg_sensource__attendance` | SEED_SENSOURCE_ATTENDANCE (report_estate_seed) | Daily attendance by area |

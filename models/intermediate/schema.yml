@@ -30,6 +30,12 @@ models:
       Enriched Gateway item journal lines (JnlDetails jnl_code_id 102-104).
       Feeds audio guide, service fee and ticketing donation metrics.
     columns:
+      - name: jnl_detail_id
+        description: "PK. Grain inherited from stg_gateway__jnlitems; the multi-join enrichment (notably plu -> stg_gateway__items) can fan out, so uniqueness is guarded at warn (promote to error once the source grain is confirmed)."
+        data_tests:
+          - unique:
+              config: { severity: warn }
+          - not_null
       - name: date_key
         description: "FK to dim_date.date_key."
         data_tests: [not_null]
@@ -130,10 +136,13 @@ models:
       Feeds fct_daily_scan.
     columns:
       - name: usage_id
-        description: "PK. Natural key (scan event identifier)."
+        description: "PK. Natural key (scan event identifier). The visual_id ticket join is deduped upstream (7.9.0); uniqueness guarded at warn per the inherited-grain rule."
         constraints:
           - type: primary_key
-        data_tests: [not_null]
+        data_tests:
+          - unique:
+              config: { severity: warn }
+          - not_null
       - name: date_key
         description: "FK to dim_date.date_key. Scan date."
         data_tests: [not_null]

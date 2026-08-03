@@ -28,14 +28,18 @@ aggregated as (
         key_facility,
         category_code,
 
-        -- Non-donation retail measures
-        sum(case when not is_donation then sale_amount - return_amount else 0 end)             as net_sales,
-        sum(case when not is_donation then sale_amount - return_amount - sale_cost else 0 end) as net_profit,
-        sum(case when not is_donation then sale_quantity - return_quantity else 0 end)         as net_units,
-        sum(case when not is_donation then sale_cost else 0 end)                               as cost_of_goods,
+        -- Non-donation retail measures. Netting comes from the centralized
+        -- net_amount / net_quantity columns (7.9.0 fix: this model previously
+        -- netted with sale - return while every other consumer and the
+        -- legacy-reconciled DPR chain net with sale + return, overstating
+        -- net_sales/net_profit by 2x returns whenever a return occurred).
+        sum(case when not is_donation then net_amount else 0 end)              as net_sales,
+        sum(case when not is_donation then net_amount - sale_cost else 0 end)  as net_profit,
+        sum(case when not is_donation then net_quantity else 0 end)            as net_units,
+        sum(case when not is_donation then sale_cost else 0 end)               as cost_of_goods,
 
-        -- Donation measures; legacy nets sale + return
-        sum(case when is_donation then sale_amount + return_amount else 0 end)                 as donations
+        -- Donation measures; legacy nets sale + return (same centralized net)
+        sum(case when is_donation then net_amount else 0 end)                  as donations
 
     from lines
     group by 1, 2, 3

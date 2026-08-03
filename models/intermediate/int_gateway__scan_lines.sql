@@ -35,6 +35,10 @@ with scans as (
 ),
 
 tickets as (
+    -- stg_gateway__jnltickets is jnl_detail_id grain: a ticket reissued or
+    -- adjusted across journal lines appears more than once per visual_id.
+    -- Deduplicate to ONE row per visual_id (latest journal line) so the scan
+    -- join cannot fan out and inflate passes_scanned / tickets_sold (7.9.0).
     select
         visual_id,
         plu,
@@ -43,6 +47,10 @@ tickets as (
         sales_program_id,
         attribute_value_group_id
     from {{ ref('stg_gateway__jnltickets') }}
+    qualify row_number() over (
+        partition by visual_id
+        order by jnl_detail_id desc
+    ) = 1
 ),
 
 attr as (

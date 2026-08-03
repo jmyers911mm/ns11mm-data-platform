@@ -32,6 +32,15 @@ models:
 
   - name: fct_ticket_demand_forecast
     description: "Ticket demand aggregated for forecasting and presale analysis"
+    data_tests:
+      # Declared grain (header): entry_date + plu + ticket_type_name +
+      # presale_bucket + purchase_channel. The in-model GROUP BY spans 14
+      # columns, so 5-column uniqueness is asserted (not enforced) — warn per
+      # the inherited/unverified-grain rule; promote once confirmed on live data.
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [entry_date, plu, ticket_type_name, presale_bucket, purchase_channel]
+          name: fct_ticket_demand_forecast_grain_unique
+          config: { severity: warn }
     columns:
       - name: entry_date
         description: "FK to dim_date.date_key. Visitor entry date."
@@ -239,7 +248,10 @@ models:
             to_columns: [date_key]
         data_tests:
           - not_null
-          - unique
+          # Grain inherited from the Excel budget seed (not GROUP-BY-enforced
+          # here) -> warn, matching the int_budget__* twins (severity rule).
+          - unique:
+              config: { severity: warn }
           - relationships:
               to: ref('dim_date')
               field: date_key
@@ -270,6 +282,8 @@ models:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [date_key, key_facility]
           name: fct_budget_admissions_forecasts_grain_unique
+          # Inherited seed grain -> warn (severity rule; matches the int twin)
+          config: { severity: warn }
 
   - name: fct_budget_retail_forecasts
     description: >
@@ -293,3 +307,5 @@ models:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [date_key, key_facility]
           name: fct_budget_retail_forecasts_grain_unique
+          # Inherited seed grain -> warn (severity rule; matches the int twin)
+          config: { severity: warn }

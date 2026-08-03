@@ -41,8 +41,10 @@ aggregated as (
         date_key,
         segment_key,
         max(segment_name)                                        as segment_name,
-        sum(case when is_valid_scan then try_to_decimal(scanned_qty::varchar, 18, 0) else 0 end) as passes_scanned,
-        sum(try_to_decimal(ticket_qty::varchar, 18, 0))          as tickets_sold
+        -- Decimal guards live upstream in int_gateway__scan_lines (DQ rule);
+        -- tickets_sold is the scan-side proxy (see header).
+        sum(case when is_valid_scan then scanned_qty else 0 end)  as passes_scanned,
+        sum(ticket_qty)                                           as tickets_sold
     from classified
     group by 1, 2
 ),
@@ -51,6 +53,10 @@ budget as (
     -- Real DSR budget (fact_dsr_forecasts) is WIDE (a column per segment).
     -- Unpivot to segment_key to match fct grain. Segment keys align with
     -- seed_scan_market_segment.segment_key.
+    -- INTENTIONALLY EXCLUDED: the staged `mobile` and `partners` budget
+    -- columns have no segment_key in the seed and no row on the legacy Daily
+    -- Scan Report (13 segments); add a seed row + a union branch here if the
+    -- report ever grows them.
     select business_date as date_key, 'advance' as segment_key, advance as passes_budget from {{ ref('stg_budget__daily_scan') }}
     union all select business_date, 'walkup', walk_up from {{ ref('stg_budget__daily_scan') }}
     union all select business_date, 'self_organized_groups', self_organized_groups from {{ ref('stg_budget__daily_scan') }}
