@@ -42,7 +42,7 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.UNIFIED
     dpr.total_tickets_sold AS SUM(TICKETS_SOLD) WITH SYNONYMS = ('tickets sold', 'admissions sold', 'ticket count') COMMENT = 'General-admission tickets sold (Gateway DPR).',
     dpr.total_ticket_revenue AS SUM(TICKET_REVENUE) WITH SYNONYMS = ('ticket revenue', 'admission revenue'),
     dpr.total_pass_revenue AS SUM(PASS_REVENUE) WITH SYNONYMS = ('pass revenue', 'CityPASS revenue', 'C3 revenue'),
-    dpr.total_admission_revenue AS SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) WITH SYNONYMS = ('total admission revenue') COMMENT = 'Ticket revenue plus pass revenue.',
+    dpr.total_admission_revenue AS SUM(TOTAL_ADMISSION_REVENUE) WITH SYNONYMS = ('total admission revenue') COMMENT = 'Governed admission-revenue numerator (ticket + pass revenue), summed from the fct column — never re-derived from components.',
     dpr.total_museum_attendance AS SUM(MUS_ATTENDANCE) WITH SYNONYMS = ('museum attendance', 'museum visitors') COMMENT = 'Museum attendance (scanned GA component; full Sensource blend not yet staged).',
     dpr.total_memorial_attendance AS SUM(MEM_ATTENDANCE) WITH SYNONYMS = ('memorial attendance', 'plaza attendance', 'memorial visitors') COMMENT = 'Memorial attendance (valid Gateway scans at memorial facilities). Scan component only.',
     dpr.total_mus_guided_tour_revenue AS SUM(MUS_GUIDED_TOUR_REVENUE) WITH SYNONYMS = ('museum guided tour revenue', 'guided tour revenue'),

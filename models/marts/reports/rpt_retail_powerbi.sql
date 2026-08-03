@@ -35,7 +35,7 @@ select * from semantic_view(
         fct_retail_daily.total_retail_net_sales   as net_sales,
         fct_retail_daily.total_retail_net_profit  as net_profit,
         fct_retail_daily.total_retail_net_units   as net_units,
-        fct_retail_daily.total_retail_donations   as donations,
+        fct_retail_daily.total_retail_donation_ask as donations,
         fct_retail_daily.total_transactions       as transactions,
         fct_retail_daily.total_visitors           as visitor_count,
         fct_retail_daily.total_ecom_orders        as ecom_orders

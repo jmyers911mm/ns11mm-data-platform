@@ -71,7 +71,7 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.RETAIL
     FCT_RETAIL_DAILY.TOTAL_RETAIL_NET_SALES AS SUM(NET_SALES) COMMENT = 'Facility-grain net sales rollup',
     FCT_RETAIL_DAILY.TOTAL_RETAIL_NET_PROFIT AS SUM(NET_PROFIT) COMMENT = 'Facility-grain net profit (gross margin profit) rollup',
     FCT_RETAIL_DAILY.TOTAL_RETAIL_NET_UNITS AS SUM(NET_UNITS) COMMENT = 'Facility-grain units rollup',
-    FCT_RETAIL_DAILY.TOTAL_RETAIL_DONATIONS AS SUM(DONATIONS) COMMENT = 'Facility-grain donation-ask rollup',
+    FCT_RETAIL_DAILY.TOTAL_RETAIL_DONATION_ASK AS SUM(DONATIONS) COMMENT = 'Facility-grain donation-ask rollup (same measure as the category-grain TOTAL_RETAIL_DONATIONS, which keeps the locked name and synonyms)',
     FCT_RETAIL_DAILY.TOTAL_TRANSACTIONS AS SUM(TRANSACTIONS) COMMENT = 'Total transaction count (customers)',
     FCT_RETAIL_DAILY.TOTAL_VISITORS AS SUM(VISITOR_COUNT) COMMENT = 'Total visitor count to retail areas (Sensource stub until fed)',
     FCT_RETAIL_DAILY.TOTAL_ECOM_ORDERS AS SUM(ECOM_ORDERS) COMMENT = 'Total ecommerce orders (Shopify stub until fed)',

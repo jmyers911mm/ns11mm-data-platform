@@ -98,8 +98,8 @@ tables:
         expr: SUM(PASS_REVENUE)
       - name: total_admission_revenue
         synonyms: ["total admission revenue"]
-        description: Ticket revenue plus pass revenue.
-        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
+        description: Governed admission-revenue numerator (ticket + pass revenue), summed from the fct column — never re-derived from components.
+        expr: SUM(TOTAL_ADMISSION_REVENUE)
       - name: total_museum_attendance
         synonyms: ["museum attendance", "museum visitors"]
         description: Museum attendance (scanned GA component; full Sensource blend not yet staged).

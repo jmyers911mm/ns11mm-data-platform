@@ -132,17 +132,16 @@ select
     mem_attendance_ytd,
 
     -- ============ NON-ADDITIVE RATIOS (computed here, never re-aggregated) ============
+    -- NULL (not 0) when the denominator is 0 — matching the semantic view's
+    -- NULLIF semantics so the two surfaces never disagree on zero-sales days.
     -- Average ticket price = total admission revenue / tickets sold
-    case when tickets_sold = 0 then 0
-         else total_admission_revenue / tickets_sold end                   as avg_ticket_price,
-        case when tickets_sold_mtd = 0 then 0
-             else total_admission_revenue_mtd / tickets_sold_mtd end       as avg_ticket_price_mtd,
+    total_admission_revenue / nullif(tickets_sold, 0)                      as avg_ticket_price,
+    total_admission_revenue_mtd / nullif(tickets_sold_mtd, 0)              as avg_ticket_price_mtd,
 
-    -- Museum store revenue per museum visitor (per-cap)
-    case when mus_attendance = 0 then 0
-         else mus_store_gross_profit / mus_attendance end                  as mus_store_rev_per_visitor,
-    case when mus_attendance_mtd = 0 then 0
-         else mus_store_gross_profit_mtd / mus_attendance_mtd end          as mus_store_rev_per_visitor_mtd
+    -- Museum store gross PROFIT per museum visitor (per-cap) — named for what
+    -- it computes; the semantic view metric is MUS_STORE_PROFIT_PER_VISITOR
+    mus_store_gross_profit / nullif(mus_attendance, 0)                     as mus_store_profit_per_visitor,
+    mus_store_gross_profit_mtd / nullif(mus_attendance_mtd, 0)             as mus_store_profit_per_visitor_mtd
 
 from with_periods
 order by date_value

@@ -136,8 +136,8 @@ tables:
       # --- Facility-grain additive rollups (added 1.6.0) --------------------
       # These let RPT_RETAIL_POWERBI project one clean row per (date, facility)
       # from a SINGLE fact, exactly like the DPR wrapper reads FCT_DAILY_PERFORMANCE.
-      # Names are namespaced (RETAIL_*) so they do not collide with the
-      # category-grain TOTAL_NET_SALES/TOTAL_NET_PROFIT above.
+      # Names are namespaced (RETAIL_* / _ASK) so they do not collide with the
+      # category-grain metrics above — including the locked TOTAL_RETAIL_DONATIONS.
       - name: TOTAL_RETAIL_NET_SALES
         expr: SUM(NET_SALES)
         data_type: NUMBER
@@ -150,10 +150,10 @@ tables:
         expr: SUM(NET_UNITS)
         data_type: NUMBER
         description: Facility-grain units rollup
-      - name: TOTAL_RETAIL_DONATIONS
+      - name: TOTAL_RETAIL_DONATION_ASK
         expr: SUM(DONATIONS)
         data_type: NUMBER
-        description: Facility-grain donation-ask rollup
+        description: Facility-grain donation-ask rollup (same measure as the category-grain TOTAL_RETAIL_DONATIONS, which keeps the locked name and synonyms)
       # --- Counts (pre-existing) -------------------------------------------
       - name: TOTAL_TRANSACTIONS
         expr: SUM(TRANSACTIONS)

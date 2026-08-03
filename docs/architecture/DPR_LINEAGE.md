@@ -241,7 +241,7 @@ Aggregation grain everywhere: **one row per `date_key`**, all measures additive 
   `audio_tour_headset` = Galaxy units + CP fac-1060). **No ratios** — additive only.
 - **`rpt_daily_performance_report`** — presentation layer: period roll-ups (MTD/YTD/JTD)
   computed on demand at query time, ratios (`avg_ticket_price`,
-  `mus_store_rev_per_visitor`) as ratio-of-sums at the query grain (never averaged
+  `mus_store_profit_per_visitor`) as ratio-of-sums at the query grain (never averaged
   across days), display ordering. No new business logic.
 - **`MARTS.DPR` semantic view** — authored in `cortex_project/DPR.sv.yaml` (DDL generated
   by `scripts/generate_semantic_view_ddl.py`): 49 metrics over `fct_daily_performance` ×

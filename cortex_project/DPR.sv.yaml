@@ -26,7 +26,7 @@ tables:
           - average ticket price
           - avg admission price
         description: "Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days)."
-        expr: "TOTAL_ADMISSION_REVENUE / TICKETS_SOLD"
+        expr: "SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0)"
         access_modifier: public_access
       - name: MUS_STORE_PROFIT_PER_VISITOR
         synonyms:
@@ -34,13 +34,16 @@ tables:
           - per-cap store profit
           - store per cap
         description: "Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain."
-        expr: "MUS_STORE_GROSS_PROFIT / MUS_ATTENDANCE"
+        expr: "SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0)"
         access_modifier: public_access
       - name: TOTAL_ADMISSION_REVENUE
         synonyms:
           - total admission revenue
-        description: Ticket revenue plus pass revenue.
-        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
+        description: >-
+          Governed admission-revenue numerator (ticket + pass revenue) — defined ONCE
+          as the TOTAL_ADMISSION_REVENUE column on FCT_DAILY_PERFORMANCE and summed
+          here; never re-derived from components.
+        expr: SUM(TOTAL_ADMISSION_REVENUE)
         access_modifier: public_access
       - name: TOTAL_ASK_EDUCATOR_REVENUE
         synonyms:
@@ -269,7 +272,11 @@ tables:
         synonyms:
           - total retail profit
           - retail gross profit
-        description: Museum Store + Memorial Carts + Cafe gross profit.
+        description: >-
+          Museum Store + Memorial Carts + Cafe gross profit (DPR rollup). NOTE: the
+          legacy DPR report line "Total Retail Gross Profit" EXCLUDES cafe (its own
+          line) and INCLUDES e-commerce GP (not yet modeled) — component realignment
+          or rename is an open ADR-005 item; do not treat this metric as that line.
         expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT)
         access_modifier: public_access
       - name: TOTAL_REVEALED_TOUR_REVENUE

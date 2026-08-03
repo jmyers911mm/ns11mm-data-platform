@@ -6,7 +6,7 @@
 -- queries in the YAML deploy via the Cortex project path, not this DDL.
 CREATE OR REPLACE SEMANTIC VIEW MARTS.ATTENDANCE
   TABLES (
-    DS AS MARTS.FCT_DAILY_SCAN PRIMARY KEY (DATE_KEY) WITH SYNONYMS = ('daily scan', 'fct_daily_scan'),
+    DS AS MARTS.FCT_DAILY_SCAN PRIMARY KEY (DATE_KEY, SEGMENT_KEY) WITH SYNONYMS = ('daily scan', 'fct_daily_scan'),
     TD AS MARTS.FCT_TICKET_DEMAND_FORECAST WITH SYNONYMS = ('ticket demand', 'fct_ticket_demand_forecast') COMMENT = 'Ticket demand aggregated for forecasting and presale analysis',
     TA AS MARTS.FCT_TICKET_AVAILABILITY WITH SYNONYMS = ('ticket availability', 'fct_ticket_availability') COMMENT = 'Real-time ticket capacity and utilization by date/window/type',
     TS AS MARTS.FCT_TODAY_SALES_HOURLY WITH SYNONYMS = ('today sales', 'fct_today_sales_hourly') COMMENT = 'Intraday retail sales by hour x facility (Today''s Sales Report). Additive sales/profit/units/transactions. Added 1.6.0.',

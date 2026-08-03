@@ -29,7 +29,9 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.DPR
     DT.WEEK_OF_YEAR AS WEEK_OF_YEAR WITH SYNONYMS = ('week', 'week number') COMMENT = 'Week of the year.'
   )
   METRICS (
-    DP.TOTAL_ADMISSION_REVENUE AS SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) WITH SYNONYMS = ('total admission revenue') COMMENT = 'Ticket revenue plus pass revenue.',
+    DP.AVG_TICKET_PRICE AS SUM(TOTAL_ADMISSION_REVENUE) / NULLIF(SUM(TICKETS_SOLD), 0) WITH SYNONYMS = ('average ticket price', 'avg admission price') COMMENT = 'Non-additive: total admission revenue divided by tickets sold, recomputed at the query grain (never averaged across days).',
+    DP.MUS_STORE_PROFIT_PER_VISITOR AS SUM(MUS_STORE_GROSS_PROFIT) / NULLIF(SUM(MUS_ATTENDANCE), 0) WITH SYNONYMS = ('store profit per visitor', 'per-cap store profit', 'store per cap') COMMENT = 'Non-additive: Museum Store GROSS PROFIT (not sales revenue) per museum visitor, recomputed at the query grain.',
+    DP.TOTAL_ADMISSION_REVENUE AS SUM(TOTAL_ADMISSION_REVENUE) WITH SYNONYMS = ('total admission revenue') COMMENT = 'Governed admission-revenue numerator (ticket + pass revenue) — defined ONCE as the TOTAL_ADMISSION_REVENUE column on FCT_DAILY_PERFORMANCE and summed here; never re-derived from components.',
     DP.TOTAL_ASK_EDUCATOR_REVENUE AS SUM(ASK_EDUCATOR_REVENUE) WITH SYNONYMS = ('ask an educator revenue', 'ask educator revenue') COMMENT = 'Ask An Educator program revenue.',
     DP.TOTAL_AUDIO_REVENUE AS SUM(AUDIO_TOUR_HEADSET) + SUM(MEM_AUDIO_GUIDE_REVENUE) WITH SYNONYMS = ('audio guide revenue', 'all audio revenue') COMMENT = 'Museum audio/headset plus memorial audio guide revenue.',
     DP.TOTAL_AUDIO_TOUR_HEADSET AS SUM(AUDIO_TOUR_HEADSET) WITH SYNONYMS = ('museum audio revenue', 'headset revenue', 'audio tour and headset') COMMENT = 'Museum audio/headset revenue (Galaxy guide + CounterPoint MUS AG).',
@@ -63,7 +65,7 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.DPR
     DP.TOTAL_MUS_STORE_GROSS_PROFIT AS SUM(MUS_STORE_GROSS_PROFIT) WITH SYNONYMS = ('museum store profit', 'store gross profit') COMMENT = 'Museum Store gross profit (sales minus cost).',
     DP.TOTAL_PASS_REVENUE AS SUM(PASS_REVENUE) WITH SYNONYMS = ('pass revenue', 'CityPASS revenue', 'C3 revenue') COMMENT = 'CityPASS / C3 pass revenue.',
     DP.TOTAL_RETAIL_CARTS_GROSS_PROFIT AS SUM(RETAIL_CARTS_GROSS_PROFIT) WITH SYNONYMS = ('memorial cart profit', 'cart gross profit') COMMENT = 'Memorial Carts gross profit.',
-    DP.TOTAL_RETAIL_GROSS_PROFIT AS SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT) WITH SYNONYMS = ('total retail profit', 'retail gross profit') COMMENT = 'Museum Store + Memorial Carts + Cafe gross profit.',
+    DP.TOTAL_RETAIL_GROSS_PROFIT AS SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT) WITH SYNONYMS = ('total retail profit', 'retail gross profit') COMMENT = 'Museum Store + Memorial Carts + Cafe gross profit (DPR rollup). NOTE: the legacy DPR report line "Total Retail Gross Profit" EXCLUDES cafe (its own line) and INCLUDES e-commerce GP (not yet modeled) — component realignment or rename is an open ADR-005 item; do not treat this metric as that line.',
     DP.TOTAL_REVEALED_TOUR_REVENUE AS SUM(REVEALED_TOUR_REVENUE) WITH SYNONYMS = ('revealed tour revenue') COMMENT = 'Revealed tour revenue.',
     DP.TOTAL_SERVICE_FEES AS SUM(SERVICE_FEES) WITH SYNONYMS = ('service fees', 'fees') COMMENT = 'Museum + Memorial service fees.',
     DP.TOTAL_TICKETING_DONATIONS AS SUM(TICKETING_DONATIONS) WITH SYNONYMS = ('ticketing donations') COMMENT = 'Gateway ticketing donations (excludes box/exit categories).',

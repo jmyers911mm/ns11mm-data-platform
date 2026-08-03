@@ -1,5 +1,4 @@
 # Generate native Snowflake semantic-view DDL from the Cortex semantic view specs.
-# Co-authored with CoCo
 """
 Generate native Snowflake semantic-view DDL from the Cortex semantic view specs.
 

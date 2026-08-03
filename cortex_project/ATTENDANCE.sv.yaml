@@ -15,6 +15,7 @@ tables:
     primary_key:
       columns:
         - DATE_KEY
+        - SEGMENT_KEY
     dimensions:
       - name: SEGMENT_KEY
         expr: SEGMENT_KEY
