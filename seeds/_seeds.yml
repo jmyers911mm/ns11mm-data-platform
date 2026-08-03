@@ -204,6 +204,44 @@ seeds:
           - accepted_values:
               values: ['additive', 'ratio']
 
+  - name: today_sales_line_items
+    description: >
+      Report-layout catalog for the Today's Sales report: one row per printed
+      line (section, label, sort order, indent, number format,
+      additive-vs-ratio, availability, and — for ratio lines —
+      numerator/denominator source measures). facility_group / key_facility
+      are intentionally blank: the lines apply to every selling area (area
+      comes from the fact row). Report scaffolding, not a business dimension.
+      Consumed by dim_today_sales_line_item.
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_today_sales_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+
+  - name: tracker_line_items
+    description: >
+      Report-layout catalog for the Memorial & Museum Daily Tracker (YTD): one
+      row per printed line (section, label, sort order, indent, number format,
+      additive-vs-ratio, availability, and — for ratio lines —
+      numerator/denominator source measures). The "... Projection" rows are
+      printed lines of their own (the tracker prints scenario as rows, not
+      columns). Report scaffolding, not a business dimension. Consumed by
+      dim_tracker_line_item.
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_tracker_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+
   - name: seed_scan_market_segment
     description: >
       Daily Scan market-segment classification rules: one row per segment

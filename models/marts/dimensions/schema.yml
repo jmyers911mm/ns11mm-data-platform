@@ -255,3 +255,21 @@ models:
         constraints:
           - type: primary_key
         data_tests: [unique, not_null]
+
+  - name: dim_today_sales_line_item
+    description: "Today's Sales report line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures. Lines apply to every selling area (facility columns NULL)."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+
+  - name: dim_tracker_line_item
+    description: "Memorial & Museum Daily Tracker (YTD) line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures. Memorial-vs-museum revenue-split rows are Stub (open business-rule seam)."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]

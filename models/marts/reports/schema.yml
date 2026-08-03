@@ -340,10 +340,11 @@ models:
 
   - name: rpt_memorial_museum_tracker_ytd
     description: >
-      Memorial Museum Daily Tracker (YTD) view: one row per date with day values,
-      calendar-year YTD cumulative sums, YTD budget, and variance over
-      fct_daily_performance measures plus civic_programs (placeholder). Budget
-      columns NULL until the budget source is staged (ADR-005).
+      Memorial Museum Daily Tracker (YTD) view: one row per date with day values
+      and calendar-year YTD cumulative sums over fct_daily_performance measures
+      plus civic_programs (placeholder). Actuals only — no budget columns (the
+      projection lives in rpt_tracker_budget_daily). Superseded for the Power BI
+      Tracker build by the rpt_tracker_* stack; kept for existing consumers.
     columns:
       - name: date_key
         data_tests:
@@ -392,6 +393,180 @@ models:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [month_of_year, revenue_type, revenue_year]
           name: rpt_website_commerce_grain_unique
+
+  # ─── Reports 2–4 serving stacks (2026-07-31): Today's Sales, Daily Scan,
+  # Memorial & Museum Daily Tracker YTD. Same severity rule as above: grain
+  # enforced in-model -> error; inherited from a projection/GROUP-BY -> warn.
+
+  - name: rpt_today_sales_report_long
+    description: >
+      Tidy Today's Sales presentation, one row per (report_date, hour_of_day,
+      key_facility, line_item_code). Ratio lines carry numerator/denominator
+      (ratio-of-sums recomputed at display grain, ADR-004). No budget columns —
+      the report has no goals. Stub lines (visitors/attendance/totes) are typed
+      NULL until the intraday feeds land.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_today_sales_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('today_sales_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item (NULL for ratio and stub rows).
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Ratio denominator (NULL for additive rows).
+
+  - name: rpt_today_sales_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of intraday Today's Sales facts
+      (day-to-date totals, per-area splits, top hour/area, vs same-weekday-last-
+      week full-day deltas). Sole input to the Cortex narrative — unit-test
+      this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_today_sales_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the task in scripts/setup_today_sales_narrative.sql. Narrates only
+      the pre-computed brief_json from rpt_today_sales_narrative_brief.
+
+  - name: rpt_daily_scan_report_long
+    description: >
+      Tidy Daily Scan presentation, one row per (report_date, segment_key,
+      line_item_code) carrying the three additive measures as line items
+      (TICKETS_SOLD / FORECAST_TICKETS_SOLD / PASSES_SCANNED). Variance %,
+      % Used, and % of Market are DAX ratio-of-sums between the carried line
+      items (ADR-004). Segment labels/order from seed_scan_market_segment
+      upstream — no line-item seed.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: line_item_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['TICKETS_SOLD', 'FORECAST_TICKETS_SOLD', 'PASSES_SCANNED']
+
+  - name: rpt_daily_scan_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Daily Scan facts (total sold
+      vs forecast, scanned, utilization, biggest over/under-forecast segments,
+      market-mix leaders). Sole input to the Cortex narrative — unit-test this,
+      not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_scan_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in scripts/setup_daily_scan_narrative.sql. Narrates
+      only the pre-computed brief_json from rpt_daily_scan_narrative_brief.
+
+  - name: rpt_tracker_powerbi
+    description: >
+      Day-grain Tracker ACTUALS conform: thin projection of rpt_dpr_powerbi
+      (sanctioned rpt -> rpt projection-chain exception) carrying attendance,
+      tickets sold, and every additive earned-revenue component. One row per
+      REPORT_DATE. The Total Earned Revenue composite is summed in DAX from
+      the carried components (mirrors DPR TOTAL_ESTIMATED_REVENUE).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date the numbers are recognized on. Table grain.
+        data_tests:
+          - not_null
+          # Grain inherited from rpt_dpr_powerbi (projection) — warn per the
+          # severity rule.
+          - unique: { config: { severity: warn } }
+
+  - name: rpt_tracker_budget_daily
+    description: >
+      Day-grain Tracker PROJECTION conform: thin projection of
+      rpt_dpr_budget_daily. Column names mirror rpt_tracker_powerbi so both
+      unpivot identically in rpt_tracker_report_long. Donations and virtual-tour
+      revenue are not in the budget — typed NULL, excluded from the projection.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null
+          # Grain inherited from rpt_dpr_budget_daily (projection) — warn per
+          # the severity rule.
+          - unique: { config: { severity: warn } }
+
+  - name: rpt_tracker_report_long
+    description: >
+      Tidy Tracker presentation, one row per (report_date, line_item_code)
+      carrying actual + projection. The tracker prints projection as its own
+      row, so "... Projection" codes carry the projection in budget_amount and
+      the actual codes carry no budget. Memorial-vs-museum revenue split is an
+      open business-rule seam (typed NULL). ADR-004: no logic in Power BI.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_tracker_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('tracker_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value (NULL for ratio, stub, and projection rows).
+      - name: budget_amount
+        description: Projection value, carried on the "... Projection" codes only.
+
+  - name: rpt_tracker_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Tracker facts (YTD earned
+      revenue vs projection with variance pct, YTD attendance and tickets sold
+      vs projection, 7-day direction). Sole input to the Cortex narrative —
+      unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_tracker_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in scripts/setup_tracker_narrative.sql. Narrates
+      only the pre-computed brief_json from rpt_tracker_narrative_brief.
 
   - name: rpt_wifi_email_export
     description: >

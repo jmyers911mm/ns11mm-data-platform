@@ -1,0 +1,11 @@
+line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,num_source,den_source
+TOTAL_EARNED_REVENUE,10,YTD Scorecard,10,YTD Total Earned Revenue,0,Currency0,additive,Available,,
+EARNED_REVENUE_PROJECTION,20,YTD Scorecard,10,YTD Earned Revenue Projection,0,Currency0,additive,Available,,
+MEMORIAL_ATTENDANCE,30,Memorial,20,Memorial Attendance,0,Number0,additive,Available,,
+MEMORIAL_ATTENDANCE_PROJECTION,40,Memorial,20,Memorial Attendance Projection,0,Number0,additive,Available,,
+TICKETS_SOLD,50,Museum,30,Museum Tickets Sold,0,Number0,additive,Available,,
+TICKETS_SOLD_PROJECTION,60,Museum,30,Tickets Sold Projection,0,Number0,additive,Available,,
+TOTAL_MEMORIAL_REVENUE,70,Revenue Split,40,Total Memorial Revenue,0,Currency0,additive,Stub,,
+TOTAL_MUSEUM_REVENUE,80,Revenue Split,40,Total Museum Revenue,0,Currency0,additive,Stub,,
+REV_PER_CAP_MEMORIAL,90,Revenue Split,40,Revenue Per Cap (Memorial),1,Currency2,ratio,Stub,total_memorial_revenue,memorial_attendance
+REV_PER_CAP_MUSEUM,100,Revenue Split,40,Revenue Per Cap (Museum),1,Currency2,ratio,Stub,total_museum_revenue,museum_attendance

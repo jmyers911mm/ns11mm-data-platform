@@ -1,0 +1,13 @@
+line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
+SALES,10,Hourly Sales,10,Sales,1,Currency0,additive,Available,,,,
+PROFIT,20,Hourly Sales,10,Profit,1,Currency0,additive,Available,,,,
+AVG_SALE,30,Hourly Sales,10,Average Sale,1,Currency2,ratio,Available,,,sales,transactions
+QTY_SOLD,40,Hourly Sales,10,Qty Sold,1,Number0,additive,Available,,,,
+AVG_QTY,50,Hourly Sales,10,Average Qty,1,Number2,ratio,Available,,,units,transactions
+CONVERSION,60,Hourly Sales,10,Conversion,1,Percent1,ratio,Stub,,,transactions,store_visitors
+CAPTURE,70,Hourly Sales,10,Capture,1,Percent1,ratio,Stub,,,store_visitors,attendance
+TICKET_COUNT,80,Hourly Sales,10,Ticket Count,1,Number0,additive,Available,,,,
+STORE_VISITORS,90,Hourly Sales,10,Store Visitors,1,Number0,additive,Stub,,,,
+ATTENDANCE,100,Hourly Sales,10,Attendance,1,Number0,additive,Stub,,,,
+TOTES_SOLD,110,Hourly Sales,10,Totes Sold,1,Number0,additive,Stub,,,,
+TOTES_PCT_GUESTS,120,Hourly Sales,10,Totes % of guests,1,Percent1,ratio,Stub,,,totes_sold,attendance

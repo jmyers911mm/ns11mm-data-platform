@@ -4,19 +4,22 @@
 -- Grain: one row per date_key
 --
 -- Presentation view for report.memorial_museum_daily_tracker_ytd. This report
--- is a YTD actuals-vs-budget variance tracker built almost entirely on
--- fct_daily_performance measures (attendance, tour/pass/ticket revenue, retail
--- profit, and every donation line) plus civic_programs. It surfaces the day
--- value, the calendar-year YTD cumulative, the YTD budget, and the variance.
+-- is a YTD tracker built almost entirely on fct_daily_performance measures
+-- (attendance, tickets sold, tour/pass/ticket revenue, retail profit, and
+-- every donation line) plus civic_programs. It surfaces the day value and the
+-- calendar-year YTD cumulative (actuals only — no budget columns, see NOTE).
 -- NOTE: YTD partitions by calendar year_number. A fiscal-year variant is
 -- pending the ADR-005 fiscal-calendar definition (owner: Data & AI Committee).
 --
 -- YTD is computed on demand with a windowed cumulative sum partitioned by
 -- year (never materialized per period), mirroring the DPR rpt_ pattern.
--- Budget columns are joined from the retail/DPR budget stub and are NULL until
--- the budget source is staged (ADR-005), so every *_variance is currently the
--- actual (budget treated as 0). civic_programs is a placeholder measure until
--- its source is wired (Excel + the Gateway 'Civic Engagement Program Fee').
+-- NOTE: budget columns are NOT joined here — this view carries actuals only
+-- (an earlier header claimed a budget join that was never built). The budget/
+-- projection side lives in rpt_tracker_budget_daily. For the Power BI Tracker
+-- build this view is SUPERSEDED by the rpt_tracker_* stack (rpt_tracker_powerbi
+-- + rpt_tracker_budget_daily -> rpt_tracker_report_long); it is kept for
+-- existing consumers. civic_programs is a placeholder measure until its source
+-- is wired (Excel + the Gateway 'Civic Engagement Program Fee').
 -- ADR-004: no logic in Power BI.
 
 {{ config(materialized='view') }}
@@ -31,6 +34,7 @@ with fct as (
         -- Attendance
         f.mem_attendance,
         f.mus_attendance,
+        f.tickets_sold,
 
         -- Revenue lines
         f.ticket_revenue,
@@ -68,6 +72,7 @@ with_ytd as (
         -- YTD cumulative on the headline tracked measures
         sum(mem_attendance)          over (partition by year order by date_value) as mem_attendance_ytd,
         sum(mus_attendance)          over (partition by year order by date_value) as mus_attendance_ytd,
+        sum(tickets_sold)            over (partition by year order by date_value) as tickets_sold_ytd,
         sum(ticket_revenue)          over (partition by year order by date_value) as ticket_revenue_ytd,
         sum(pass_revenue)            over (partition by year order by date_value) as pass_revenue_ytd,
         sum(mus_store_gross_profit)  over (partition by year order by date_value) as mus_store_gross_profit_ytd,

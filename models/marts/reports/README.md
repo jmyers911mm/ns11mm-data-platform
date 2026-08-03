@@ -7,7 +7,7 @@ report → table → column mapping and
 [report_semantic_view_map.md](report_semantic_view_map.md) for which semantic
 view fronts each report.
 
-## Enabled Models (23 files; 21 build, 2 gated)
+## Enabled Models (34 files; 29 build, 5 gated)
 
 ### DPR family
 
@@ -19,7 +19,12 @@ view fronts each report.
 | `rpt_dpr_powerbi` | Thin `SEMANTIC_VIEW()` projection of the DPR semantic view for Power BI |
 | `rpt_dpr_narrative_brief` | Deterministic narrative brief — pre-computed DPR facts for the AI_COMPLETE prompt |
 | `rpt_dpr_narrative` | **`enabled=false` (gated)** — AI-generated DPR narrative via Snowflake Cortex; deployed by `scripts/setup_dpr_narrative.sql`, kept out of the routine dbt build |
-| `rpt_memorial_museum_tracker_ytd` | Memorial Museum Daily Tracker — YTD |
+| `rpt_memorial_museum_tracker_ytd` | Memorial Museum Daily Tracker — YTD (actuals only; superseded for the PBI build by the `rpt_tracker_*` stack) |
+| `rpt_tracker_powerbi` | Day-grain Tracker actuals conform over `rpt_dpr_powerbi` (Memorial & Museum Daily Tracker YTD) |
+| `rpt_tracker_budget_daily` | Budget-vs-actual daily serving — day-grain Tracker projection over `rpt_dpr_budget_daily` |
+| `rpt_tracker_report_long` | Long/unpivoted Tracker serving shape (actual + projection per line item) |
+| `rpt_tracker_narrative_brief` | Deterministic narrative brief — pre-computed Tracker facts for the AI_COMPLETE prompt |
+| `rpt_tracker_narrative` | **`enabled=false` (gated)** — AI-generated Tracker narrative via Snowflake Cortex; deployed by `scripts/setup_tracker_narrative.sql`, kept out of the routine dbt build |
 
 ### Retail family
 
@@ -43,7 +48,13 @@ view fronts each report.
 | `rpt_daily_attendance` | Daily Attendance Report (hourly passes via `stg_gateway__passes_by_hour`) |
 | `rpt_daily_scan` | Daily Scan Report (segment mapping still to validate) |
 | `rpt_daily_scan_powerbi` | Thin `SEMANTIC_VIEW()` projection of the ATTENDANCE semantic view for Power BI (Daily Scan) |
+| `rpt_daily_scan_report_long` | Long/unpivoted Daily Scan serving shape (actual + forecast + scanned per line item) |
+| `rpt_daily_scan_narrative_brief` | Deterministic narrative brief — pre-computed Daily Scan facts for the AI_COMPLETE prompt |
+| `rpt_daily_scan_narrative` | **`enabled=false` (gated)** — AI-generated Daily Scan narrative via Snowflake Cortex; deployed by `scripts/setup_daily_scan_narrative.sql`, kept out of the routine dbt build |
 | `rpt_today_sales_powerbi` | Thin `SEMANTIC_VIEW()` projection of the ATTENDANCE semantic view for Power BI (Today's Sales) |
+| `rpt_today_sales_report_long` | Long/unpivoted Today's Sales serving shape (intraday actuals per line item; no budget) |
+| `rpt_today_sales_narrative_brief` | Deterministic narrative brief — pre-computed intraday Today's Sales facts for the AI_COMPLETE prompt |
+| `rpt_today_sales_narrative` | **`enabled=false` (gated)** — AI-generated Today's Sales narrative via Snowflake Cortex; deployed by `scripts/setup_today_sales_narrative.sql`, kept out of the routine dbt build |
 
 ### Other
 
