@@ -27,7 +27,7 @@
         "customer_name": "Jane Doe"   # optional — Gateway/dim_customer
     }'
 
-  Every run is logged to {{ target.database }}.INTERMEDIATE.GDPR_ERASURE_LOG
+  Every run is logged to {{ var('source_database') }}.INTERMEDIATE.GDPR_ERASURE_LOG
   (created if missing) with the request ID and the tables touched.
   ===========================================================================
 #}
@@ -48,7 +48,7 @@
 
 {# --- Create erasure log if not exists --- #}
 {% set log_sql %}
-    create table if not exists {{ target.database }}.INTERMEDIATE.GDPR_ERASURE_LOG (
+    create table if not exists {{ var('source_database') }}.INTERMEDIATE.GDPR_ERASURE_LOG (
         request_id varchar,
         email_hash varchar,
         requested_at timestamp_ltz default current_timestamp(),
@@ -62,7 +62,7 @@
 {# --- RAW: WiFi captive-portal audience (feeds stg_wifi__audience,
        rpt_wifi_email_export) --- #}
 {% set wifi_sql %}
-    update {{ target.database }}.RAW.SEED_STAGE_ACCEPTANCE_UAP_DAILY
+    update {{ var('source_database') }}.RAW.SEED_STAGE_ACCEPTANCE_UAP_DAILY
     set
         email_address = {{ anon_email }},
         first_name = {{ anon_name }},
@@ -76,7 +76,7 @@
 {# --- RAW: Drupal commerce recurring orders (feeds
        stg_ecommerce__website_recurring) --- #}
 {% set ecom_sql %}
-    update {{ target.database }}.RAW.SEED_FACT_WEBSITE_RECURRING_DATA
+    update {{ var('source_database') }}.RAW.SEED_FACT_WEBSITE_RECURRING_DATA
     set
         email = {{ anon_email }}
     where lower(trim(email)) = '{{ email_lower }}';
@@ -91,7 +91,7 @@
 {# --- RAW: Gateway tickets carry names, not emails — redact by name so the
        redaction survives the nightly dim_customer rebuild --- #}
 {% set gate_sql %}
-    update {{ target.database }}.RAW.SEED_GATE_TICKETS
+    update {{ var('source_database') }}.RAW.SEED_GATE_TICKETS
     set
         firstname = {{ anon_name }},
         lastname = {{ anon_name }}
@@ -118,7 +118,7 @@
 
 {# --- Log the erasure --- #}
 {% set log_entry_sql %}
-    insert into {{ target.database }}.INTERMEDIATE.GDPR_ERASURE_LOG
+    insert into {{ var('source_database') }}.INTERMEDIATE.GDPR_ERASURE_LOG
         (request_id, email_hash, executed_at, tables_affected)
     select
         '{{ request_id }}',
@@ -131,7 +131,7 @@
 {{ log("", info=True) }}
 {{ log("GDPR ERASURE COMPLETE — request " ~ request_id, info=True) }}
 {{ log("  Tables updated: " ~ tables_affected | join(', '), info=True) }}
-{{ log("  Logged to: " ~ target.database ~ ".INTERMEDIATE.GDPR_ERASURE_LOG", info=True) }}
+{{ log("  Logged to: " ~ var('source_database') ~ ".INTERMEDIATE.GDPR_ERASURE_LOG", info=True) }}
 {{ log("  NOTE: downstream views (stg_wifi__audience, stg_ecommerce__website_recurring,", info=True) }}
 {{ log("        int_pos_tickets, rpt_wifi_email_export) reflect the RAW updates", info=True) }}
 {{ log("        immediately; rebuild tables with: dbt build --select stg_wifi__audience+ stg_ecommerce__website_recurring+ dim_customer+", info=True) }}

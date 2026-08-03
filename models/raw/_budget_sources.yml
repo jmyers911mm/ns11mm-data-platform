@@ -1,7 +1,7 @@
 sources:
   - name: budget_seeds
     description: Budget and forecast seed tables loaded from Excel exports.
-    database: "{{ var('seed_database') }}"
+    database: "{{ var('source_database') }}"
     schema: SEEDS
     tables:
       - name: SEED_DPR_FORECASTS

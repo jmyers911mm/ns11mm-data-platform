@@ -17,10 +17,11 @@ ADRs are the authoritative record of why the platform is built the way it is. Wh
 | [ADR-005](ADR_005_metric_definition_gate.md) | Metric Definition Gate: No Gold Model Without Approved Definition | Accepted — minor revision in progress (extends gate to Cortex semantic model YAML) |
 | [ADR-006](ADR_006_change_management.md) | Change Management: Seven-Stage Process | Accepted (current) |
 | [ADR-018](ADR_018_metric_definition_ownership.md) | Metric Definition Ownership Across Semantic Views and Report Models | Proposed |
+| [ADR-019](ADR_019_single_source_database.md) | All Environments Read Source Data from a Single Shared Database (NS11MM_DW_DEV) | Proposed |
 
 ## Numbering
 
-ADR-001 through ADR-006 and ADR-018 live in this repository. ADR-007 through ADR-017 exist in the external decision register (Platform Hub) and are adopted into the repo as they are formalized — in-repo ADRs may cite them by number (e.g. ADR-007 Bronze Immutability, ADR-010 Power BI Authorization Model) before the corresponding file exists here.
+ADR-001 through ADR-006, ADR-018, and ADR-019 live in this repository. ADR-007 through ADR-017 exist in the external decision register (Platform Hub) and are adopted into the repo as they are formalized — in-repo ADRs may cite them by number (e.g. ADR-007 Bronze Immutability, ADR-010 Power BI Authorization Model) before the corresponding file exists here.
 
 **Known open item — 007/008 register collision (owner: Jeremy).** Two numbering sequences exist for 007/008: an earlier in-repo pair (007 Drupal Ingestion Path / 008 Retail Source Split) and the external register's pair (007 Bronze Immutability / 008 Semantic-Layer Governance). The collision must be resolved before 007/008 are adopted into the repo; until then, treat cross-references to 007/008 with care and check which sequence is meant.
 

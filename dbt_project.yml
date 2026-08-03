@@ -1,5 +1,5 @@
 name: 'ns11mm_data_platform'
-version: '7.6.0'
+version: '7.7.0'
 config-version: 2
 profile: 'ns11mm_data_platform'
 
@@ -16,7 +16,12 @@ clean-targets:
 
 vars:
   skip_circuit_breaker: false
-  seed_database: NS11MM_DW_DEV
+  # Single shared source database (ADR-019): every environment — sandboxes,
+  # shared dev, CI, and prod — reads RAW/SEEDS landed extracts from this one
+  # database while ingestion is seed-based. gdpr_anonymize erases against the
+  # same var so erasure always hits the data the models actually read.
+  # Override per-run with --vars '{source_database: <db>}' only for testing.
+  source_database: NS11MM_DW_DEV
 
 
 on-run-end:

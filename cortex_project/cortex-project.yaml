@@ -19,7 +19,7 @@ artifacts:
     type: semantic_view
     targets:
       default:
-        object: NS11MM_DW_DEV_JMYERS.MARTS.DPR
+        object: NS11MM_DW_DEV.MARTS.DPR
   - path: UNIFIED.sv.yaml
     type: semantic_view
     targets:

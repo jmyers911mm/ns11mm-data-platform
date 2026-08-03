@@ -10,7 +10,9 @@
 --   - Warehouse must be specified (task uses caller's warehouse)
 -- ---------------------------------------------------------------------------
 
-USE SCHEMA NS11MM_DW_DEV.MARTS;
+-- Resolve against the session database: run USE DATABASE <target> first
+-- (dev: NS11MM_DW_DEV, prod: NS11MM_DW_PROD). ADR-019 / 7.5.3 portability pattern.
+USE SCHEMA MARTS;
 
 -- 1. Target table: one row per day, append-only
 CREATE TABLE IF NOT EXISTS MARTS.DPR_NARRATIVE (

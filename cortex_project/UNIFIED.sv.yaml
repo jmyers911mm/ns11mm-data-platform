@@ -315,7 +315,7 @@ verified_queries:
     sql: |
       SELECT *
       FROM SEMANTIC_VIEW(
-          NS11MM_DW_DEV.MARTS.UNIFIED
+          MARTS.UNIFIED
           DIMENSIONS date.is_weekend
           METRICS dpr.total_ticket_revenue, retail_daily.total_net_sales, daily_scan.scan_passes_scanned
       )
@@ -326,7 +326,7 @@ verified_queries:
     sql: |
       SELECT *
       FROM SEMANTIC_VIEW(
-          NS11MM_DW_DEV.MARTS.UNIFIED
+          MARTS.UNIFIED
           DIMENSIONS date.calendar_month
           METRICS dpr.total_admission_revenue, retail_daily.total_net_sales, dpr.total_donations
       )
@@ -337,7 +337,7 @@ verified_queries:
     sql: |
       SELECT *
       FROM SEMANTIC_VIEW(
-          NS11MM_DW_DEV.MARTS.UNIFIED
+          MARTS.UNIFIED
           DIMENSIONS daily_scan.market_segment
           METRICS daily_scan.scan_utilization
       )

@@ -39,7 +39,7 @@ def load_dpr_data():
             DATE_VALUE::DATE AS report_date,
             DAYNAME(DATE_VALUE) AS day_name,
             {metric_cols}
-        FROM NS11MM_DW_DEV.MARTS.FCT_DAILY_PERFORMANCE
+        FROM MARTS.FCT_DAILY_PERFORMANCE
         GROUP BY DATE_VALUE, DAYNAME(DATE_VALUE)
         ORDER BY DATE_VALUE
     """

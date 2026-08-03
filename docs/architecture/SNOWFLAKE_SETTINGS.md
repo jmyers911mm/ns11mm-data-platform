@@ -8,7 +8,7 @@
 | Database | Purpose | Owner |
 |---|---|---|
 
-| `NS11MM_DW_DEV` | Shared dev — promotion target; hosts RAW ingestion + deployed dbt project | ACCOUNTADMIN |
+| `NS11MM_DW_DEV` | Shared dev — promotion target; hosts RAW ingestion + deployed dbt project. Single source of record for RAW/SEEDS read by ALL environments incl. prod (ADR-019, `source_database` var) | ACCOUNTADMIN |
 | `NS11MM_DW_DEV_JMYERS` | Jeremy personal dev sandbox (TRANSFORMER_ROLE writes here) | ACCOUNTADMIN |
 | `NS11MM_DW_DEV_DSUN` | Diana personal dev sandbox | ACCOUNTADMIN |
 | `NS11MM_DW_DEV_KRAMSEY` | Kalea personal dev sandbox | ACCOUNTADMIN |

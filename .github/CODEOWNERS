@@ -1,0 +1,38 @@
+# NS11MM Data Platform — Code Ownership
+# Lives at .github/CODEOWNERS so GitHub enforces it on PRs.
+# All paths require review from the listed owner before merge.
+
+# Default owner for everything not explicitly listed
+*                                               @jmyers911mm
+
+# Infrastructure and configuration — Jeremy only
+/dbt_project.yml                                @jmyers911mm
+/packages.yml                                   @jmyers911mm
+/profiles.yml                                   @jmyers911mm
+/profiles.yml.template                          @jmyers911mm
+/.github/                                       @jmyers911mm
+/terraform/                                     @jmyers911mm
+
+# Pipelines — Jeremy (add Kenny when function packaging lands)
+/pipelines/                                     @jmyers911mm
+
+# dbt models — Kalea co-owns staging (raw) and silver (intermediate)
+/models/raw/                                    @jmyers911mm @kramsey911mm
+/models/intermediate/                           @jmyers911mm @kramsey911mm
+
+# Gold (marts) and ML — Jeremy owns
+/models/marts/                                  @jmyers911mm
+/models/ml_features/                            @jmyers911mm
+
+# Semantic layer and Cortex artifacts — Jeremy approval required
+/cortex_project/                                @jmyers911mm
+/scripts/                                       @jmyers911mm
+
+# Macros, tests, seeds
+/macros/                                        @jmyers911mm
+/tests/                                         @jmyers911mm
+/seeds/                                         @jmyers911mm @kramsey911mm
+
+# Governance docs
+/docs/                                          @jmyers911mm
+/docs/adr/                                      @jmyers911mm
