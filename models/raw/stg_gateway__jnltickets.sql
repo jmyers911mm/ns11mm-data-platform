@@ -10,7 +10,10 @@
 --
 -- ADR-001: rename/recast only, no business logic (that lands in the int_ layer).
 
-{{ config(materialized='view') }}
+{{ config(
+    materialized='view',
+    tags=['pii', 'restricted']
+) }}
 
 with source as (
     select * from {{ source('gateway_seed', 'seed_gate_jnltickets') }}

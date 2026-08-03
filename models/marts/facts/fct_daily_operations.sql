@@ -40,6 +40,9 @@ with ticket_sales as (
         transaction_date                                    as visit_date,
         count(distinct transaction_id)                      as ticket_transactions,
         sum(quantity)                                       as tickets_sold,
+        -- POS-derived (int_pos_tickets price x quantity). NOT the same measure
+        -- as fct_daily_performance.ticket_revenue (GA journal-line amounts) —
+        -- the shared column name is historical; do not compare the two by name.
         sum(total_amount)                                   as ticket_revenue,
         sum(discount_amount)                                as ticket_discounts,
         count(distinct case when has_email then customer_email end) as identified_visitors

@@ -6,7 +6,10 @@
 -- (replaces the ecom stub). PII note: `email` is a direct identifier -- mark
 -- restricted in schema.yml if this is surfaced downstream.
 -- ADR-001: rename/recast only.
-{{ config(materialized='view') }}
+{{ config(
+    materialized='view',
+    tags=['pii', 'restricted']
+) }}
 
 with source as (
     select * from {{ source('report_estate_seed', 'seed_fact_website_recurring_data') }}

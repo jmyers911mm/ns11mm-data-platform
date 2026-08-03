@@ -7,7 +7,8 @@
 -- market-mix percentages at query grain: each segment's share of total passes
 -- scanned and tickets sold for the day, plus scanned-vs-sold utilization.
 -- Percentages divide by the day total (window sum), never averaged. Budget
--- variance is present but NULL until the DSR forecast seed is populated.
+-- (the DSR forecast) is joined in fct_daily_scan from stg_budget__daily_scan;
+-- variance is NULL only for dates/segments the forecast has not been loaded for.
 -- ADR-004: no logic in Power BI.
 
 {{ config(materialized='view') }}

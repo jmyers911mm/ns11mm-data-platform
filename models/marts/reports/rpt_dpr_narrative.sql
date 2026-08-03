@@ -19,6 +19,10 @@
 --
 -- ADR-004: all analysis lives upstream in rpt_dpr_narrative_brief.
 
+-- SYNC GUARD (7.11.0): the deployed TASK in scripts/setup_*_narrative.sql
+-- embeds a COPY of the system prompt below. Any edit here must be mirrored
+-- there (and the task re-created) — there is no automated drift check for
+-- this pair yet.
 {{ config(enabled=false) }}
 {% set system_prompt %}
 You are the analyst writing the "Analyst Notes" section of the National September 11 Memorial & Museum Daily Performance Report, read each morning by museum leadership.

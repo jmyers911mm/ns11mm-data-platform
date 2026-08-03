@@ -27,6 +27,12 @@
     {'schema': 'STAGING', 'table': 'STG_ECOMMERCE__WEBSITE_RECURRING', 'type': 'VIEW', 'columns': [
         ('EMAIL', 'MASK_EMAIL')
     ]},
+    {'schema': 'STAGING', 'table': 'STG_GATEWAY__TICKETS', 'type': 'VIEW', 'columns': [
+        ('FIRST_NAME', 'MASK_NAME'), ('LAST_NAME', 'MASK_NAME')
+    ]},
+    {'schema': 'STAGING', 'table': 'STG_GATEWAY__JNLTICKETS', 'type': 'VIEW', 'columns': [
+        ('FIRST_NAME', 'MASK_NAME'), ('LAST_NAME', 'MASK_NAME')
+    ]},
     {'schema': 'INTERMEDIATE', 'table': 'INT_POS_TICKETS', 'type': 'VIEW', 'columns': [
         ('CUSTOMER_EMAIL', 'MASK_EMAIL')
     ]},

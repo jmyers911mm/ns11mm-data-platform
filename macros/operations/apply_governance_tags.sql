@@ -19,6 +19,8 @@
 {% set tag_assignments = [
     {'schema': 'STAGING',      'table': 'STG_WIFI__AUDIENCE',              'sensitivity': 'PII',          'domain': 'MARKETING', 'owner': 'Jeremy Myers', 'type': 'VIEW'},
     {'schema': 'STAGING',      'table': 'STG_ECOMMERCE__WEBSITE_RECURRING','sensitivity': 'PII',          'domain': 'ECOMMERCE', 'owner': 'Jeremy Myers', 'type': 'VIEW'},
+    {'schema': 'STAGING',      'table': 'STG_GATEWAY__TICKETS',            'sensitivity': 'PII',          'domain': 'TICKETING', 'owner': 'Jeremy Myers', 'type': 'VIEW'},
+    {'schema': 'STAGING',      'table': 'STG_GATEWAY__JNLTICKETS',         'sensitivity': 'PII',          'domain': 'TICKETING', 'owner': 'Jeremy Myers', 'type': 'VIEW'},
     {'schema': 'INTERMEDIATE', 'table': 'INT_POS_TICKETS',                 'sensitivity': 'PII',          'domain': 'TICKETING', 'owner': 'Jeremy Myers', 'type': 'VIEW'},
     {'schema': 'MARTS',        'table': 'DIM_CUSTOMER',                    'sensitivity': 'PII',          'domain': 'TICKETING', 'owner': 'Jeremy Myers', 'type': 'TABLE'},
     {'schema': 'MARTS',        'table': 'RPT_WIFI_EMAIL_EXPORT',           'sensitivity': 'PII',          'domain': 'MARKETING', 'owner': 'Jeremy Myers', 'type': 'VIEW'},

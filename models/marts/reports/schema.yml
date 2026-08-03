@@ -46,7 +46,12 @@ models:
     columns:
       - name: report_date
         description: Calendar date.
-        data_tests: [not_null, unique]
+        data_tests:
+          - not_null
+          # Grain partially inherited (the dpr CTE passes fct_budget_dpr_forecasts
+          # rows through un-aggregated) -> warn per the severity rule
+          - unique:
+              config: { severity: warn }
   - name: rpt_dpr_powerbi
     description: >
       Power BI consumption layer over the DPR semantic view (MARTS.DPR).
@@ -575,6 +580,8 @@ models:
       Carries direct identifiers; masked by the on-run-end policy hook and
       excluded from the default marts grants — export happens via the governed
       egress path only (see docs/architecture/DATA_CLASSIFICATION.md).
+      Columns: email_address, first_name, last_name, capture_date (the capture
+      date completes the model's declared grain).
     columns:
       - name: email_address
         description: "PII. Visitor email address captured at the WiFi portal (masked)."
