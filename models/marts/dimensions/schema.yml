@@ -273,3 +273,20 @@ models:
         constraints:
           - type: primary_key
         data_tests: [unique, not_null]
+  - name: dim_attendance_line_item
+    description: "Attendance Report line-item metadata: section, display order, indent, number format, availability. All lines additive counts (num/den NULL); Sensource-backed lines are Stub. Also drives the Daily Attendance Report card (MUS_ATTENDANCE line)."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+
+  - name: dim_carts_line_item
+    description: "Retail Carts Analysis line-item metadata: section, display order, number format, availability, and (for ratio lines) numerator/denominator source measures. Facility fixed to Memorial Carts (1020); visitor-derived lines are Stub pending Sensource."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]

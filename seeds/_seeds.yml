@@ -268,3 +268,40 @@ seeds:
     description: "Legacy reference seed (payment method catalog). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
   - name: ref_ticket_types
     description: "Legacy reference seed (ticket type catalog with default prices). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+
+  - name: attendance_line_items
+    description: >
+      Report-layout catalog for the Attendance Report: one row per printed
+      line (section, label, sort order, indent, number format,
+      additive-vs-ratio, availability). All five lines are additive counts,
+      so num_source/den_source are blank; the three Sensource-backed lines
+      are Stub until sensordata lands. Report scaffolding, not a business
+      dimension. Consumed by dim_attendance_line_item.
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_attendance_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+
+  - name: carts_line_items
+    description: >
+      Report-layout catalog for the Retail Carts Analysis report: one row per
+      printed workbook column (section, label, sort order, number format,
+      additive-vs-ratio, availability, and — for ratio lines — numerator/
+      denominator source measures). Single-area report: facility fixed to
+      Memorial Carts (1020). Visitor-derived lines are Stub until Sensource
+      lands. Report scaffolding, not a business dimension. Consumed by
+      dim_carts_line_item.
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_carts_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']

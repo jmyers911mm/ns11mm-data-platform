@@ -591,3 +591,140 @@ models:
         description: "PII. Visitor first name (masked; empty string when absent)."
       - name: last_name
         description: "PII. Visitor last name (masked; empty string when absent)."
+  # --- Reports 6-8 serving stacks (7.12.0): Attendance / Carts / Website Commerce ---
+
+  - name: rpt_attendance_report_long
+    description: >
+      Tidy Attendance Report presentation, one row per (report_date,
+      line_item_code). All five lines are additive counts — no ratio or budget
+      columns (the report has no goals). Sensource-backed lines
+      (MEMORIAL_ONLY, MUSEUM_STORE, MUSEUM_STORE_VESEY) flow the stub's zeros
+      and are marked Stub in the seed. Also serves the Daily Attendance
+      Report (card on MUS_ATTENDANCE at latest date). Periods (WTD/MTD/YTD)
+      are DAX over dim_date, never SQL (ADR-004).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_attendance_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('attendance_line_items')
+              field: line_item_code
+      - name: amount
+        description: Additive daily count for the line item.
+
+  - name: rpt_attendance_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Attendance Report facts
+      (memorial/museum/memorial-only counts, DoD, same-weekday-last-week,
+      same-date-last-year, 7-day direction, commemoration guard). Sensource
+      visitor stubs deliberately excluded until fed. Sole input to the Cortex
+      narrative — unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_attendance_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the task in scripts/setup_attendance_narrative.sql. Narrates only
+      the pre-computed brief_json from rpt_attendance_narrative_brief.
+
+  - name: rpt_carts_report_long
+    description: >
+      Tidy Retail Carts Analysis presentation, one row per (report_date,
+      line_item_code). Ratio lines (capture rate, average sale, per-caps)
+      carry numerator/denominator so the legacy workbook's monthly views are
+      ratio-of-sums in DAX, never averaged daily ratios (ADR-004). Visitor-
+      derived lines flow the Sensource stub and are marked Stub in the seed.
+      The pre-divided day-grain ratios remain on rpt_retail_carts_analysis
+      for the legacy surface; this model does not read them.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_carts_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('carts_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item (NULL for ratio rows).
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Ratio denominator (NULL for additive rows).
+
+  - name: rpt_carts_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Carts Analysis facts (carts
+      sales/profit/customers/avg sale, DoD, same-weekday-last-week,
+      same-date-last-year, 7-day direction, commemoration guard). Capture and
+      per-cap measures deliberately excluded while the Sensource denominator
+      is a stub. Sole input to the Cortex narrative — unit-test this, not the
+      LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_carts_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the task in scripts/setup_carts_narrative.sql. Narrates only
+      the pre-computed brief_json from rpt_carts_narrative_brief.
+
+  - name: rpt_website_commerce_daily
+    description: >
+      Day-grain Website Commerce serving shape, one row per (report_date,
+      revenue_type). Supersedes the month-pivot rpt_website_commerce for the
+      Power BI rebuild — the legacy month x year pivot becomes a Power BI
+      matrix over dim_date. is_recurring is TRUE on every row today (only the
+      recurring Drupal-commerce feed is live); the one-time website feed is an
+      open seam that adds is_recurring = FALSE rows with no Power BI change.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: revenue_type
+        description: Donation / Membership / Other (ruled open-set name matching, single authored rule).
+        data_tests: [not_null]
+      - name: revenue
+        description: Net revenue for the day and type.
+
+  - name: rpt_website_commerce_detail
+    description: >
+      Website Commerce "Donations By Date" serving shape, one row per
+      (report_date, title). Donation rows only; same source and
+      verbatim-identical revenue_type rule as rpt_website_commerce_daily.
+      Projects no order-level or PII columns.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: title
+        description: Product/appeal title as printed on the legacy sheet.

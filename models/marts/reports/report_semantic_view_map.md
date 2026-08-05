@@ -18,13 +18,13 @@ semantic-view design and [`README.md`](README.md) for report status.
 | Daily Performance Report (New/MTD/YTD) | `rpt_daily_performance_report` | `FCT_DAILY_PERFORMANCE` | **`dpr`** | ✅ full |
 | Memorial Museum Daily Tracker YTD | `rpt_memorial_museum_tracker_ytd` | `FCT_DAILY_PERFORMANCE` | **`dpr`** | ✅ full |
 | Retail Performance Report | `rpt_retail_performance` | `FCT_RETAIL_DAILY` | **`retail`** | ✅ full |
-| Retail Carts Analysis | `rpt_retail_carts_analysis` | `FCT_RETAIL_DAILY` | **`retail`** | ✅ full |
+| Retail Carts Analysis | `rpt_retail_carts_analysis` (+ `rpt_carts_report_long` serving stack) | `FCT_RETAIL_DAILY` | **`retail`** | ✅ full |
 | Monthly Retail KPI | `rpt_monthly_retail_kpi` | `FCT_RETAIL_DAILY` | **`retail`** | ✅ full |
 | Daily Scan Report | `rpt_daily_scan` | `FCT_DAILY_SCAN` | **`attendance`** | ✅ full |
-| Attendance Report | `rpt_attendance` | `FCT_DAILY_PERFORMANCE` + `stg_sensource__*` | **`attendance`** | ⚠️ partial — DPR attendance only, not the Sensource blend |
-| Daily Attendance Report | `rpt_daily_attendance` | `FCT_DAILY_PERFORMANCE` + `stg_gateway__passes_by_hour` | **`attendance`** | ⚠️ partial — DPR attendance only, not hourly |
+| Attendance Report | `rpt_attendance` (+ `rpt_attendance_report_long` serving stack) | `FCT_DAILY_PERFORMANCE` + `stg_sensource__*` | **`attendance`** | ⚠️ partial — DPR attendance only, not the Sensource blend |
+| Daily Attendance Report | `rpt_daily_attendance` (card binds to the attendance stack) | `FCT_DAILY_PERFORMANCE` + `stg_gateway__passes_by_hour` | **`attendance`** | ⚠️ partial — DPR attendance only, not hourly |
 | Today's Sales | `rpt_today_sales_powerbi` | `FCT_TODAY_SALES_HOURLY` | **`attendance`** | ❌ excluded (hourly grain) |
-| Website Commerce Report | `rpt_website_commerce` | `RPT_WEBSITE_COMMERCE` (view on `stg_ecommerce__website_recurring`) | **`fundraising_ecom`** _(scaffold in `cortex_project/disabled/`)_ | ❌ excluded (monthly grain) |
+| Website Commerce Report | `rpt_website_commerce` (legacy pivot) + `rpt_website_commerce_daily` / `_detail` (PBI serving) | `stg_ecommerce__website_recurring` | **`fundraising_ecom`** _(scaffold in `cortex_project/disabled/`)_ | ❌ excluded (monthly grain) |
 | Blue State WiFi Email Export | `rpt_wifi_email_export` | `stg_wifi__audience` | **none — by design** | ❌ (PII export, not a chat surface) |
 
 ## Serving-shape families (no Pentaho counterpart)

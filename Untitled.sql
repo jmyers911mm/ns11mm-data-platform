@@ -1,3 +1,0 @@
-USE DATABASE NS11MM_DW_DEV_JMYERS;   -- the database your dev target builds in
-USE SCHEMA MARTS;
-USE WAREHOUSE DBT_DEV_WH;
