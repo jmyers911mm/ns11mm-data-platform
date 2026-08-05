@@ -16,14 +16,25 @@ ADRs are the authoritative record of why the platform is built the way it is. Wh
 | [ADR-004](ADR_004_no_logic_in_power_bi.md) | No Business Logic in Power BI: Thin Display Layer Only | Accepted (current) |
 | [ADR-005](ADR_005_metric_definition_gate.md) | Metric Definition Gate: No Gold Model Without Approved Definition | Accepted — minor revision in progress (extends gate to Cortex semantic model YAML) |
 | [ADR-006](ADR_006_change_management.md) | Change Management: Seven-Stage Process | Accepted (current) |
+| [ADR-007](ADR_007_bronze_immutability.md) | Bronze Layer Immutability: Standalone Rule and Exception Process | Proposed — decision pending review session |
+| [ADR-008](ADR_008_semantic_layer_governance.md) | Semantic Layer Governance: Snowflake Semantic Views as the Metric Layer, Definitions Governed in dbt | Proposed — decision pending review session |
+| [ADR-009](ADR_009_reporting_tiers.md) | Reporting Tiers Framework: T3 / T2 / T1 | Proposed — decision pending review session |
+| [ADR-010](ADR_010_power_bi_authorization.md) | Power BI Authorization Model: Entra ID SSO, External OAuth, Per-User UPN Mapping | Proposed — decision pending review session |
+| [ADR-011](ADR_011_orchestration.md) | Orchestration: Azure DevOps Scheduling, dbt Run Order, and Failure Handling | Proposed — decision pending review session |
+| [ADR-012](ADR_012_data_retention_archival.md) | Data Retention and Archival: Bronze Cost and Compliance Policy | Proposed — no option selected; session decision required |
+| [ADR-013](ADR_013_private_ai_workspace.md) | Private AI Workspace: Self-Hosted Inference for Sensitive Data | Proposed — decision pending review session |
+| [ADR-014](ADR_014_change_validation.md) | Change Validation and Non-Regression | Proposed — decision pending review session |
+| [ADR-015](ADR_015_data_monitoring.md) | Data Monitoring and Automated Validation | Proposed — decision pending review session |
+| [ADR-016](ADR_016_service_level_agreements.md) | Service Level Agreements | Proposed — decision pending review session |
+| [ADR-017](ADR_017_platform_audit_process.md) | Platform Audit Process | Proposed — decision pending review session |
 | [ADR-018](ADR_018_metric_definition_ownership.md) | Metric Definition Ownership Across Semantic Views and Report Models | Proposed |
 | [ADR-019](ADR_019_single_source_database.md) | All Environments Read Source Data from a Single Shared Database (NS11MM_DW_DEV) | Proposed |
 
 ## Numbering
 
-ADR-001 through ADR-006, ADR-018, and ADR-019 live in this repository. ADR-007 through ADR-017 exist in the external decision register (Platform Hub) and are adopted into the repo as they are formalized — in-repo ADRs may cite them by number (e.g. ADR-007 Bronze Immutability, ADR-010 Power BI Authorization Model) before the corresponding file exists here.
+ADR-001 through ADR-019 now all live in this repository. ADR-007 through ADR-017 were adopted from the external decision register (Platform Hub) as Proposed drafts on 2026-08-05, drafted from the ADR Review working document; their decision boxes in that document were empty, so each remains **Proposed** until the Jeremy/Diana review session ratifies (or amends) it through the ADR-006 change process.
 
-**Known open item — 007/008 register collision (owner: Jeremy).** Two numbering sequences exist for 007/008: an earlier in-repo pair (007 Drupal Ingestion Path / 008 Retail Source Split) and the external register's pair (007 Bronze Immutability / 008 Semantic-Layer Governance). The collision must be resolved before 007/008 are adopted into the repo; until then, treat cross-references to 007/008 with care and check which sequence is meant.
+**Known open item — 007/008 register collision (owner: Jeremy).** Two numbering sequences exist for 007/008: an earlier in-repo pair (007 Drupal Ingestion Path / 008 Retail Source Split) and the external register's pair (007 Bronze Immutability / 008 Semantic-Layer Governance). The adopted files use the **external register's numbering**; the collision must be resolved before 007/008 are ratified. Until then, treat cross-references to 007/008 in older documents with care and check which sequence is meant. The Drupal Ingestion Path and Retail Source Split decisions still need numbers of their own once the collision is resolved.
 
 ## Open confirmations
 

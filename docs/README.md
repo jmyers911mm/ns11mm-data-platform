@@ -60,7 +60,7 @@ The **technical source of truth** — the dbt project, its tests, lineage, and t
 
 #### ADR log (`docs/adr/`)
 
-ADR-001–006 and ADR-018 live in-repo; ADR-007–017 live in the external decision register (Platform Hub). See the [ADR index](adr/README.md) for numbering notes.
+ADR-001 through ADR-019 live in-repo. ADR-007–017 were adopted from the external decision register (Platform Hub) as **proposed** drafts on 2026-08-05, pending the ADR review session. See the [ADR index](adr/README.md) for numbering notes, including the 007/008 register collision.
 
 | ADR | Decision |
 | --- | --- |
@@ -70,7 +70,19 @@ ADR-001–006 and ADR-018 live in-repo; ADR-007–017 live in the external decis
 | [ADR-004](adr/ADR_004_no_logic_in_power_bi.md) | No business logic in Power BI — thin display layer only |
 | [ADR-005](adr/ADR_005_metric_definition_gate.md) | Metric definition gate — required before any Gold model build |
 | [ADR-006](adr/ADR_006_change_management.md) | Change management — seven-stage process |
+| [ADR-007](adr/ADR_007_bronze_immutability.md) | Bronze layer immutability — standalone rule and exception process — **proposed** |
+| [ADR-008](adr/ADR_008_semantic_layer_governance.md) | Semantic layer governance — Snowflake semantic views as the metric layer — **proposed** |
+| [ADR-009](adr/ADR_009_reporting_tiers.md) | Reporting tiers framework — T3 / T2 / T1 — **proposed** |
+| [ADR-010](adr/ADR_010_power_bi_authorization.md) | Power BI authorization — Entra ID SSO, external OAuth, per-user UPN — **proposed** |
+| [ADR-011](adr/ADR_011_orchestration.md) | Orchestration — Azure DevOps scheduling, dbt run order, failure handling — **proposed** |
+| [ADR-012](adr/ADR_012_data_retention_archival.md) | Data retention and archival — Bronze cost and compliance policy — **proposed, no option selected** |
+| [ADR-013](adr/ADR_013_private_ai_workspace.md) | Private AI workspace — self-hosted inference for sensitive data — **proposed** |
+| [ADR-014](adr/ADR_014_change_validation.md) | Change validation and non-regression — **proposed** |
+| [ADR-015](adr/ADR_015_data_monitoring.md) | Data monitoring and automated validation — **proposed** |
+| [ADR-016](adr/ADR_016_service_level_agreements.md) | Service level agreements — **proposed** |
+| [ADR-017](adr/ADR_017_platform_audit_process.md) | Platform audit process — **proposed** |
 | [ADR-018](adr/ADR_018_metric_definition_ownership.md) | Metric definition ownership across semantic views and report models — **proposed** |
+| [ADR-019](adr/ADR_019_single_source_database.md) | All environments read source data from a single shared database (NS11MM_DW_DEV) — **proposed** |
 
 ### 2. The Platform Hub
 
