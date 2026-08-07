@@ -731,30 +731,6 @@ models:
 
   # --- 7.12.1: DirectQuery support for the Tracker ---
 
-  - name: rpt_tracker_week_bucket
-    description: >
-      Rolling Mon-Sun week-bucket dimension for the Daily Tracker matrix, one
-      row per date_key: 'Prior Years' / '1/1 - MM/DD' / the current week and
-      two prior weeks as 'MM/DD - MM/DD' / 'Future'. Anchor = yesterday
-      America/New_York, computed at query time so buckets stay current under
-      DirectQuery. bucket_sort is the Power BI sort-by column (date, with
-      1900-01-01 / 9999-01-01 sentinels). Display grouping, not a metric
-      (ADR-004).
-    config:
-      materialized: view
-      grants:
-        select: ['POWERBI_ROLE']
-    columns:
-      - name: date_key
-        description: Calendar date. Relate to the tracker facts' report_date (or to dim_date).
-        data_tests: [not_null, unique]
-      - name: week_bucket
-        description: Bucket label. Filter 'Future' and 'Prior Years' out in the report.
-        data_tests: [not_null]
-      - name: bucket_sort
-        description: Sort-by date for the bucket label (sentinels for Prior Years / Future).
-        data_tests: [not_null]
-
   - name: rpt_tracker_narrative_card
     description: >
       Deterministic ASCII analyst-notes card for the Daily Tracker, rendered

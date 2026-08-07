@@ -12,6 +12,16 @@ models:
         data_tests:
           - unique
           - not_null
+      - name: week_start_monday
+        description: "Monday of the date's Mon-Sun week (static; 7.12.1)."
+      - name: week_end_sunday
+        description: "Sunday of the date's Mon-Sun week (static; 7.12.1)."
+      - name: week_bucket
+        description: "Daily Tracker rolling bucket (7.12.2): 'Prior Years' / '1/1 - MM/DD' / current + two prior Mon-Sun weeks as 'MM/DD - MM/DD' / 'Future'. Anchored to yesterday America/New_York at BUILD time (nightly rebuild, same cadence as the tracker facts). Filter 'Future'/'Prior Years' out in reports."
+        data_tests: [not_null]
+      - name: bucket_sort
+        description: "Sort-by date for week_bucket (sentinels 1900-01-01 Prior Years / 9999-01-01 Future)."
+        data_tests: [not_null]
       - name: is_commemoration_day
         description: >
           True for September 11 (anniversary). This flag exists because the anniversary

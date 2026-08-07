@@ -114,6 +114,21 @@ ptd as (
     from final f
     cross join windows w
     group by f.date_key
+),
+
+-- Daily Tracker week-bucket anchor (7.12.2): yesterday, America/New_York —
+-- same as-of convention as rpt_tracker_narrative_brief. Like the ptd flags
+-- above, this is BUILD-TIME-relative: buckets are as fresh as the nightly
+-- dim_date rebuild (which also gates the tracker facts, so they move
+-- together).
+bucket_anchor as (
+    select
+        asof_date,
+        dateadd(day, -1 * mod(dayofweek(asof_date) + 6, 7), asof_date) as cur_week_start,
+        dateadd(day, 6 - mod(dayofweek(asof_date) + 6, 7), asof_date)  as cur_week_end
+    from (
+        select dateadd(day, -1, convert_timezone('America/New_York', current_timestamp())::date) as asof_date
+    )
 )
 
 select
@@ -126,6 +141,28 @@ select
     iff(p.ytd_years_ago is not null, 'YES', 'NO')  as ytd_flag,
     -- COALESCE (not OR) so comparison year 0 is preserved; widest window first.
     coalesce(p.ytd_years_ago, p.qtd_years_ago, p.mtd_years_ago, p.wtd_years_ago)
-                                                   as comparison_years_ago
+                                                   as comparison_years_ago,
+    -- Daily Tracker rolling week buckets (7.12.2): 'Prior Years' /
+    -- '1/1 - MM/DD' / current + two prior Mon-Sun weeks / 'Future'.
+    -- bucket_sort is the Power BI sort-by date (1900/9999 sentinels).
+    case
+        when f.week_start_monday between dateadd(day, -14, ba.cur_week_start) and ba.cur_week_start
+            then to_char(f.week_start_monday, 'mm/dd') || ' - ' || to_char(f.week_end_sunday, 'mm/dd')
+        when f.date_key > ba.cur_week_end
+            then 'Future'
+        when year(f.date_key) < year(ba.asof_date)
+            then 'Prior Years'
+        else '1/1 - ' || to_char(dateadd(day, -15, ba.cur_week_start), 'mm/dd')
+    end                                            as week_bucket,
+    case
+        when f.week_start_monday between dateadd(day, -14, ba.cur_week_start) and ba.cur_week_start
+            then f.week_start_monday
+        when f.date_key > ba.cur_week_end
+            then '9999-01-01'::date
+        when year(f.date_key) < year(ba.asof_date)
+            then '1900-01-01'::date
+        else date_from_parts(year(ba.asof_date), 1, 1)
+    end                                            as bucket_sort
 from final f
 left join ptd p on f.date_key = p.date_key
+cross join bucket_anchor ba
