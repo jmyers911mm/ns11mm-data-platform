@@ -54,5 +54,16 @@ select
     cast(null as number(38,4))     as coatcheck_don,
     cast(null as number(38,4))     as mus_store_don,
     cast(null as number(38,4))     as mus_exit_don,
-    cast(null as number(38,4))     as cafe_don
+    cast(null as number(38,4))     as cafe_don,
+
+    -- Earned Revenue Projection composite (7.12.1): authored HERE, once —
+    -- budgeted components only (donations and virtual-tour revenue are not
+    -- in the budget and stay excluded). rpt_tracker_report_long and
+    -- rpt_tracker_narrative_brief consume this column; do not re-author the
+    -- sum downstream (define once, serve many).
+    coalesce(admission_revenue, 0)
+      + coalesce(revealed_tour_revenue, 0) + coalesce(mem_mus_tour_revenue, 0)
+      + coalesce(mus_guided_tour_revenue, 0) + coalesce(mem_guided_tour_revenue, 0)
+      + coalesce(mus_store_gross_profit, 0) + coalesce(retail_carts_gross_profit, 0)
+      + coalesce(cafe_profit, 0) + coalesce(audio_tour_headset, 0)  as earned_revenue_projection
 from {{ ref('rpt_dpr_budget_daily') }}

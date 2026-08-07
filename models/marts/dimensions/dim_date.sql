@@ -44,6 +44,11 @@ final as (
         last_day(date_day, 'year')                                       as last_day_of_year,
         dayofweek(date_day)                                              as day_of_week,
         dayname(date_day)                                                as day_of_week_name,
+        -- Monday-anchored week bounds (7.12.1): static columns for reports
+        -- whose weeks run Mon-Sun (the Daily Tracker's week buckets).
+        -- dayofweek is Sunday=0..Saturday=6, so Monday offset = (dow+6)%7.
+        dateadd(day, -1 * mod(dayofweek(date_day) + 6, 7), date_day)     as week_start_monday,
+        dateadd(day, 6 - mod(dayofweek(date_day) + 6, 7), date_day)      as week_end_sunday,
         day(date_day)                                                    as day_of_month,
         dayofyear(date_day)                                              as day_of_year,
         weekofyear(date_day)                                             as week_of_year,

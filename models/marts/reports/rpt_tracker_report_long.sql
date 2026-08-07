@@ -31,18 +31,10 @@
 with a_wide as ( select * from {{ ref('rpt_tracker_powerbi') }} ),
 
 actual_long as (
-    -- Total Earned Revenue composite = the DPR TOTAL_ESTIMATED_REVENUE
-    -- component set (admissions + all tours + retail & cafe profit + audio
-    -- + all donation components), sourced from rpt_dpr_report_long.
+    -- Total Earned Revenue composite: authored once in rpt_tracker_powerbi
+    -- (7.12.1) — consumed here, never re-authored (define once, serve many).
     select report_date, 'TOTAL_EARNED_REVENUE' as line_item_code,
-           cast( admission_revenue
-               + revealed_tour_revenue + mem_mus_tour_revenue + mus_guided_tour_revenue
-                 + mem_guided_tour_revenue + virtual_tour_revenue
-               + mus_store_gross_profit + retail_carts_gross_profit
-               + cafe_profit + audio_tour_headset
-               + cart_donation_ask + box_office_mem_don + donation_box + ecom_donation_ask
-               + ticketing_donations + box_office_mus_exit_don + coatcheck_don
-                 + mus_store_don + mus_exit_don + cafe_don as number(38,4)) as amount,
+           cast(total_earned_revenue as number(38,4)) as amount,
            cast(null as number(38,4)) as numerator, cast(null as number(38,4)) as denominator
     from a_wide
     union all
@@ -76,14 +68,10 @@ actual_long as (
 b_wide as ( select * from {{ ref('rpt_tracker_budget_daily') }} ),
 
 budget_long as (
-    -- Earned Revenue Projection: budgeted components only — donations and
-    -- virtual-tour revenue are NULL in the budget conform and excluded here.
+    -- Earned Revenue Projection: authored once in rpt_tracker_budget_daily
+    -- (7.12.1) — consumed here, never re-authored (define once, serve many).
     select report_date, 'EARNED_REVENUE_PROJECTION' as line_item_code,
-           cast( admission_revenue
-               + revealed_tour_revenue + mem_mus_tour_revenue + mus_guided_tour_revenue
-                 + mem_guided_tour_revenue
-               + mus_store_gross_profit + retail_carts_gross_profit
-               + cafe_profit + audio_tour_headset as number(38,4)) as budget_amount,
+           cast(earned_revenue_projection as number(38,4)) as budget_amount,
            cast(null as number(38,4)) as budget_numerator, cast(null as number(38,4)) as budget_denominator
     from b_wide
     union all

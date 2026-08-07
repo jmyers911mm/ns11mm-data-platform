@@ -64,5 +64,22 @@ select
     coatcheck_don,
     mus_store_don,
     mus_exit_don,
-    cafe_don
+    cafe_don,
+
+    -- Total Earned Revenue composite (7.12.1): authored HERE, once — the DPR
+    -- TOTAL_ESTIMATED_REVENUE component set. rpt_tracker_report_long and
+    -- rpt_tracker_narrative_brief consume this column; do not re-author the
+    -- sum downstream (define once, serve many). NULL components are treated
+    -- as zero so one missing feed does not NULL the composite.
+    coalesce(admission_revenue, 0)
+      + coalesce(revealed_tour_revenue, 0) + coalesce(mem_mus_tour_revenue, 0)
+      + coalesce(mus_guided_tour_revenue, 0) + coalesce(mem_guided_tour_revenue, 0)
+      + coalesce(virtual_tour_revenue, 0)
+      + coalesce(mus_store_gross_profit, 0) + coalesce(retail_carts_gross_profit, 0)
+      + coalesce(cafe_profit, 0) + coalesce(audio_tour_headset, 0)
+      + coalesce(cart_donation_ask, 0) + coalesce(box_office_mem_don, 0)
+      + coalesce(donation_box, 0) + coalesce(ecom_donation_ask, 0)
+      + coalesce(ticketing_donations, 0) + coalesce(box_office_mus_exit_don, 0)
+      + coalesce(coatcheck_don, 0) + coalesce(mus_store_don, 0)
+      + coalesce(mus_exit_don, 0) + coalesce(cafe_don, 0)   as total_earned_revenue
 from {{ ref('rpt_dpr_powerbi') }}

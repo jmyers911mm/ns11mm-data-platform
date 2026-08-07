@@ -21,38 +21,26 @@ with
 -- Daily actuals with the earned-revenue composite resolved (DPR
 -- TOTAL_ESTIMATED_REVENUE component set — see rpt_tracker_report_long)
 actuals as (
+    -- earned-revenue composite authored once in rpt_tracker_powerbi (7.12.1)
     select
         report_date,
         memorial_attendance,
         museum_attendance,
         tickets_sold,
-        coalesce(admission_revenue, 0)
-          + coalesce(revealed_tour_revenue, 0) + coalesce(mem_mus_tour_revenue, 0)
-          + coalesce(mus_guided_tour_revenue, 0) + coalesce(mem_guided_tour_revenue, 0)
-          + coalesce(virtual_tour_revenue, 0)
-          + coalesce(mus_store_gross_profit, 0) + coalesce(retail_carts_gross_profit, 0)
-          + coalesce(cafe_profit, 0) + coalesce(audio_tour_headset, 0)
-          + coalesce(cart_donation_ask, 0) + coalesce(box_office_mem_don, 0)
-          + coalesce(donation_box, 0) + coalesce(ecom_donation_ask, 0)
-          + coalesce(ticketing_donations, 0) + coalesce(box_office_mus_exit_don, 0)
-          + coalesce(coatcheck_don, 0) + coalesce(mus_store_don, 0)
-          + coalesce(mus_exit_don, 0) + coalesce(cafe_don, 0)   as earned_revenue
+        total_earned_revenue as earned_revenue
     from {{ ref('rpt_tracker_powerbi') }}
 ),
 
 -- Daily projection (budgeted components only — donations and virtual
 -- excluded, they are NULL in the budget conform)
 projection as (
+    -- projection composite authored once in rpt_tracker_budget_daily (7.12.1)
     select
         report_date,
         memorial_attendance,
         museum_attendance,
         tickets_sold,
-        coalesce(admission_revenue, 0)
-          + coalesce(revealed_tour_revenue, 0) + coalesce(mem_mus_tour_revenue, 0)
-          + coalesce(mus_guided_tour_revenue, 0) + coalesce(mem_guided_tour_revenue, 0)
-          + coalesce(mus_store_gross_profit, 0) + coalesce(retail_carts_gross_profit, 0)
-          + coalesce(cafe_profit, 0) + coalesce(audio_tour_headset, 0)  as earned_revenue
+        earned_revenue_projection as earned_revenue
     from {{ ref('rpt_tracker_budget_daily') }}
 ),
 
