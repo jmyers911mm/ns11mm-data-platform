@@ -748,3 +748,110 @@ models:
           - not_null: { config: { severity: warn } }
       - name: analyst_brief
         description: The full fixed-width card text (monospace font + word wrap in Power BI).
+
+  # --- 7.12.3: Retail Performance DirectQuery serving (periods resolved in SQL) ---
+
+  - name: rpt_retail_period_windows
+    description: >
+      Single authored definition of the Retail Performance Report's six printed
+      period columns (Current Day / SDLY / WTD / MTD / QTD / YTD) as
+      [start_date .. end_date] ranges, anchored on the latest ACTUALS date
+      before today (from rpt_retail_powerbi — the budget side is
+      forward-dated). Consumed by rpt_retail_report_periods and
+      rpt_retail_category_periods so the two report pages can never disagree
+      about a period. Six rows. Validate the window definitions (SDLY -364,
+      Sunday-start WTD, calendar MTD/QTD/YTD) against the legacy .prpt before
+      sign-off.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_code
+        description: CURRENT_DAY / SDLY / WTD / MTD / QTD / YTD. Grain of this model.
+        data_tests: [not_null, unique]
+      - name: as_of_date
+        description: Reporting date the windows are anchored on (latest actuals date before today).
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: start_date
+        description: Inclusive window start.
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: end_date
+        description: Inclusive window end (= as_of_date for all but SDLY).
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_report_periods
+    description: >
+      Retail Performance Report page-1 grid as an as-of snapshot: one row per
+      (period_code, line_item_code) with actual_value, budget_value, variance
+      and variance_pct already resolved. Ratio lines divide
+      sum(numerator)/sum(denominator) within each window (ratio-of-sums, never
+      an average of daily ratios); variance is blank-guarded so unbudgeted
+      lines read NULL rather than -100%. Lets Power BI render the six period
+      columns with NO time intelligence — the DirectQuery-viable form of the
+      grid. Join dim_retail_line_item on line_item_code for labels/order/
+      format/availability. For history, read rpt_retail_report_long.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_code
+        description: Joins to rpt_retail_period_windows.period_code.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_retail_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('retail_line_items')
+              field: line_item_code
+      - name: actual_value
+        description: Resolved actual (additive sum, or ratio-of-sums for ratio lines).
+      - name: budget_value
+        description: Resolved goal, same shape. NULL where the line is unbudgeted.
+      - name: variance
+        description: actual_value - budget_value; NULL when budget_value is NULL.
+      - name: variance_pct
+        description: variance / abs(budget_value); NULL when budget_value is NULL or zero.
+
+  - name: rpt_retail_category_periods
+    description: >
+      Retail Performance Report page-2 category grid as an as-of snapshot: one
+      row per (period_code, key_facility, category_code) with additive units /
+      profit / sales / donations summed per window from the shared
+      rpt_retail_period_windows. Category-grain budget stays NULL by design
+      (the forecast is facility-grain); the columns are carried so the seam
+      stays visible. For history, read rpt_retail_category_long.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_code
+        data_tests: [not_null]
+      - name: category_code
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_narrative_card
+    description: >
+      Deterministic ASCII analyst-notes card for the Retail Performance Report,
+      rendered in SQL from rpt_retail_narrative_brief (one row, latest
+      report_date). Binds directly to a Power BI card/table visual — works
+      under DirectQuery with no native query and no DAX text assembly. Twin of
+      rpt_tracker_narrative_card; sibling of the Cortex prose note in
+      RETAIL_PBI_NARRATIVE and usable before that task is resumed.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: analyst_brief
+        description: The full fixed-width card text (monospace font + word wrap in Power BI).
