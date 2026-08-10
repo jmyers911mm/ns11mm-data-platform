@@ -34,10 +34,21 @@
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
+{#- Optional pinned as-of date for reconciliation against a specific legacy
+    PDF, e.g.
+      dbt build --select rpt_retail_period_windows+ \
+        --vars '{retail_as_of_date: "2026-07-28"}'
+    Leave unset in scheduled runs so the anchor follows the data. -#}
+{% set pinned_as_of = var('retail_as_of_date', none) %}
+
 with as_of as (
+{% if pinned_as_of %}
+    select '{{ pinned_as_of }}'::date as as_of_date
+{% else %}
     select max(report_date) as as_of_date
     from {{ ref('rpt_retail_powerbi') }}
     where report_date < current_date()
+{% endif %}
 )
 
 select as_of_date, 'CURRENT_DAY' as period_code, 'Current Day' as period_label, 10 as period_sort,

@@ -855,3 +855,36 @@ models:
           - not_null: { config: { severity: warn } }
       - name: analyst_brief
         description: The full fixed-width card text (monospace font + word wrap in Power BI).
+
+  - name: rpt_retail_report_print
+    description: >
+      Retail Performance Report exactly as printed: one row per (period_code,
+      print_code) resolving each printed line to a single `value`. The legacy
+      report puts scenario on ROWS ('... Goal' / '... Actual' / a shaded
+      'Variance' row on selected metrics only) with the six periods as the only
+      columns — so Power BI needs one measure, no scenario switch and no time
+      intelligence. Cross join of 6 windows x 69 printed lines, LEFT joined to
+      rpt_retail_report_periods, so Stub lines (Medallion Machine, E-commerce)
+      render as NULL rather than vanishing. rpt_retail_report_periods remains
+      the metric-grain audit surface.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: print_code
+        description: Joins to dim_retail_print_line.print_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('retail_print_lines')
+              field: print_code
+      - name: period_code
+        data_tests: [not_null]
+      - name: value
+        description: The single number this printed row shows (actual, goal, or variance per scenario).
+      - name: scenario
+        description: actual / goal / variance — which side of the metric this printed row reads.
+        data_tests:
+          - accepted_values:
+              values: ['actual', 'goal', 'variance']

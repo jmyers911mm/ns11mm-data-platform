@@ -305,3 +305,24 @@ seeds:
         data_tests:
           - accepted_values:
               values: ['additive', 'ratio']
+
+  - name: retail_print_lines
+    description: >
+      Printed-row catalog for the Retail Performance Report: one row per line
+      as it appears on the legacy PDF, in print order, with the metric it reads
+      and which scenario (actual / goal / variance). The legacy report prints
+      scenario as rows, and prints a Variance row for selected metrics only —
+      both facts are encoded here rather than inferred. Report scaffolding, not
+      a business dimension. Consumed by dim_retail_print_line.
+    columns:
+      - name: print_code
+        description: Stable key joined from rpt_retail_report_print. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: print_order
+        description: Global printed order. Unique — drives matrix row sort.
+        data_tests: [not_null, unique]
+      - name: scenario
+        description: "'actual', 'goal', or 'variance' — which side of metric_code this printed row shows."
+        data_tests:
+          - accepted_values:
+              values: ['actual', 'goal', 'variance']

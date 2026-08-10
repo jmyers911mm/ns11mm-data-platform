@@ -1,0 +1,1 @@
+select count(*) from marts.rpt_retail_report_periods; 

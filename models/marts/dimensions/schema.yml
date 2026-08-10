@@ -300,3 +300,15 @@ models:
         constraints:
           - type: primary_key
         data_tests: [unique, not_null]
+
+  - name: dim_retail_print_line
+    description: "Printed-row catalog for the Retail Performance Report (69 rows): the legacy report prints scenario as ROWS ('... Goal' / '... Actual' / shaded 'Variance' on selected metrics), so each printed line gets its own row pointing at its metric_code + scenario. Complements dim_retail_line_item, which stays the metric catalog. line_item_display carries occurrence-index trailing spaces so repeated labels ('Variance' x8) are unique for Power BI sort-by-column while rendering identically — the padding is load-bearing."
+    columns:
+      - name: print_line_key
+        description: "PK. Surrogate = print_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: print_order
+        description: "Global printed order (unique; drives the matrix row sort via line_item_display)."
+        data_tests: [unique, not_null]

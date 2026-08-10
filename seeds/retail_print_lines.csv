@@ -1,0 +1,70 @@
+print_code,print_order,section,section_sort_order,line_item,indent,format,scenario,metric_code,availability
+ATT_ACTUAL,1010,Attendance,10,Attendance,1,Number0,actual,ATTENDANCE,Available
+ATT_GOAL,1020,Attendance,10,Attendance Goal,1,Number0,goal,ATTENDANCE,Available
+MS_CAPTURE_GOAL,2010,Museum Store Performance,20,Capture Rate Goal,1,Percent1,goal,MUSEUM_STORE__CAPTURE_RATE,Stub
+MS_CAPTURE_ACTUAL,2020,Museum Store Performance,20,Capture Rate Actual,1,Percent1,actual,MUSEUM_STORE__CAPTURE_RATE,Stub
+MS_VISITORS_GOAL,2030,Museum Store Performance,20,Visitors Goal,1,Number0,goal,MUSEUM_STORE__VISITORS,Stub
+MS_VISITORS_ACTUAL,2040,Museum Store Performance,20,Visitors Actual,1,Number0,actual,MUSEUM_STORE__VISITORS,Stub
+MS_CUSTOMERS_GOAL,2050,Museum Store Performance,20,Customers Goal,1,Number0,goal,MUSEUM_STORE__CUSTOMERS,Available
+MS_CUSTOMERS_ACTUAL,2060,Museum Store Performance,20,Customers Actual,1,Number0,actual,MUSEUM_STORE__CUSTOMERS,Available
+MS_CONV_GOAL,2070,Museum Store Performance,20,Conversion Rate Goal,1,Percent1,goal,MUSEUM_STORE__CONVERSION_RATE,Stub
+MS_CONV_ACTUAL,2080,Museum Store Performance,20,Conversion Rate Actual,1,Percent1,actual,MUSEUM_STORE__CONVERSION_RATE,Stub
+MS_ADS_GOAL,2090,Museum Store Performance,20,Average Daily Sale Goal,1,Currency2,goal,MUSEUM_STORE__AVG_DAILY_SALE,Available
+MS_ADS_ACTUAL,2100,Museum Store Performance,20,Average Daily Sale Actual,1,Currency2,actual,MUSEUM_STORE__AVG_DAILY_SALE,Available
+MS_GMS_GOAL,2110,Museum Store Performance,20,Gross Merchandise Sales Goal,1,Currency0,goal,MUSEUM_STORE__GROSS_MERCH_SALES,Available
+MS_GMS_ACTUAL,2120,Museum Store Performance,20,Gross Merchandise Sales Actual,1,Currency0,actual,MUSEUM_STORE__GROSS_MERCH_SALES,Available
+MS_GMS_VAR,2130,Museum Store Performance,20,Variance,1,Currency0,variance,MUSEUM_STORE__GROSS_MERCH_SALES,Available
+MS_GMP_GOAL,2140,Museum Store Performance,20,Gross Margin Profit Goal,1,Currency0,goal,MUSEUM_STORE__GROSS_MARGIN_PROFIT,Available
+MS_GMP_ACTUAL,2150,Museum Store Performance,20,Gross Margin Profit Actual,1,Currency0,actual,MUSEUM_STORE__GROSS_MARGIN_PROFIT,Available
+MS_GMP_VAR,2160,Museum Store Performance,20,Variance,1,Currency0,variance,MUSEUM_STORE__GROSS_MARGIN_PROFIT,Available
+MS_DON_GOAL,2170,Museum Store Performance,20,Donation Ask Goal,1,Currency0,goal,MUSEUM_STORE__DONATION_ASK,Available
+MS_DON_ACTUAL,2180,Museum Store Performance,20,Donation Ask Actual,1,Currency0,actual,MUSEUM_STORE__DONATION_ASK,Available
+MS_DON_VAR,2190,Museum Store Performance,20,Variance,1,Currency0,variance,MUSEUM_STORE__DONATION_ASK,Available
+MS_RPV_ACTUAL,2200,Museum Store Performance,20,Revenue / Museum Visitor,1,Currency2,actual,MUSEUM_STORE__REV_PER_VISITOR,Available
+MC_CUSTOMERS_ACTUAL,3010,Memorial Carts,30,Customers,1,Number0,actual,MEMORIAL_CARTS__CUSTOMERS,Available
+MC_CONV_GOAL,3020,Memorial Carts,30,Conversion Goal,1,Percent1,goal,MEMORIAL_CARTS__CONVERSION_RATE,Stub
+MC_CONV_ACTUAL,3030,Memorial Carts,30,Conversion Actual,1,Percent1,actual,MEMORIAL_CARTS__CONVERSION_RATE,Stub
+MC_ADS_GOAL,3040,Memorial Carts,30,Average Daily Sale Goal,1,Currency2,goal,MEMORIAL_CARTS__AVG_DAILY_SALE,Available
+MC_ADS_ACTUAL,3050,Memorial Carts,30,Average Daily Sale Actual,1,Currency2,actual,MEMORIAL_CARTS__AVG_DAILY_SALE,Available
+MC_GMS_GOAL,3060,Memorial Carts,30,Gross Merchandise Sales Goal,1,Currency0,goal,MEMORIAL_CARTS__GROSS_MERCH_SALES,Available
+MC_GMS_ACTUAL,3070,Memorial Carts,30,Gross Merchandise Sales Actual,1,Currency0,actual,MEMORIAL_CARTS__GROSS_MERCH_SALES,Available
+MC_GMS_VAR,3080,Memorial Carts,30,Variance,1,Currency0,variance,MEMORIAL_CARTS__GROSS_MERCH_SALES,Available
+MC_GMP_GOAL,3090,Memorial Carts,30,Gross Margin Profit Goal,1,Currency0,goal,MEMORIAL_CARTS__GROSS_MARGIN_PROFIT,Available
+MC_GMP_ACTUAL,3100,Memorial Carts,30,Gross Margin Profit Actual,1,Currency0,actual,MEMORIAL_CARTS__GROSS_MARGIN_PROFIT,Available
+MC_GMP_VAR,3110,Memorial Carts,30,Variance,1,Currency0,variance,MEMORIAL_CARTS__GROSS_MARGIN_PROFIT,Available
+MC_DON_GOAL,3120,Memorial Carts,30,Donations Goal,1,Currency0,goal,MEMORIAL_CARTS__DONATIONS,Available
+MC_DON_ACTUAL,3130,Memorial Carts,30,Donation Ask Actual,1,Currency0,actual,MEMORIAL_CARTS__DONATIONS,Available
+MC_DON_VAR,3140,Memorial Carts,30,Variance,1,Currency0,variance,MEMORIAL_CARTS__DONATIONS,Available
+MC_RPV_ACTUAL,3150,Memorial Carts,30,Revenue / Museum Visitor,1,Currency2,actual,MEMORIAL_CARTS__REV_PER_VISITOR,Available
+CAFE_SALES_GOAL,4010,Museum Cafe,40,Sales Goal,1,Currency0,goal,MUSEUM_CAFE__SALES,Available
+CAFE_SALES_ACTUAL,4020,Museum Cafe,40,Sales Actual,1,Currency0,actual,MUSEUM_CAFE__SALES,Available
+CAFE_SALES_VAR,4030,Museum Cafe,40,Variance,1,Currency0,variance,MUSEUM_CAFE__SALES,Available
+CAFE_PROFIT_GOAL,4040,Museum Cafe,40,Profit Goal,1,Currency0,goal,MUSEUM_CAFE__PROFIT,Available
+CAFE_PROFIT_ACTUAL,4050,Museum Cafe,40,Profit Actual,1,Currency0,actual,MUSEUM_CAFE__PROFIT,Available
+CAFE_PROFIT_VAR,4060,Museum Cafe,40,Variance,1,Currency0,variance,MUSEUM_CAFE__PROFIT,Available
+CAFE_CONV_GOAL,4070,Museum Cafe,40,Conversion Goal,1,Percent1,goal,MUSEUM_CAFE__CONVERSION_RATE,Stub
+CAFE_CONV_ACTUAL,4080,Museum Cafe,40,Conversion Actual,1,Percent1,actual,MUSEUM_CAFE__CONVERSION_RATE,Stub
+CAFE_TRANS_ACTUAL,4090,Museum Cafe,40,Transactions,1,Number0,actual,MUSEUM_CAFE__TRANSACTIONS,Available
+CAFE_AVGSALE_GOAL,4100,Museum Cafe,40,Average Sale Goal,1,Currency2,goal,MUSEUM_CAFE__AVG_SALE,Available
+CAFE_AVGSALE_ACTUAL,4110,Museum Cafe,40,Average Sale Actual,1,Currency2,actual,MUSEUM_CAFE__AVG_SALE,Available
+CAFE_DON_GOAL,4120,Museum Cafe,40,Donation Ask Goal,1,Currency0,goal,MUSEUM_CAFE__DONATION_ASK,Available
+CAFE_DON_ACTUAL,4130,Museum Cafe,40,Donation Ask Actual,1,Currency0,actual,MUSEUM_CAFE__DONATION_ASK,Available
+CAFE_DON_VAR,4140,Museum Cafe,40,Variance,1,Currency0,variance,MUSEUM_CAFE__DONATION_ASK,Available
+CAFE_RPV_ACTUAL,4150,Museum Cafe,40,Revenue / Museum Visitor,1,Currency2,actual,MUSEUM_CAFE__REV_PER_VISITOR,Available
+ECOM_SALES_ACTUAL,5010,E-commerce,50,Sales,1,Currency0,actual,ECOMMERCE__SALES,Stub
+ECOM_ORDERS_ACTUAL,5020,E-commerce,50,# of Orders,1,Number0,actual,ECOMMERCE__ORDERS,Stub
+ECOM_AVGSALE_ACTUAL,5030,E-commerce,50,Average Sale,1,Currency2,actual,ECOMMERCE__AVG_SALE,Stub
+ECOM_DON_ACTUAL,5040,E-commerce,50,Donations,1,Currency0,actual,ECOMMERCE__DONATIONS,Stub
+ECOM_GPPO_ACTUAL,5050,E-commerce,50,Gross Profit / Order,1,Currency2,actual,ECOMMERCE__GROSS_PROFIT_PER_ORDER,Stub
+ECOM_GP_GOAL,5060,E-commerce,50,Gross Profit from E-Commerce Goal,1,Currency0,goal,ECOMMERCE__GROSS_PROFIT,Stub
+ECOM_GP_ACTUAL,5070,E-commerce,50,Gross Profit from E-Commerce Actual,1,Currency0,actual,ECOMMERCE__GROSS_PROFIT,Stub
+ECOM_GP_VAR,5080,E-commerce,50,Variance,1,Currency0,variance,ECOMMERCE__GROSS_PROFIT,Stub
+MAG_PROFIT_GOAL,6010,Museum Audio Guide,60,Profit Goal,1,Currency0,goal,MUS_AG__PROFIT,Available
+MAG_PROFIT_ACTUAL,6020,Museum Audio Guide,60,Profit Actual,1,Currency0,actual,MUS_AG__PROFIT,Available
+MAG_PROFIT_VAR,6030,Museum Audio Guide,60,Variance,1,Currency0,variance,MUS_AG__PROFIT,Available
+MAG_UNITS_ACTUAL,6040,Museum Audio Guide,60,Units Sold,1,Number0,actual,MUS_AG__UNITS_SOLD,Available
+MAG_RPV_ACTUAL,6050,Museum Audio Guide,60,Revenue / Museum Visitor,1,Currency2,actual,MUS_AG__REV_PER_VISITOR,Available
+MAG_CONV_ACTUAL,6060,Museum Audio Guide,60,Conversion,1,Percent1,actual,MUS_AG__CONVERSION_RATE,Available
+MED_SALES_ACTUAL,7010,Medallion Machine,70,Sales Actual,1,Currency0,actual,MEDALLION__SALES,Stub
+MED_PROFIT_ACTUAL,7020,Medallion Machine,70,Profit Actual,1,Currency0,actual,MEDALLION__PROFIT,Stub
+MED_UNITS_ACTUAL,7030,Medallion Machine,70,Units Sold,1,Number0,actual,MEDALLION__UNITS_SOLD,Stub
