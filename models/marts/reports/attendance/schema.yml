@@ -1,0 +1,81 @@
+version: 2
+
+# attendance report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_attendance
+    description: >
+      Attendance Report view: one row per date combining DPR memorial/museum
+      attendance from fct_daily_performance with Sensource plaza counts and
+      retail store visitor counts (Sensource inputs stubbed until sensordata lands).
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_attendance
+    description: >
+      Daily Attendance Report view: one row per date. Museum attendance from the
+      hourly-passes feed (stub), falling back to scan-based attendance from
+      fct_daily_performance so the report is non-empty today.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_attendance_report_long
+    description: >
+      Tidy Attendance Report presentation, one row per (report_date,
+      line_item_code). All five lines are additive counts — no ratio or budget
+      columns (the report has no goals). Sensource-backed lines
+      (MEMORIAL_ONLY, MUSEUM_STORE, MUSEUM_STORE_VESEY) flow the stub's zeros
+      and are marked Stub in the seed. Also serves the Daily Attendance
+      Report (card on MUS_ATTENDANCE at latest date). Periods (WTD/MTD/YTD)
+      are DAX over dim_date, never SQL (ADR-004).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_attendance_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('attendance_line_items')
+              field: line_item_code
+      - name: amount
+        description: Additive daily count for the line item.
+
+  - name: rpt_attendance_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Attendance Report facts
+      (memorial/museum/memorial-only counts, DoD, same-weekday-last-week,
+      same-date-last-year, 7-day direction, commemoration guard). Sensource
+      visitor stubs deliberately excluded until fed. Sole input to the Cortex
+      narrative — unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_attendance_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the task in scripts/setup_attendance_narrative.sql. Narrates only
+      the pre-computed brief_json from rpt_attendance_narrative_brief.
+
+  - name: dim_attendance_line_item
+    description: "Attendance Report line-item metadata: section, display order, indent, number format, availability. All lines additive counts (num/den NULL); Sensource-backed lines are Stub. Also drives the Daily Attendance Report card (MUS_ATTENDANCE line)."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]

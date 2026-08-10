@@ -42,6 +42,11 @@ An `rpt_` table is a materialization of already-defined metrics: a cache for a h
 
 `rpt_` models must not select from other `rpt_` models. Report-on-report coupling, where a fix to `rpt_dpr` silently breaks three downstream reports, is prohibited.
 
+> **Superseded by ADR-021 (2026-08-10).** The enumerated amendment below fell out of date twice
+> in twelve days as the serving chains grew from six models to roughly twenty. ADR-021 replaces it
+> with a role-based rule keyed on model-name suffix, which covers new reports without amendment.
+> The original text is retained for the record:
+>
 > **Amendment (2026-07-29, pending committee ratification):** thin projection/serving chains off the semantic-view wrapper reports (`rpt_*_powerbi`, `rpt_*_budget_daily`) are exempt — they add no new business logic, only shape. This covers the narrative-brief and report-long chains (`rpt_dpr_narrative_brief`, `rpt_retail_narrative_brief`, `rpt_dpr_report_long`, `rpt_retail_report_long`, and the disabled `rpt_dpr_narrative` / `rpt_retail_narrative`), which read `rpt_dpr_powerbi` / `rpt_retail_powerbi` and `rpt_dpr_budget_daily` / `rpt_retail_budget_daily`. New metric logic in an `rpt_` still violates this rule.
 
 ### 4. The same-versus-cousin rule

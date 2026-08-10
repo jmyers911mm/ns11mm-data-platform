@@ -1,0 +1,66 @@
+version: 2
+
+# scan report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_daily_scan_powerbi
+    description: >
+      Thin SEMANTIC_VIEW() projection of the ATTENDANCE semantic view for Power BI
+      (Daily Scan). One row per report_date x segment_key; additive tickets sold,
+      passes scanned, and DSR forecast only — shares and variance % recompute at
+      display grain.
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_scan
+    description: >
+      Daily Scan Report view: one row per date x market segment with passes
+      scanned, tickets sold, market-mix percentages computed at query grain
+      (window sums), and budget variance seams.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_scan_report_long
+    description: >
+      Tidy Daily Scan presentation, one row per (report_date, segment_key,
+      line_item_code) carrying the three additive measures as line items
+      (TICKETS_SOLD / FORECAST_TICKETS_SOLD / PASSES_SCANNED). Variance %,
+      % Used, and % of Market are DAX ratio-of-sums between the carried line
+      items (ADR-004). Segment labels/order from seed_scan_market_segment
+      upstream — no line-item seed.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: line_item_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['TICKETS_SOLD', 'FORECAST_TICKETS_SOLD', 'PASSES_SCANNED']
+
+  - name: rpt_daily_scan_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Daily Scan facts (total sold
+      vs forecast, scanned, utilization, biggest over/under-forecast segments,
+      market-mix leaders). Sole input to the Cortex narrative — unit-test this,
+      not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_daily_scan_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in scripts/setup_daily_scan_narrative.sql. Narrates
+      only the pre-computed brief_json from rpt_daily_scan_narrative_brief.

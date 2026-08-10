@@ -1,6 +1,10 @@
 version: 2
 
 models:
+
+# NOTE (ADR-021): report-LAYOUT dimensions (dim_*_line_item, dim_*_print_line)
+# moved to models/marts/reports/<family>/ with their reports. Business dimensions stay here.
+
   - name: dim_date
     description: "Date dimension spanning 2000-2035 with commemoration day flag. Calendar-only today — fiscal columns pending Data & AI Committee sign-off on the fiscal-calendar definition (ADR-005)."
     columns:
@@ -203,6 +207,7 @@ models:
           - not_null
 
   # ─── Still awaiting external source connections ─────────────────────────────
+
   - name: dim_campaign
     description: "Campaign dimension from Salesforce. STATUS: Awaiting RAW connection."
     columns:
@@ -229,98 +234,3 @@ models:
 
   - name: dim_budget_version
     description: "Vena plan version dimension. STATUS: Awaiting Vena RAW connection."
-
-  - name: dim_dpr_line_item
-    description: "DPR report line-item metadata: section, display order, formatting, and availability status for each measure."
-    columns:
-      - name: line_item_key
-        description: "PK. Surrogate = line_item_code."
-        constraints:
-          - type: primary_key
-        data_tests:
-          - unique
-          - not_null
-      - name: line_item_code
-        description: "Business key (e.g. TICKETS_SOLD, MEM_ATTENDANCE)."
-        data_tests:
-          - not_null
-      - name: section
-        description: "Report section grouping (Memorial Attendance, Guided Tours, Retail & Cafe, etc.)."
-      - name: value_type
-        description: "additive (summable) or ratio (recompute at query grain)."
-        data_tests:
-          - accepted_values:
-              values: ['additive', 'ratio']
-      - name: availability
-        description: "Available = live in dbt today; Partial = some components gapped; Gap = source not yet staged."
-        data_tests:
-          - accepted_values:
-              values: ['Available', 'Partial', 'Gap']
-
-  - name: dim_retail_line_item
-    description: "Retail Performance Report line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures."
-    columns:
-      - name: line_item_key
-        description: "PK. Surrogate = line_item_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-
-  - name: dim_today_sales_line_item
-    description: "Today's Sales report line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures. Lines apply to every selling area (facility columns NULL)."
-    columns:
-      - name: line_item_key
-        description: "PK. Surrogate = line_item_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-
-  - name: dim_tracker_line_item
-    description: "Memorial & Museum Daily Tracker (YTD) line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures. Memorial-vs-museum revenue-split rows are Stub (open business-rule seam)."
-    columns:
-      - name: line_item_key
-        description: "PK. Surrogate = line_item_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-  - name: dim_attendance_line_item
-    description: "Attendance Report line-item metadata: section, display order, indent, number format, availability. All lines additive counts (num/den NULL); Sensource-backed lines are Stub. Also drives the Daily Attendance Report card (MUS_ATTENDANCE line)."
-    columns:
-      - name: line_item_key
-        description: "PK. Surrogate = line_item_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-
-  - name: dim_carts_line_item
-    description: "Retail Carts Analysis line-item metadata: section, display order, number format, availability, and (for ratio lines) numerator/denominator source measures. Facility fixed to Memorial Carts (1020); visitor-derived lines are Stub pending Sensource."
-    columns:
-      - name: line_item_key
-        description: "PK. Surrogate = line_item_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-
-  - name: dim_retail_print_line
-    description: "Printed-row catalog for the Retail Performance Report (69 rows): the legacy report prints scenario as ROWS ('... Goal' / '... Actual' / shaded 'Variance' on selected metrics), so each printed line gets its own row pointing at its metric_code + scenario. Complements dim_retail_line_item, which stays the metric catalog. line_item_display carries occurrence-index trailing spaces so repeated labels ('Variance' x8) are unique for Power BI sort-by-column while rendering identically — the padding is load-bearing."
-    columns:
-      - name: print_line_key
-        description: "PK. Surrogate = print_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-      - name: print_order
-        description: "Global printed order (unique; drives the matrix row sort via line_item_display)."
-        data_tests: [unique, not_null]
-
-  - name: dim_dpr_mtd_ytd_print_line
-    description: "Printed-row catalog for the DPR MTD/YTD Excel variants (both print the same rows; only the window differs). These workbooks compare ACTUAL to PRIOR YEAR (not budget) and break donations out individually, which is why they need their own catalog rather than reusing dpr_line_items. line_item_display pads repeated labels ('Attendance', 'Customers', 'Average Sale') with occurrence-index trailing spaces for Power BI sort-by-column — the padding is load-bearing."
-    columns:
-      - name: print_line_key
-        description: "PK. Surrogate = print_code."
-        constraints:
-          - type: primary_key
-        data_tests: [unique, not_null]
-      - name: print_order
-        description: "Global printed order (unique; drives matrix row sort via line_item_display)."
-        data_tests: [unique, not_null]

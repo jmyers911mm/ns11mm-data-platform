@@ -30,10 +30,11 @@ ADRs are the authoritative record of why the platform is built the way it is. Wh
 | [ADR-018](ADR_018_metric_definition_ownership.md) | Metric Definition Ownership Across Semantic Views and Report Models | Proposed |
 | [ADR-019](ADR_019_single_source_database.md) | All Environments Read Source Data from a Single Shared Database (NS11MM_DW_DEV) | Proposed |
 | [ADR-020](ADR_020_materialization_policy.md) | Materialization Is Set by Layer Default, and Overridden Only for a Stated Reason | Proposed |
+| [ADR-021](ADR_021_report_serving_layer.md) | Report Serving Models Are Named by Role, and Projection Chains Off a Wrapper Are Permitted | Proposed |
 
 ## Numbering
 
-ADR-001 through ADR-020 now all live in this repository. ADR-007 through ADR-017 were adopted from the external decision register (Platform Hub) as Proposed drafts on 2026-08-05, drafted from the ADR Review working document; their decision boxes in that document were empty, so each remains **Proposed** until the Jeremy/Diana review session ratifies (or amends) it through the ADR-006 change process.
+ADR-001 through ADR-021 now all live in this repository. ADR-007 through ADR-017 were adopted from the external decision register (Platform Hub) as Proposed drafts on 2026-08-05, drafted from the ADR Review working document; their decision boxes in that document were empty, so each remains **Proposed** until the Jeremy/Diana review session ratifies (or amends) it through the ADR-006 change process.
 
 
 **Known open item — 007/008 register collision (owner: Jeremy).** Two numbering sequences exist for 007/008: an earlier in-repo pair (007 Drupal Ingestion Path / 008 Retail Source Split) and the external register's pair (007 Bronze Immutability / 008 Semantic-Layer Governance). The adopted files use the **external register's numbering**; the collision must be resolved before 007/008 are ratified. Until then, treat cross-references to 007/008 in older documents with care and check which sequence is meant. The Drupal Ingestion Path and Retail Source Split decisions still need numbers of their own once the collision is resolved.

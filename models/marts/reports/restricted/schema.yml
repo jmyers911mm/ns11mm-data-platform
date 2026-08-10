@@ -1,0 +1,25 @@
+version: 2
+
+# restricted report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_wifi_email_export
+    description: >
+      RESTRICTED / PII. Governed marketing email extract of the WiFi
+      captive-portal audience (one row per distinct email per capture date).
+      Carries direct identifiers; masked by the on-run-end policy hook and
+      excluded from the default marts grants — export happens via the governed
+      egress path only (see docs/architecture/DATA_CLASSIFICATION.md).
+      Columns: email_address, first_name, last_name, capture_date (the capture
+      date completes the model's declared grain).
+    columns:
+      - name: email_address
+        description: "PII. Visitor email address captured at the WiFi portal (masked)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: first_name
+        description: "PII. Visitor first name (masked; empty string when absent)."
+      - name: last_name
+        description: "PII. Visitor last name (masked; empty string when absent)."
+  # --- Reports 6-8 serving stacks (7.12.0): Attendance / Carts / Website Commerce ---

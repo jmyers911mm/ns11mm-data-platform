@@ -1,0 +1,379 @@
+version: 2
+
+# dpr report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_dpr_report_long
+    description: >
+      Tidy DPR presentation, one row per (report_date, line_item_code). All
+      composites and the ratio components are resolved in SQL (ADR-004: no logic
+      in Power BI). amount is additive; numerator/denominator carry the ratio row.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_dpr_line_items.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dpr_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item on the date (NULL for ratio rows).
+      - name: numerator
+        description: Actual ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Actual ratio denominator (NULL for additive rows).
+      - name: budget_amount
+        description: Budget additive value (NULL for ratio rows and for unmapped rows — donation composites, Professional Program, Total Estimated Revenue, Virtual Tour Revenue).
+      - name: budget_numerator
+        description: Budget ratio numerator (NULL for additive rows).
+      - name: budget_denominator
+        description: Budget ratio denominator (NULL for additive rows).
+  
+
+  - name: rpt_dpr_budget_daily
+    description: >
+      Day-grain DPR budget, conformed from FCT_BUDGET_DPR_FORECASTS (primary),
+      FCT_BUDGET_ADMISSIONS_FORECASTS (attendance + guided tours, facility-summed),
+      and FCT_BUDGET_RETAIL_FORECASTS (store/carts/cafe profit by facility). Column
+      names mirror rpt_dpr_powerbi so both unpivot identically in rpt_dpr_report_long.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        description: Calendar date.
+        data_tests:
+          - not_null
+          # Grain partially inherited (the dpr CTE passes fct_budget_dpr_forecasts
+          # rows through un-aggregated) -> warn per the severity rule
+          - unique:
+              config: { severity: warn }
+
+  - name: rpt_dpr_powerbi
+    description: >
+      Power BI consumption layer over the DPR semantic view (MARTS.DPR).
+      One row per REPORT_DATE. Thin, display-only projection per ADR-004 — no
+      business logic; metric definitions live in the semantic view. Non-additive
+      ratios (avg ticket price, store per-cap) are intentionally omitted and
+      recomputed in DAX from summed components.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+      # contract:                 # enable after confirming column types (DESCRIBE the view)
+      #   enforced: true
+    meta:
+      owner: "Data & AI Team"
+      serves: "Power BI — Daily Performance Report"
+      source_of_truth: "MARTS.DPR semantic view"
+    columns:
+      # ---------------- grain / date dimensions ----------------
+      - name: report_date
+        description: Calendar date the numbers are recognized on. Table grain.
+        data_type: date
+        data_tests:
+          - not_null
+          # Grain inherited from the DPR semantic view (not enforced in this
+          # thin projection) — warn per the severity rule.
+          - unique: { config: { severity: warn } }
+      - name: calendar_year
+        description: Calendar year (Jan–Dec).
+        data_type: number
+      - name: calendar_quarter
+        description: Calendar quarter (1–4).
+        data_type: number
+      - name: calendar_month
+        description: Calendar month number (1–12).
+        data_type: number
+      - name: month_name
+        description: Abbreviated month name.
+        data_type: varchar
+      - name: day_of_month
+        description: Day of the month (1–31).
+        data_type: number
+      - name: day_name
+        description: Abbreviated day-of-week name.
+        data_type: varchar
+      - name: is_weekend
+        description: TRUE on Saturday and Sunday.
+        data_type: boolean
+      - name: is_commemoration_day
+        description: TRUE for the September 11 commemoration day (known structural exception).
+        data_type: boolean
+
+      # ---------------- attendance ----------------
+      - name: memorial_attendance
+        description: Memorial attendance (scan component only; Sensource blend not yet staged).
+        data_type: number
+      - name: museum_attendance
+        description: Museum attendance (GA-ticket-scanned proxy).
+        data_type: number
+
+      # ---------------- admissions (ratio components) ----------------
+      - name: tickets_sold
+        description: General-admission tickets sold (issued-GA definition).
+        data_type: number
+      - name: ticket_revenue
+        description: General-admission ticket revenue.
+        data_type: number
+      - name: pass_revenue
+        description: CityPASS / C3 pass revenue (estimated; updated ~6 weeks later).
+        data_type: number
+      - name: admission_revenue
+        description: Ticket revenue plus pass revenue.
+        data_type: number
+
+      # ---------------- guided tours ----------------
+      - name: mem_mus_tours
+        description: Memorial + Museum combined tour ticket count.
+        data_type: number
+      - name: mem_mus_tour_revenue
+        description: Memorial + Museum combined tour revenue.
+        data_type: number
+      - name: museum_guided_tours
+        description: Museum guided tour ticket count.
+        data_type: number
+      - name: mus_guided_tour_revenue
+        description: Museum guided tour revenue.
+        data_type: number
+      - name: memorial_guided_tours
+        description: Memorial guided tour ticket count.
+        data_type: number
+      - name: mem_guided_tour_revenue
+        description: Memorial guided tour revenue.
+        data_type: number
+      - name: revealed_tour_revenue
+        description: Revealed tour revenue (tentatively maps to PDF "Early Access Museum Tour" — confirm).
+        data_type: number
+      - name: virtual_tour_revenue
+        description: All virtual tour revenue (memorial + museum + youth & family).
+        data_type: number
+      - name: virtual_yf_tour_revenue
+        description: Virtual Youth & Family Memorial tour revenue.
+        data_type: number
+
+      # ---------------- retail & cafe ----------------
+      - name: mus_store_gross_profit
+        description: Museum Store gross profit (sales minus cost).
+        data_type: number
+      - name: retail_carts_gross_profit
+        description: Memorial Carts gross profit.
+        data_type: number
+      - name: cafe_profit
+        description: Cafe gross profit.
+        data_type: number
+
+      # ---------------- audio ----------------
+      - name: audio_tour_headset
+        description: Museum audio/headset revenue (Galaxy guide + CounterPoint MUS AG).
+        data_type: number
+
+      # ---------------- donation components (assembled into composites in DAX) ----------------
+      - name: cart_donation_ask
+        description: Memorial cart donation-ask collections.
+        data_type: number
+      - name: box_office_mem_don
+        description: Box office memorial (plaza) box donations.
+        data_type: number
+      - name: donation_box
+        description: General donation box collections.
+        data_type: number
+      - name: ecom_donation_ask
+        description: Ecommerce donation-ask collections.
+        data_type: number
+      - name: ticketing_donations
+        description: Gateway ticketing donations (excludes box/exit categories).
+        data_type: number
+      - name: box_office_mus_exit_don
+        description: Box office museum exit box donations.
+        data_type: number
+      - name: coatcheck_don
+        description: Coat check donations.
+        data_type: number
+      - name: mus_store_don
+        description: Museum Store donations.
+        data_type: number
+      - name: mus_exit_don
+        description: Museum exit donations (CounterPoint).
+        data_type: number
+      - name: cafe_don
+        description: Cafe donations.
+        data_type: number
+
+  - name: rpt_dpr_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of DPR facts (actuals, budget,
+      DoD/WoW, MTD/YTD context, direction flags, top movers). Sole input to the
+      Cortex DPR narrative — unit-test this, not the LLM output. ADR-004.
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_dpr_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in scripts/setup_dpr_narrative.sql. Narrates only the
+      pre-computed brief_json from rpt_dpr_narrative_brief.
+
+  - name: rpt_daily_performance_report
+    description: >
+      Power BI-facing Daily Performance Report surface: one row per date with
+      today / MTD / YTD roll-ups of fct_daily_performance additive measures plus
+      the non-additive ratios (avg ticket price, per-cap) computed at this grain.
+      Materialized as a table (import source / snapshot target).
+    columns:
+      - name: date_value
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_dpr_retail_conform
+    description: >
+      Cross-domain conform: the retail sub-metrics the DPR MTD/YTD workbooks
+      print (Museum Store visitors/customers/sales/profit, Carts
+      customers/sales/profit, E-commerce orders/sales/profit, Cafe
+      transactions/sales/profit) pivoted to one row per report_date by
+      facility_group. Mirror image of rpt_retail_report_long reaching into
+      fct_daily_performance for attendance. Ratios are NOT computed here —
+      consumers carry numerator/denominator. visitor_count and ecom_orders are
+      Sensource/Shopify stubs.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null, unique]
+
+  - name: rpt_dpr_period_windows
+    description: >
+      Single authored definition of the DPR MTD/YTD comparison windows: four
+      rows (MTD and YTD, each current and prior year) as
+      [start_date .. end_date]. PRIOR YEAR IS A CALENDAR-YEAR SHIFT, not the
+      -364 days the daily reports use for Same Day Last Year — a 52-week shift
+      is wrong for period-to-date (364 days before 2025-12-31 is 2025-01-01,
+      the same calendar year). Accepts a `dpr_as_of_date` var to pin the anchor
+      for reconciliation. Validate the definitions against the legacy .prpt.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_group
+        description: MTD or YTD.
+        data_tests: [not_null]
+      - name: scenario
+        description: current or prior.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['current', 'prior']
+
+  - name: rpt_dpr_mtd_ytd_long
+    description: >
+      Day-grain long shape of every metric the DPR MTD/YTD workbooks print, one
+      row per (report_date, metric_code). Additive metrics carry `amount`; the
+      four ratios carry numerator/denominator for ratio-of-sums at period grain.
+      Sources rpt_dpr_powerbi + rpt_dpr_retail_conform. Authors three composites
+      once (TOTAL_GUIDED_TOUR_REVENUE, TOTAL_OTHER_VISITOR_REVENUE,
+      TOTAL_ESTIMATED_REVENUE) — all three verified to the cent against the
+      2025-12-31 MTD and YTD workbooks; see the model header for the component
+      lists and the arithmetic.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: metric_code
+        data_tests: [not_null]
+
+  - name: rpt_dpr_mtd_ytd_print
+    description: >
+      The DPR MTD and YTD Excel variants print-ready: one row per
+      (period_group, print_code) with the workbooks' four columns resolved —
+      actual, prior_year, variance_amount, variance_pct. Both variants come
+      from this one model. Ratio lines are ratio-of-sums within the window.
+      Variance is blank-guarded (NULL prior year -> NULL variance), which
+      deliberately differs from the legacy workbook's '0%' in those cells.
+      Power BI: rows = section -> line_item_display, columns = the four
+      measures, page or slicer on period_group.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: print_code
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dpr_mtd_ytd_print_lines')
+              field: print_code
+      - name: period_group
+        data_tests: [not_null]
+
+  - name: rpt_dpr_excel_export
+    description: >
+      The "DPR Excel Data" workbook as a flat day-grain table, column names and
+      order following the workbook. Area columns are REVENUE (from
+      rpt_dpr_retail_conform), not gross profit — the workbook differs from the
+      daily/MTD/YTD reports here. 'Total Museum Revenue' and 'Total Memorial
+      Revenue' are deliberately typed NULL: the memorial-vs-museum revenue split
+      is the open ADR-005 committee rule that also blocks the YTD Tracker, and a
+      guess must not enter a finance-facing export. 'Museum Donations' /
+      'Memorial Donations' are NULL pending the two donation composites being
+      projected onto rpt_dpr_powerbi (do not re-author them locally).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: Date
+        data_tests: [not_null, unique]
+
+  - name: dim_dpr_line_item
+    description: "DPR report line-item metadata: section, display order, formatting, and availability status for each measure."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: line_item_code
+        description: "Business key (e.g. TICKETS_SOLD, MEM_ATTENDANCE)."
+        data_tests:
+          - not_null
+      - name: section
+        description: "Report section grouping (Memorial Attendance, Guided Tours, Retail & Cafe, etc.)."
+      - name: value_type
+        description: "additive (summable) or ratio (recompute at query grain)."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+      - name: availability
+        description: "Available = live in dbt today; Partial = some components gapped; Gap = source not yet staged."
+        data_tests:
+          - accepted_values:
+              values: ['Available', 'Partial', 'Gap']
+
+  - name: dim_dpr_mtd_ytd_print_line
+    description: "Printed-row catalog for the DPR MTD/YTD Excel variants (both print the same rows; only the window differs). These workbooks compare ACTUAL to PRIOR YEAR (not budget) and break donations out individually, which is why they need their own catalog rather than reusing dpr_line_items. line_item_display pads repeated labels ('Attendance', 'Customers', 'Average Sale') with occurrence-index trailing spaces for Power BI sort-by-column — the padding is load-bearing."
+    columns:
+      - name: print_line_key
+        description: "PK. Surrogate = print_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: print_order
+        description: "Global printed order (unique; drives matrix row sort via line_item_display)."
+        data_tests: [unique, not_null]

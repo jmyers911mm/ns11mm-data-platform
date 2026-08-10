@@ -1,0 +1,128 @@
+version: 2
+
+# tracker report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_memorial_museum_tracker_ytd
+    description: >
+      Memorial Museum Daily Tracker (YTD) view: one row per date with day values
+      and calendar-year YTD cumulative sums over fct_daily_performance measures
+      plus civic_programs (placeholder). Actuals only — no budget columns (the
+      projection lives in rpt_tracker_budget_daily). Superseded for the Power BI
+      Tracker build by the rpt_tracker_* stack; kept for existing consumers.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_tracker_powerbi
+    description: >
+      Day-grain Tracker ACTUALS conform: thin projection of rpt_dpr_powerbi
+      (sanctioned rpt -> rpt projection-chain exception) carrying attendance,
+      tickets sold, and every additive earned-revenue component. One row per
+      REPORT_DATE. The Total Earned Revenue composite is summed in DAX from
+      the carried components (mirrors DPR TOTAL_ESTIMATED_REVENUE).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date the numbers are recognized on. Table grain.
+        data_tests:
+          - not_null
+          # Grain inherited from rpt_dpr_powerbi (projection) — warn per the
+          # severity rule.
+          - unique: { config: { severity: warn } }
+
+  - name: rpt_tracker_budget_daily
+    description: >
+      Day-grain Tracker PROJECTION conform: thin projection of
+      rpt_dpr_budget_daily. Column names mirror rpt_tracker_powerbi so both
+      unpivot identically in rpt_tracker_report_long. Donations and virtual-tour
+      revenue are not in the budget — typed NULL, excluded from the projection.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null
+          # Grain inherited from rpt_dpr_budget_daily (projection) — warn per
+          # the severity rule.
+          - unique: { config: { severity: warn } }
+
+  - name: rpt_tracker_report_long
+    description: >
+      Tidy Tracker presentation, one row per (report_date, line_item_code)
+      carrying actual + projection. The tracker prints projection as its own
+      row, so "... Projection" codes carry the projection in budget_amount and
+      the actual codes carry no budget. Memorial-vs-museum revenue split is an
+      open business-rule seam (typed NULL). ADR-004: no logic in Power BI.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_tracker_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('tracker_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value (NULL for ratio, stub, and projection rows).
+      - name: budget_amount
+        description: Projection value, carried on the "... Projection" codes only.
+
+  - name: rpt_tracker_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Tracker facts (YTD earned
+      revenue vs projection with variance pct, YTD attendance and tickets sold
+      vs projection, 7-day direction). Sole input to the Cortex narrative —
+      unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_tracker_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in scripts/setup_tracker_narrative.sql. Narrates
+      only the pre-computed brief_json from rpt_tracker_narrative_brief.
+
+  - name: rpt_tracker_narrative_card
+    description: >
+      Deterministic ASCII analyst-notes card for the Daily Tracker, rendered
+      in SQL from rpt_tracker_narrative_brief (one row, latest report_date).
+      Binds directly to a Power BI card/table visual — works under
+      DirectQuery with no native query and no DAX text assembly. Sibling of
+      the Cortex note in TRACKER_PBI_NARRATIVE; works before the task is
+      resumed. Inherits the tracker's open sign-off gates on the projection
+      side.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: analyst_brief
+        description: The full fixed-width card text (monospace font + word wrap in Power BI).
+
+  # --- 7.12.3: Retail Performance DirectQuery serving (periods resolved in SQL) ---
+
+  - name: dim_tracker_line_item
+    description: "Memorial & Museum Daily Tracker (YTD) line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures. Memorial-vs-museum revenue-split rows are Stub (open business-rule seam)."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]

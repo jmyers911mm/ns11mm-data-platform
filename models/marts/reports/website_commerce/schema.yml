@@ -1,0 +1,59 @@
+version: 2
+
+# website_commerce report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_website_commerce
+    description: >
+      Website Commerce Report view: one row per month x revenue type x revenue
+      year of recurring online donation and membership revenue from
+      stg_ecommerce__website_recurring.
+    data_tests:
+      # Grain enforced by the in-model GROUP BY -> error (severity rule)
+      - unique:
+          column_name: "month_of_year || '~' || revenue_type || '~' || revenue_year"
+          name: rpt_website_commerce_grain_unique
+
+  # ─── Reports 2–4 serving stacks (2026-07-31): Today's Sales, Daily Scan,
+  # Memorial & Museum Daily Tracker YTD. Same severity rule as above: grain
+  # enforced in-model -> error; inherited from a projection/GROUP-BY -> warn.
+
+  - name: rpt_website_commerce_daily
+    description: >
+      Day-grain Website Commerce serving shape, one row per (report_date,
+      revenue_type). Supersedes the month-pivot rpt_website_commerce for the
+      Power BI rebuild — the legacy month x year pivot becomes a Power BI
+      matrix over dim_date. is_recurring is TRUE on every row today (only the
+      recurring Drupal-commerce feed is live); the one-time website feed is an
+      open seam that adds is_recurring = FALSE rows with no Power BI change.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: revenue_type
+        description: Donation / Membership / Other (ruled open-set name matching, single authored rule).
+        data_tests: [not_null]
+      - name: revenue
+        description: Net revenue for the day and type.
+
+  - name: rpt_website_commerce_detail
+    description: >
+      Website Commerce "Donations By Date" serving shape, one row per
+      (report_date, title). Donation rows only; same source and
+      verbatim-identical revenue_type rule as rpt_website_commerce_daily.
+      Projects no order-level or PII columns.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: title
+        description: Product/appeal title as printed on the legacy sheet.
+
+  # --- 7.12.1: DirectQuery support for the Tracker ---

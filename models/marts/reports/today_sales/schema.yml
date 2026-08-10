@@ -1,0 +1,72 @@
+version: 2
+
+# today_sales report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_today_sales_powerbi
+    description: >
+      Thin SEMANTIC_VIEW() projection of the ATTENDANCE semantic view for Power BI
+      (Today's Sales). One row per report_date x hour_of_day x key_facility;
+      additive intraday sales, profit, units, and transactions.
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_today_sales_report_long
+    description: >
+      Tidy Today's Sales presentation, one row per (report_date, hour_of_day,
+      key_facility, line_item_code). Ratio lines carry numerator/denominator
+      (ratio-of-sums recomputed at display grain, ADR-004). No budget columns —
+      the report has no goals. Stub lines (visitors/attendance/totes) are typed
+      NULL until the intraday feeds land.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_today_sales_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('today_sales_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item (NULL for ratio and stub rows).
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Ratio denominator (NULL for additive rows).
+
+  - name: rpt_today_sales_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of intraday Today's Sales facts
+      (day-to-date totals, per-area splits, top hour/area, vs same-weekday-last-
+      week full-day deltas). Sole input to the Cortex narrative — unit-test
+      this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_today_sales_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the task in scripts/setup_today_sales_narrative.sql. Narrates only
+      the pre-computed brief_json from rpt_today_sales_narrative_brief.
+
+  - name: dim_today_sales_line_item
+    description: "Today's Sales report line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures. Lines apply to every selling area (facility columns NULL)."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]

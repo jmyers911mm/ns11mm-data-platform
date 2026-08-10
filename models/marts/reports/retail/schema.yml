@@ -1,0 +1,322 @@
+version: 2
+
+# retail report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+
+models:
+  - name: rpt_retail_powerbi
+    description: >
+      Power BI consumption layer over the RETAIL semantic view (MARTS.RETAIL).
+      One row per (REPORT_DATE, KEY_FACILITY). Thin, display-only projection per
+      ADR-004 — no business logic; metric definitions live in the semantic view.
+      Non-additive ratios are omitted and recomputed from summed components.
+    config:
+      materialized: view
+    data_tests:
+      # Inherited from the semantic-view projection -> warn (severity rule;
+      # matches the warn'd uniqueness on the DPR sibling wrapper)
+      - unique:
+          column_name: "report_date || '~' || key_facility"
+          name: rpt_retail_powerbi_grain_unique
+          config: { severity: warn }
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: key_facility
+        data_tests: [not_null]
+
+  - name: rpt_retail_budget_daily
+    description: >
+      Day × facility retail budget (goal), conformed from FCT_BUDGET_RETAIL_FORECASTS.
+      Column names mirror rpt_retail_powerbi so both unpivot identically in
+      rpt_retail_report_long. net_units and ecom_orders have no budget source (NULL).
+    config:
+      materialized: view
+
+  - name: rpt_retail_report_long
+    description: >
+      Tidy Retail Performance presentation, one row per (report_date, key_facility,
+      line_item_code) carrying actual + budget. Ratio lines carry numerator/denominator
+      (ratio-of-sums recomputed at display grain, ADR-004). Visitor-based ratios NULL
+      until Sensource; attendance is cross-domain (fct_daily_performance actual, forecast goal).
+    config:
+      materialized: view
+
+  - name: rpt_retail_category_long
+    description: >
+      Category page (page 2): one row per (report_date, key_facility, category_code)
+      with additive units/profit/sales/donations. Budget is category-level NULL today.
+    config:
+      materialized: view
+
+  - name: rpt_retail_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of retail facts (headline totals,
+      per-area splits, DoD/WoW/YoY, MTD/YTD, 7-day direction, top movers). Sole input
+      to the Cortex narrative — unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+
+  - name: rpt_retail_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source SQL
+      for the daily task in scripts/setup_retail_narrative.sql. Narrates only brief_json.
+
+  # ─── Coverage pass (2026-07-29): descriptions for the remaining active reports.
+  # Reports inherit their grain from upstream marts, so tests here are warn per
+  # the severity rule (grain enforced in-model -> error; inherited -> warn).
+
+  - name: rpt_monthly_retail_kpi
+    description: >
+      Monthly Retail KPI view: one row per calendar month x selling area, rolling
+      up fct_retail_daily with ratio-of-sums KPIs recomputed at the month grain.
+      Visitor-based KPIs NULL until Sensource lands.
+    data_tests:
+      # Grain enforced by the in-model GROUP BY -> error (severity rule)
+      - unique:
+          column_name: "calendar_year || '~' || calendar_month || '~' || key_facility"
+          name: rpt_monthly_retail_kpi_grain_unique
+
+  - name: rpt_retail_carts_analysis
+    description: >
+      Retail Carts Analysis view: one row per date for the Memorial Carts area,
+      with the legacy adjusted-memorial-visitor denominator driving capture rate
+      and per-cap ratios (NULL until Sensource lands). Additive sales, profit,
+      and customers are live.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_performance
+    description: >
+      Retail Performance Report view: one row per date x facility with the
+      report's non-additive ratios (conversion, rev-per-visitor, avg sale,
+      donation-per-visitor, profit margin) computed at query grain from
+      fct_retail_daily, plus MTD/YTD roll-ups on demand.
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_carts_report_long
+    description: >
+      Tidy Retail Carts Analysis presentation, one row per (report_date,
+      line_item_code). Ratio lines (capture rate, average sale, per-caps)
+      carry numerator/denominator so the legacy workbook's monthly views are
+      ratio-of-sums in DAX, never averaged daily ratios (ADR-004). Visitor-
+      derived lines flow the Sensource stub and are marked Stub in the seed.
+      The pre-divided day-grain ratios remain on rpt_retail_carts_analysis
+      for the legacy surface; this model does not read them.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_carts_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('carts_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item (NULL for ratio rows).
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Ratio denominator (NULL for additive rows).
+
+  - name: rpt_carts_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Carts Analysis facts (carts
+      sales/profit/customers/avg sale, DoD, same-weekday-last-week,
+      same-date-last-year, 7-day direction, commemoration guard). Capture and
+      per-cap measures deliberately excluded while the Sensource denominator
+      is a stub. Sole input to the Cortex narrative — unit-test this, not the
+      LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_carts_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the task in scripts/setup_carts_narrative.sql. Narrates only
+      the pre-computed brief_json from rpt_carts_narrative_brief.
+
+  - name: rpt_retail_period_windows
+    description: >
+      Single authored definition of the Retail Performance Report's six printed
+      period columns (Current Day / SDLY / WTD / MTD / QTD / YTD) as
+      [start_date .. end_date] ranges, anchored on the latest ACTUALS date
+      before today (from rpt_retail_powerbi — the budget side is
+      forward-dated). Consumed by rpt_retail_report_periods and
+      rpt_retail_category_periods so the two report pages can never disagree
+      about a period. Six rows. Validate the window definitions (SDLY -364,
+      Sunday-start WTD, calendar MTD/QTD/YTD) against the legacy .prpt before
+      sign-off.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_code
+        description: CURRENT_DAY / SDLY / WTD / MTD / QTD / YTD. Grain of this model.
+        data_tests: [not_null, unique]
+      - name: as_of_date
+        description: Reporting date the windows are anchored on (latest actuals date before today).
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: start_date
+        description: Inclusive window start.
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: end_date
+        description: Inclusive window end (= as_of_date for all but SDLY).
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_report_periods
+    description: >
+      Retail Performance Report page-1 grid as an as-of snapshot: one row per
+      (period_code, line_item_code) with actual_value, budget_value, variance
+      and variance_pct already resolved. Ratio lines divide
+      sum(numerator)/sum(denominator) within each window (ratio-of-sums, never
+      an average of daily ratios); variance is blank-guarded so unbudgeted
+      lines read NULL rather than -100%. Lets Power BI render the six period
+      columns with NO time intelligence — the DirectQuery-viable form of the
+      grid. Join dim_retail_line_item on line_item_code for labels/order/
+      format/availability. For history, read rpt_retail_report_long.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_code
+        description: Joins to rpt_retail_period_windows.period_code.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_retail_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('retail_line_items')
+              field: line_item_code
+      - name: actual_value
+        description: Resolved actual (additive sum, or ratio-of-sums for ratio lines).
+      - name: budget_value
+        description: Resolved goal, same shape. NULL where the line is unbudgeted.
+      - name: variance
+        description: actual_value - budget_value; NULL when budget_value is NULL.
+      - name: variance_pct
+        description: variance / abs(budget_value); NULL when budget_value is NULL or zero.
+
+  - name: rpt_retail_category_periods
+    description: >
+      Retail Performance Report page-2 category grid as an as-of snapshot: one
+      row per (period_code, key_facility, category_code) with additive units /
+      profit / sales / donations summed per window from the shared
+      rpt_retail_period_windows. Category-grain budget stays NULL by design
+      (the forecast is facility-grain); the columns are carried so the seam
+      stays visible. For history, read rpt_retail_category_long.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_code
+        data_tests: [not_null]
+      - name: category_code
+        data_tests:
+          - not_null: { config: { severity: warn } }
+
+  - name: rpt_retail_narrative_card
+    description: >
+      Deterministic ASCII analyst-notes card for the Retail Performance Report,
+      rendered in SQL from rpt_retail_narrative_brief (one row, latest
+      report_date). Binds directly to a Power BI card/table visual — works
+      under DirectQuery with no native query and no DAX text assembly. Twin of
+      rpt_tracker_narrative_card; sibling of the Cortex prose note in
+      RETAIL_PBI_NARRATIVE and usable before that task is resumed.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: analyst_brief
+        description: The full fixed-width card text (monospace font + word wrap in Power BI).
+
+  - name: rpt_retail_report_print
+    description: >
+      Retail Performance Report exactly as printed: one row per (period_code,
+      print_code) resolving each printed line to a single `value`. The legacy
+      report puts scenario on ROWS ('... Goal' / '... Actual' / a shaded
+      'Variance' row on selected metrics only) with the six periods as the only
+      columns — so Power BI needs one measure, no scenario switch and no time
+      intelligence. Cross join of 6 windows x 69 printed lines, LEFT joined to
+      rpt_retail_report_periods, so Stub lines (Medallion Machine, E-commerce)
+      render as NULL rather than vanishing. rpt_retail_report_periods remains
+      the metric-grain audit surface.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: print_code
+        description: Joins to dim_retail_print_line.print_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('retail_print_lines')
+              field: print_code
+      - name: period_code
+        data_tests: [not_null]
+      - name: value
+        description: The single number this printed row shows (actual, goal, or variance per scenario).
+      - name: scenario
+        description: actual / goal / variance — which side of the metric this printed row reads.
+        data_tests:
+          - accepted_values:
+              values: ['actual', 'goal', 'variance']
+
+  # --- 7.12.5: DPR MTD/YTD + Excel Data serving ---
+
+  - name: dim_retail_line_item
+    description: "Retail Performance Report line-item metadata: section, display order, indent, number format, availability, and (for ratio lines) numerator/denominator source measures."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+
+  - name: dim_carts_line_item
+    description: "Retail Carts Analysis line-item metadata: section, display order, number format, availability, and (for ratio lines) numerator/denominator source measures. Facility fixed to Memorial Carts (1020); visitor-derived lines are Stub pending Sensource."
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+
+  - name: dim_retail_print_line
+    description: "Printed-row catalog for the Retail Performance Report (69 rows): the legacy report prints scenario as ROWS ('... Goal' / '... Actual' / shaded 'Variance' on selected metrics), so each printed line gets its own row pointing at its metric_code + scenario. Complements dim_retail_line_item, which stays the metric catalog. line_item_display carries occurrence-index trailing spaces so repeated labels ('Variance' x8) are unique for Power BI sort-by-column while rendering identically — the padding is load-bearing."
+    columns:
+      - name: print_line_key
+        description: "PK. Surrogate = print_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: print_order
+        description: "Global printed order (unique; drives the matrix row sort via line_item_display)."
+        data_tests: [unique, not_null]
