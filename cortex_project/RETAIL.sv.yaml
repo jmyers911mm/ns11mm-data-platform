@@ -4,7 +4,7 @@ tables:
   - name: FCT_RETAIL_PERFORMANCE
     description: Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_RETAIL_PERFORMANCE
     dimensions:
@@ -89,7 +89,7 @@ tables:
   - name: FCT_RETAIL_DAILY
     description: Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups of sales/profit/units/donations. This is the single-fact projection the Retail Performance Power BI wrapper (RPT_RETAIL_POWERBI) reads.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_RETAIL_DAILY
     dimensions:
@@ -176,7 +176,7 @@ tables:
   - name: DIM_DATE
     description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: DIM_DATE
     primary_key:
@@ -216,7 +216,7 @@ tables:
   - name: SEED_FACILITY_AREA
     description: Retail selling-area facility reference
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: SEEDS
       table: SEED_FACILITY_AREA
     primary_key:

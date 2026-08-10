@@ -9,7 +9,7 @@ tables:
       - daily scan
       - fct_daily_scan
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_DAILY_SCAN
     primary_key:
@@ -66,7 +66,7 @@ tables:
       - fct_ticket_demand_forecast
     description: Ticket demand aggregated for forecasting and presale analysis
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_TICKET_DEMAND_FORECAST
     dimensions:
@@ -177,7 +177,7 @@ tables:
       - fct_ticket_availability
     description: Real-time ticket capacity and utilization by date/window/type
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_TICKET_AVAILABILITY
     dimensions:
@@ -247,7 +247,7 @@ tables:
       - fct_today_sales_hourly
     description: Intraday retail sales by hour x facility (Today's Sales Report). Additive sales/profit/units/transactions. Added 1.6.0.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_TODAY_SALES_HOURLY
     dimensions:
@@ -307,7 +307,7 @@ tables:
       - calendar
     description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: DIM_DATE
     primary_key:
@@ -375,7 +375,7 @@ tables:
       - seed_scan_market_segment
     description: Market segment reference for scan/attendance classification
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: SEEDS
       table: SEED_SCAN_MARKET_SEGMENT
     primary_key:

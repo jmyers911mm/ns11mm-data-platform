@@ -13,7 +13,7 @@ tables:
   - name: date
     description: Conformed calendar/date dimension. The single shared axis every live fact reconciles against.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: DIM_DATE
     primary_key:
@@ -79,7 +79,7 @@ tables:
   - name: dpr
     description: Ticketing / DPR additive day-grain fact. One row per calendar day.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_DAILY_PERFORMANCE
     primary_key:
@@ -163,7 +163,7 @@ tables:
   - name: retail_daily
     description: Retail facility-grain fact. One row per day per selling area. Base for retail ratios.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_RETAIL_DAILY
     primary_key:
@@ -224,7 +224,7 @@ tables:
   - name: retail_category
     description: Retail category-grain fact. One row per day per selling area per product category.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_RETAIL_PERFORMANCE
     primary_key:
@@ -257,7 +257,7 @@ tables:
   - name: daily_scan
     description: Gate-scan fact. One row per day per market segment. Scan component only.
     base_table:
-      database: NS11MM_DW_DEV
+      database: NS11MM_DW_PROD
       schema: MARTS
       table: FCT_DAILY_SCAN
     primary_key:

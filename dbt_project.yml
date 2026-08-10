@@ -98,6 +98,7 @@ models:
 
 seeds:
   ns11mm_data_platform:
+    +database: NS11MM_DW_DEV
     +schema: SEEDS
 
 snapshots:

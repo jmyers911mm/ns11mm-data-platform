@@ -19,4 +19,4 @@ tool_resources:
     execution_environment:
       type: "warehouse"
       warehouse: "COMPUTE_WH"
-    semantic_view: "NS11MM_DW_DEV.MARTS.DPR"
+    semantic_view: "MARTS.DPR"

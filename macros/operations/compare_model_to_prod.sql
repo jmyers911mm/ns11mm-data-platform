@@ -8,7 +8,7 @@
 {% set new_rows_query %}
     select 'NEW IN DEV' as status, count(*) as row_count
     from (
-        select * from NS11MM_DW_DEV.{{ target.schema }}.{{ model_name }}
+        select * from {{ target.database }}.{{ target.schema }}.{{ model_name }}
         minus
         select * from NS11MM_DW_PROD.MARTS.{{ model_name }}
     )
@@ -19,7 +19,7 @@
     from (
         select * from NS11MM_DW_PROD.MARTS.{{ model_name }}
         minus
-        select * from NS11MM_DW_DEV.{{ target.schema }}.{{ model_name }}
+        select * from {{ target.database }}.{{ target.schema }}.{{ model_name }}
     )
 {% endset %}
 

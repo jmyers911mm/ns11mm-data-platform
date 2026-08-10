@@ -23,7 +23,7 @@ def get_connection():
         user      = secret("SNOWFLAKE-USER"),
         password  = secret("SNOWFLAKE-PASSWORD"),
         warehouse = os.environ.get("NS11MM_SNOWFLAKE_WAREHOUSE", "SOURCES_WH"),
-        database  = os.environ.get("NS11MM_SNOWFLAKE_DATABASE", "NS11MM_DW_DEV"),
+        database  = os.environ.get("NS11MM_SNOWFLAKE_DATABASE", "NS11MM_DW_PROD"),
         schema    = "RAW",
         role      = "LOADER_ROLE",
     )
