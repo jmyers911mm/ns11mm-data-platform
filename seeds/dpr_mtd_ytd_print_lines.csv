@@ -1,0 +1,62 @@
+print_code,print_order,section,section_sort_order,line_item,indent,format,metric_code,availability
+MEM_ATTENDANCE,1010,Memorial,10,Attendance,1,Number0,MEMORIAL_ATTENDANCE,Available
+MUS_ATTENDANCE,2010,Museum,20,Attendance,1,Number0,MUSEUM_ATTENDANCE,Available
+MUS_TICKETS_SOLD,2020,Museum,20,Tickets Sold (for Date),1,Number0,TICKETS_SOLD,Available
+MUS_TICKET_REVENUE,2030,Museum,20,Ticket Revenue (for Date),1,Currency0,TICKET_REVENUE,Available
+MUS_CITYPASS,2040,Museum,20,CityPASS*,1,Currency0,PASS_REVENUE,Available
+MUS_SERVICE_FEES,2050,Museum,20,Service Fees Collected,1,Currency0,SERVICE_FEES,Available
+MUS_TOTAL_ADMISSION,2060,Museum,20,Total Admission Revenue,1,Currency0,ADMISSION_REVENUE,Available
+GT_MUS_TOURS,3010,Guided Tours,30,Museum Guided Tours (for Date),1,Number0,MUSEUM_GUIDED_TOURS,Available
+GT_MUS_TOUR_REV,3020,Guided Tours,30,Museum Guided Tour Revenue (for Date),1,Currency0,MUS_GUIDED_TOUR_REVENUE,Available
+GT_MEM_TOURS,3030,Guided Tours,30,Memorial Guided Tours (for Date),1,Number0,MEMORIAL_GUIDED_TOURS,Available
+GT_MEM_TOUR_REV,3040,Guided Tours,30,Memorial Guided Tour Revenue (for Date),1,Currency0,MEM_GUIDED_TOUR_REVENUE,Available
+GT_EA_MUS_TOURS,3050,Guided Tours,30,Early Access Museum Tours,1,Number0,EARLY_ACCESS_TOUR_COUNT,Stub
+GT_EA_MUS_TOUR_REV,3060,Guided Tours,30,Early Access Museum Tour Revenue,1,Currency0,REVEALED_TOUR_REVENUE,Available
+GT_YF_TOURS,3070,Guided Tours,30,Youth and Family Tours,1,Number0,YF_TOUR_COUNT,Stub
+GT_YF_TOUR_REV,3080,Guided Tours,30,Youth and Family Tour Revenue,1,Currency0,VIRTUAL_YF_TOUR_REVENUE,Available
+GT_MEM_MUS_TOURS,3090,Guided Tours,30,Memorial + Museum Tours (for Date),1,Number0,MEM_MUS_TOURS,Available
+GT_MEM_MUS_TOUR_REV,3100,Guided Tours,30,Memorial + Museum Tour Revenue (for Date),1,Currency0,MEM_MUS_TOUR_REVENUE,Available
+GT_TOTAL,3110,Guided Tours,30,Total Guided Tour Revenue,1,Currency0,TOTAL_GUIDED_TOUR_REVENUE,Available
+GT_EA_MEM_MUS_TOURS,3120,Guided Tours,30,Early Access Memorial + Museum Tours,1,Number0,EA_MEM_MUS_TOUR_COUNT,Stub
+GT_EA_MEM_MUS_TOUR_REV,3130,Guided Tours,30,Early Access Memorial + Museum Tour Revenue,1,Currency0,EA_MEM_MUS_TOUR_REVENUE,Stub
+VT_MEM_TOURS,4010,Virtual Tours,40,Virtual Memorial Tours,1,Number0,VIRTUAL_MEM_TOURS,Available
+VT_MEM_TOUR_REV,4020,Virtual Tours,40,Virtual Memorial Tour Revenue,1,Currency0,VIRTUAL_MEM_TOUR_REVENUE,Available
+VT_YF_MEM_TOURS,4030,Virtual Tours,40,Virtual Youth & Family Memorial Tours,1,Number0,VIRTUAL_YF_MEM_TOURS,Available
+VT_YF_MEM_TOUR_REV,4040,Virtual Tours,40,Virtual Youth & Family Memorial Tour Revenue,1,Currency0,VIRTUAL_YF_TOUR_REVENUE,Available
+VT_MEM_FIELD_TRIPS,4050,Virtual Tours,40,Memorial Field Trips,1,Number0,MEMORIAL_FIELD_TRIPS,Available
+VT_MEM_FIELD_TRIP_REV,4060,Virtual Tours,40,Memorial Field Trip Revenue,1,Currency0,MEM_FIELD_TRIP_REVENUE,Available
+VT_MUS_TOURS,4070,Virtual Tours,40,Museum Tours,1,Number0,VIRTUAL_MUS_TOURS,Available
+VT_MUS_TOUR_REV,4080,Virtual Tours,40,Museum Tour Revenue,1,Currency0,VIRTUAL_MUS_TOUR_REVENUE,Available
+VT_MUS_FIELD_TRIPS,4090,Virtual Tours,40,Museum Field Trips,1,Number0,MUSEUM_FIELD_TRIPS,Available
+VT_MUS_FIELD_TRIP_REV,4100,Virtual Tours,40,Museum Field Trip Revenue,1,Currency0,MUS_FIELD_TRIP_REVENUE,Available
+VT_REVEALED_REV,4110,Virtual Tours,40,Revealed Tour Revenue,1,Currency0,REVEALED_TOUR_REVENUE_VIRTUAL,Stub
+VT_ASK_EDUCATOR_REV,4120,Virtual Tours,40,Ask Educator Revenue,1,Currency0,ASK_EDUCATOR_REVENUE,Available
+VT_TOTAL,4130,Virtual Tours,40,Total Virtual Tour Revenue,1,Currency0,VIRTUAL_TOUR_REVENUE,Available
+MS_VISITORS,5010,Museum Store,50,Visitors,1,Number0,MUS_STORE_VISITORS,Stub
+MS_CAPTURE_RATE,5020,Museum Store,50,Capture Rate,1,Percent2,MUS_STORE_CAPTURE_RATE,Stub
+MS_CUSTOMERS,5030,Museum Store,50,Customers,1,Number0,MUS_STORE_CUSTOMERS,Available
+MS_CONVERSION_RATE,5040,Museum Store,50,Conversion Rate,1,Percent2,MUS_STORE_CONVERSION_RATE,Stub
+MS_AVG_SALE,5050,Museum Store,50,Average Sale,1,Currency2,MUS_STORE_AVG_SALE,Available
+MS_GROSS_PROFIT,5060,Museum Store,50,Gross Profit from Museum Store,1,Currency0,MUS_STORE_GROSS_PROFIT,Available
+RC_CUSTOMERS,6010,Retail Carts,60,Customers,1,Number0,CARTS_CUSTOMERS,Available
+RC_AVG_SALE,6020,Retail Carts,60,Average Sale,1,Currency2,CARTS_AVG_SALE,Available
+RC_GROSS_PROFIT,6030,Retail Carts,60,Gross Profit from Retail Carts,1,Currency0,RETAIL_CARTS_GROSS_PROFIT,Available
+EC_ORDERS,7010,E-Commerce,70,# of Orders,1,Number0,ECOM_ORDERS,Stub
+EC_GROSS_PROFIT,7020,E-Commerce,70,Gross Profit from E-Commerce,1,Currency0,ECOM_GROSS_PROFIT,Stub
+EC_TOTAL_RETAIL_GP,7030,E-Commerce,70,Total Retail Gross Profit,1,Currency0,TOTAL_RETAIL_GROSS_PROFIT,Available
+CAFE_TRANSACTIONS,8010,Museum Cafe,80,# of Transactions,1,Number0,CAFE_TRANSACTIONS,Available
+CAFE_TOTAL_PROFIT,8020,Museum Cafe,80,Total Profit,1,Currency0,CAFE_PROFIT,Available
+OV_AUDIO_HEADSET,9010,Other Visitor Revenue,90,Audio Tour & Headset,1,Currency0,AUDIO_TOUR_HEADSET,Available
+OV_MEM_AUDIO,9020,Other Visitor Revenue,90,Memorial Audio Tour,1,Currency0,MEM_AUDIO_GUIDE_REVENUE,Available
+OV_TICKETING_DON,9030,Other Visitor Revenue,90,Ticketing Donations,1,Currency0,TICKETING_DONATIONS,Available
+OV_COATCHECK_DON,9040,Other Visitor Revenue,90,Coat Check Donations,1,Currency0,COATCHECK_DON,Available
+OV_MUS_EXIT_DON,9050,Other Visitor Revenue,90,Museum Exit Donations,1,Currency0,MUS_EXIT_DON,Available
+OV_MUS_STORE_DON,9060,Other Visitor Revenue,90,Museum Store Donations,1,Currency0,MUS_STORE_DON,Available
+OV_CART_DON,9070,Other Visitor Revenue,90,Retail Cart Donations,1,Currency0,CART_DONATION_ASK,Available
+OV_CAFE_DON,9080,Other Visitor Revenue,90,Cafe Donations,1,Currency0,CAFE_DON,Available
+OV_SHOPIFY_DON,9090,Other Visitor Revenue,90,Shopify Donations,1,Currency0,ECOM_DONATION_ASK,Available
+OV_MASK_DON,9100,Other Visitor Revenue,90,Mask Donations,1,Currency0,MASK_DONATIONS,Available
+OV_TOTAL,9110,Other Visitor Revenue,90,Total Other Visitor Revenue,1,Currency0,TOTAL_OTHER_VISITOR_REVENUE,Available
+TOTAL_EST_REVENUE,9910,Total,99,Total Estimated Revenue,0,Currency0,TOTAL_ESTIMATED_REVENUE,Available
+TOTAL_BUDGETED_OPEX,9920,Total,99,Estimated Budgeted Operating Expenses,0,Currency0,BUDGETED_OPERATING_EXPENSES,Stub
+TOTAL_REV_PCT_OPEX,9930,Total,99,Revenue as % of Budgeted Operating Expenses,0,Percent1,REVENUE_PCT_OF_OPEX,Stub

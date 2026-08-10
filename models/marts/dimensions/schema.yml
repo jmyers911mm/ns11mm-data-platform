@@ -312,3 +312,15 @@ models:
       - name: print_order
         description: "Global printed order (unique; drives the matrix row sort via line_item_display)."
         data_tests: [unique, not_null]
+
+  - name: dim_dpr_mtd_ytd_print_line
+    description: "Printed-row catalog for the DPR MTD/YTD Excel variants (both print the same rows; only the window differs). These workbooks compare ACTUAL to PRIOR YEAR (not budget) and break donations out individually, which is why they need their own catalog rather than reusing dpr_line_items. line_item_display pads repeated labels ('Attendance', 'Customers', 'Average Sale') with occurrence-index trailing spaces for Power BI sort-by-column — the padding is load-bearing."
+    columns:
+      - name: print_line_key
+        description: "PK. Surrogate = print_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: print_order
+        description: "Global printed order (unique; drives matrix row sort via line_item_display)."
+        data_tests: [unique, not_null]

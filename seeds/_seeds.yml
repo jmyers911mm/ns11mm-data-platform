@@ -326,3 +326,24 @@ seeds:
         data_tests:
           - accepted_values:
               values: ['actual', 'goal', 'variance']
+
+  - name: dpr_mtd_ytd_print_lines
+    description: >
+      Printed-row catalog for the DPR "Month to Date" and "Year to Date" Excel
+      variants: one row per printed line in print order, with the metric it
+      reads. Both variants print identical rows, so one catalog serves both.
+      Lines whose metric has no source in the platform today (Early Access tour
+      counts, Youth & Family tour counts, Early Access Memorial + Museum,
+      E-Commerce gross profit, budgeted operating expenses) are marked Stub and
+      render blank rather than being omitted. Report scaffolding, not a business
+      dimension. Consumed by dim_dpr_mtd_ytd_print_line.
+    columns:
+      - name: print_code
+        description: Stable key joined from rpt_dpr_mtd_ytd_print. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: print_order
+        description: Global printed order. Unique — drives matrix row sort.
+        data_tests: [not_null, unique]
+      - name: metric_code
+        description: The metric in rpt_dpr_mtd_ytd_long this printed row reads (unmatched = Stub).
+        data_tests: [not_null]

@@ -888,3 +888,110 @@ models:
         data_tests:
           - accepted_values:
               values: ['actual', 'goal', 'variance']
+
+  # --- 7.12.5: DPR MTD/YTD + Excel Data serving ---
+
+  - name: rpt_dpr_retail_conform
+    description: >
+      Cross-domain conform: the retail sub-metrics the DPR MTD/YTD workbooks
+      print (Museum Store visitors/customers/sales/profit, Carts
+      customers/sales/profit, E-commerce orders/sales/profit, Cafe
+      transactions/sales/profit) pivoted to one row per report_date by
+      facility_group. Mirror image of rpt_retail_report_long reaching into
+      fct_daily_performance for attendance. Ratios are NOT computed here —
+      consumers carry numerator/denominator. visitor_count and ecom_orders are
+      Sensource/Shopify stubs.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null, unique]
+
+  - name: rpt_dpr_period_windows
+    description: >
+      Single authored definition of the DPR MTD/YTD comparison windows: four
+      rows (MTD and YTD, each current and prior year) as
+      [start_date .. end_date]. PRIOR YEAR IS A CALENDAR-YEAR SHIFT, not the
+      -364 days the daily reports use for Same Day Last Year — a 52-week shift
+      is wrong for period-to-date (364 days before 2025-12-31 is 2025-01-01,
+      the same calendar year). Accepts a `dpr_as_of_date` var to pin the anchor
+      for reconciliation. Validate the definitions against the legacy .prpt.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: period_group
+        description: MTD or YTD.
+        data_tests: [not_null]
+      - name: scenario
+        description: current or prior.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['current', 'prior']
+
+  - name: rpt_dpr_mtd_ytd_long
+    description: >
+      Day-grain long shape of every metric the DPR MTD/YTD workbooks print, one
+      row per (report_date, metric_code). Additive metrics carry `amount`; the
+      four ratios carry numerator/denominator for ratio-of-sums at period grain.
+      Sources rpt_dpr_powerbi + rpt_dpr_retail_conform. Authors three composites
+      once (TOTAL_GUIDED_TOUR_REVENUE, TOTAL_OTHER_VISITOR_REVENUE,
+      TOTAL_ESTIMATED_REVENUE) — all three verified to the cent against the
+      2025-12-31 MTD and YTD workbooks; see the model header for the component
+      lists and the arithmetic.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        data_tests: [not_null]
+      - name: metric_code
+        data_tests: [not_null]
+
+  - name: rpt_dpr_mtd_ytd_print
+    description: >
+      The DPR MTD and YTD Excel variants print-ready: one row per
+      (period_group, print_code) with the workbooks' four columns resolved —
+      actual, prior_year, variance_amount, variance_pct. Both variants come
+      from this one model. Ratio lines are ratio-of-sums within the window.
+      Variance is blank-guarded (NULL prior year -> NULL variance), which
+      deliberately differs from the legacy workbook's '0%' in those cells.
+      Power BI: rows = section -> line_item_display, columns = the four
+      measures, page or slicer on period_group.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: print_code
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dpr_mtd_ytd_print_lines')
+              field: print_code
+      - name: period_group
+        data_tests: [not_null]
+
+  - name: rpt_dpr_excel_export
+    description: >
+      The "DPR Excel Data" workbook as a flat day-grain table, column names and
+      order following the workbook. Area columns are REVENUE (from
+      rpt_dpr_retail_conform), not gross profit — the workbook differs from the
+      daily/MTD/YTD reports here. 'Total Museum Revenue' and 'Total Memorial
+      Revenue' are deliberately typed NULL: the memorial-vs-museum revenue split
+      is the open ADR-005 committee rule that also blocks the YTD Tracker, and a
+      guess must not enter a finance-facing export. 'Museum Donations' /
+      'Memorial Donations' are NULL pending the two donation composites being
+      projected onto rpt_dpr_powerbi (do not re-author them locally).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: Date
+        data_tests: [not_null, unique]

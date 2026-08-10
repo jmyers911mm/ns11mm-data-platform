@@ -58,5 +58,25 @@ select * from semantic_view(
         dp.total_coatcheck_donations         as coatcheck_don,
         dp.total_mus_store_donations         as mus_store_don,
         dp.total_mus_exit_donations          as mus_exit_don,
-        dp.total_cafe_donations              as cafe_don
+        dp.total_cafe_donations              as cafe_don,
+
+        -- 7.12.5: metrics the MTD/YTD workbooks print that were already
+        -- authored in the DPR semantic view but not projected here.
+        dp.total_service_fees                as service_fees,
+        dp.total_mask_donations              as mask_donations,
+        dp.total_mem_audio_guide_revenue     as mem_audio_guide_revenue,
+        dp.total_ask_educator_revenue        as ask_educator_revenue,
+        dp.total_retail_gross_profit         as total_retail_gross_profit,
+        dp.total_donations                   as total_donations,
+        dp.total_audio_tour_headset_units    as audio_tour_headset_units,
+        dp.total_memorial_field_trips        as memorial_field_trips,
+        dp.total_mem_field_trip_revenue      as mem_field_trip_revenue,
+        dp.total_museum_field_trips          as museum_field_trips,
+        dp.total_mus_field_trip_revenue      as mus_field_trip_revenue,
+        dp.total_field_trip_revenue          as field_trip_revenue,
+        dp.total_virtual_mem_tours           as virtual_mem_tours,
+        dp.total_virtual_mem_tour_revenue    as virtual_mem_tour_revenue,
+        dp.total_virtual_mus_tours           as virtual_mus_tours,
+        dp.total_virtual_mus_tour_revenue    as virtual_mus_tour_revenue,
+        dp.total_virtual_yf_mem_tours        as virtual_yf_mem_tours
 )
