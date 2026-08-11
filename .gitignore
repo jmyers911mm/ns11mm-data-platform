@@ -7,6 +7,7 @@ __pycache__/
 .DS_Store
 SCRATCHPAD.sql
 .temp/
+profiles.yml
 
 # Never commit credentials. The ROOT profiles.yml is committed BY DESIGN and
 # is credential-free (dbt Projects on Snowflake reads it; execution uses the
