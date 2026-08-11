@@ -9,17 +9,17 @@ artifacts:
     type: semantic_view
     targets:
       default:
-        object: MARTS.ATTENDANCE
+        object: NS11MM_DW_DEV_KRAMSEY.MARTS.ATTENDANCE
   - path: RETAIL.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: MARTS.RETAIL
+        object: NS11MM_DW_DEV_KRAMSEY.MARTS.RETAIL
   - path: DPR.sv.yaml
     type: semantic_view
     targets:
       default:
-        object: MARTS.DPR
+        object: NS11MM_DW_DEV_KRAMSEY.MARTS.DPR
   - path: UNIFIED.sv.yaml
     type: semantic_view
     targets:

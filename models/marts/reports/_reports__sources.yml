@@ -1,7 +1,7 @@
 sources:
   - name: dpr_semantic
     description: Native Snowflake SEMANTIC VIEW objects (deployed from cortex_project/DPR.sv.yaml as DDL — not dbt-built).
-    database: "{{ target.database }}"
+    database: NS11MM_DW_PROD
     schema: MARTS
     tables:
       - name: DPR
@@ -10,7 +10,7 @@ sources:
   # --- Attendance domain semantic view (Daily Scan + Today's Sales, 1.6.0) ---
   - name: attendance_semantic
     description: Native Snowflake SEMANTIC VIEW object for attendance/scanning (deployed from cortex_project/ATTENDANCE.sv.yaml as DDL — not dbt-built).
-    database: "{{ target.database }}"
+    database: NS11MM_DW_PROD
     schema: MARTS
     tables:
       - name: ATTENDANCE
@@ -19,7 +19,7 @@ sources:
   # --- Retail Performance Report serving layer (added 1.6.0) ----------------
   - name: retail_semantic
     description: Native Snowflake SEMANTIC VIEW object for retail (deployed from cortex_project/RETAIL.sv.yaml as DDL — not dbt-built).
-    database: "{{ target.database }}"
+    database: NS11MM_DW_PROD
     schema: MARTS
     tables:
       - name: RETAIL

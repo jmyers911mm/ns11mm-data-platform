@@ -109,3 +109,14 @@ subfolders and are **not** shown here.
   STAGING / INTERMEDIATE / MARTS / ML_FEATURES / SEEDS.
 - Calendar-based reporting only: `dim_date` has **no fiscal columns**; the
   fiscal calendar is pending ADR-005 committee sign-off.
+
+## Per-report lineage
+
+This document describes the platform-wide flow. For the chain behind a specific
+report — source extract through staging, intermediate, fact, semantic view, and
+the ADR-021 serving models — see the per-family lineage pages:
+
+- **Index:** [`lineage/LINEAGE_INDEX.md`](lineage/LINEAGE_INDEX.md)
+- **Daily Performance Report:** [`DPR_LINEAGE.md`](DPR_LINEAGE.md)
+- Retail · Tracker · Scan · Today's Sales · Attendance · Website Commerce —
+  linked from the index.

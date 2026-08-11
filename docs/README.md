@@ -52,6 +52,8 @@ The **technical source of truth** — the dbt project, its tests, lineage, and t
 | --- | --- |
 | [PROJECT_MAP](architecture/PROJECT_MAP.md) | Team orientation: mental model, file placement, cross-references |
 | [ARCHITECTURE_FLOW](architecture/ARCHITECTURE_FLOW.md) | End-to-end data flow from source systems to Power BI |
+| [Report Lineage Index](architecture/lineage/LINEAGE_INDEX.md) | Per-family lineage: source → staging → intermediate → fact → semantic view → serving models, one page per report family |
+| [DPR_LINEAGE](architecture/DPR_LINEAGE.md) | The Daily Performance Report chain in full — the reference implementation of the ADR-021 role grammar |
 | [SOURCE_INTEGRATION](architecture/SOURCE_INTEGRATION.md) | Per-source API profiles, auth models, extraction details |
 | [TEST_ORCHESTRATION](architecture/TEST_ORCHESTRATION.md) | Test scheduling, gate sequence, freshness SLAs, alert routing |
 | [SNOWFLAKE_SETTINGS](architecture/SNOWFLAKE_SETTINGS.md) | Account settings: roles, warehouses, integrations |
@@ -83,6 +85,8 @@ ADR-001 through ADR-019 live in-repo. ADR-007–017 were adopted from the extern
 | [ADR-017](adr/ADR_017_platform_audit_process.md) | Platform audit process — **proposed** |
 | [ADR-018](adr/ADR_018_metric_definition_ownership.md) | Metric definition ownership across semantic views and report models — **proposed** |
 | [ADR-019](adr/ADR_019_single_source_database.md) | All environments read source data from a single shared database (NS11MM_DW_DEV) — **proposed** |
+| [ADR-020](adr/ADR_020_materialization_policy.md) | Materialization policy — when a model is a view, a table, or incremental — **proposed** |
+| [ADR-021](adr/ADR_021_report_serving_layer.md) | Report serving models are named by role; projection chains off a wrapper are permitted — **proposed** |
 
 ### 2. The Platform Hub
 
