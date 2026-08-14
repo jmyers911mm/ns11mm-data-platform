@@ -11,6 +11,17 @@
 -- Category from int_gateway__scan_lines is mapped to the reporting segment via
 -- seed_scan_market_segment. Budget is left-joined from a stub (dsr forecasts)
 -- to preserve the seam (ADR-005). ADR-004: additive only.
+--
+-- SCOPE NOTE (ADR-005 gate, 8.7.0) — owner Chris Wogas: passes_scanned is now
+-- the NET legacy measure. int_ticket_scans applies the
+-- t_fact_museum_passes_scanned rule -- Status = 0 AND Code = 0 adds, Status = 0
+-- AND Code = 11 subtracts, every other usage code contributes nothing, and
+-- Gateway facility 13 is excluded -- and hands down a signed net_scanned_qty.
+-- The previous definition (status in 0,1; no code predicate; no reversal leg)
+-- over-counted. passes_scanned can be negative for a single segment on a day
+-- whose reversals exceed its entries; that is legacy behaviour and nets
+-- correctly at the day total, so it is deliberately not floored at zero.
+-- gross_passes_scanned is carried alongside for reconciliation.
 
 {{ config(materialized='table') }}
 
@@ -30,8 +41,11 @@ classified as (
         coalesce(s.segment_key, 'unmapped')      as segment_key,
         coalesce(s.segment_name, 'Unmapped')     as segment_name,
         l.scanned_qty,
+        l.net_scanned_qty,
         l.ticket_qty,
-        l.is_valid_scan
+        l.is_valid_scan,
+        l.is_reversing_scan,
+        l.is_counted_scan
     from lines l
     left join segments s on l.category = s.match_value
 ),
@@ -43,7 +57,11 @@ aggregated as (
         max(segment_name)                                        as segment_name,
         -- Decimal guards live upstream in int_gateway__scan_lines (DQ rule);
         -- tickets_sold is the scan-side proxy (see header).
-        sum(case when is_valid_scan then scanned_qty else 0 end)  as passes_scanned,
+        -- net_scanned_qty is already 0 for uncounted scans and negative for the
+        -- code-11 leg, so this single SUM is the legacy UNION of both legs.
+        sum(coalesce(net_scanned_qty, 0))                         as passes_scanned,
+        sum(case when is_valid_scan then scanned_qty else 0 end)  as gross_passes_scanned,
+        sum(case when is_reversing_scan then scanned_qty else 0 end) as reversed_passes_scanned,
         sum(ticket_qty)                                           as tickets_sold
     from classified
     group by 1, 2
@@ -80,6 +98,8 @@ final as (
         a.segment_name,
         dd.is_commemoration_day,
         a.passes_scanned,
+        a.gross_passes_scanned,
+        a.reversed_passes_scanned,
         a.tickets_sold,
         b.passes_budget
     from aggregated a

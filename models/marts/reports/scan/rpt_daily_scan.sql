@@ -9,6 +9,13 @@
 -- Percentages divide by the day total (window sum), never averaged. Budget
 -- (the DSR forecast) is joined in fct_daily_scan from stg_budget__daily_scan;
 -- variance is NULL only for dates/segments the forecast has not been loaded for.
+--
+-- SCOPE NOTE (ADR-005 gate, 8.7.0) — owner Chris Wogas: passes_scanned is the
+-- NET legacy measure (code 0 adds, code 11 subtracts, all other usage codes
+-- dropped, Gateway facility 13 excluded), so both the printed counts and every
+-- share below change value. gross_passes_scanned / reversed_passes_scanned are
+-- carried through for reconciliation against the pre-8.7.0 figures. Shares stay
+-- ratio-of-sums at display grain — no stored quotient (ratio rule).
 -- ADR-004: no logic in Power BI.
 
 {{ config(materialized='view') }}
@@ -33,6 +40,8 @@ select
     is_commemoration_day,
 
     passes_scanned,
+    gross_passes_scanned,
+    reversed_passes_scanned,
     tickets_sold,
     passes_budget,
     day_total_scanned,

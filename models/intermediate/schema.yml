@@ -83,35 +83,65 @@ models:
 
   - name: int_dpr__admissions
     description: >
-      GA tickets sold, ticket revenue, scanned-GA attendance proxy and
-      CityPASS/C3 pass revenue per day. Partial attendance (see model header
-      scope note; Sensource + additional-revenue inputs not yet staged).
+      GA tickets sold, ticket revenue and CityPASS/C3 pass revenue per day
+      (journal-issued component). Attendance moved OUT of this model in 8.7.0 —
+      mus_attendance is authored once in int_dpr__attendance; the GA quantity
+      survives here only as mus_attendance_ga_proxy for reconciliation and is
+      not consumed downstream.
     columns:
       - name: date_key
         description: "PK. Natural key (calendar date)."
         constraints:
           - type: primary_key
         data_tests: [not_null, unique]
+      - name: mus_attendance_ga_proxy
+        description: >
+          RECONCILIATION ONLY. GA ticket quantity — the pre-8.7.0 museum
+          attendance definition. Never join this to a report.
 
   - name: int_dpr__attendance
     description: >
-      Scan-based museum and memorial attendance per day, from int_ticket_scans
-      (valid Gateway scans) classified to area by facility name. mem_attendance
-      feeds fct_daily_performance; mus_attendance_scanned is a QA companion to
-      the ga-ticket attendance proxy in int_dpr__admissions. See model header
-      scope note (facility-name classification; Sensource blend not yet staged).
+      Museum and memorial attendance per day. Museum = net scanned passes at
+      key_facility 1006/3000 (legacy scan-validity rule) with the closed-day
+      zeroing from seed_attendance_zeroing_rule applied. Memorial =
+      SUM(passes_scanned) from stg_memorial__attendance
+      (911dw.memorial_attendance, staged in 8.4.0) at the seeded memorial
+      key_facility — its own legacy table, not the Gateway scan feed, which
+      cannot emit key_facility 2000. Classification is seed-driven
+      (seed_attendance_facility_group), no longer facility-name pattern
+      matching. Feeds fct_daily_performance.
     columns:
       - name: date_key
         description: "PK. Natural key (calendar date)."
         constraints:
           - type: primary_key
         data_tests: [not_null, unique]
+      - name: mus_attendance
+        description: >
+          Museum attendance: net scanned passes at key_facility 1006/3000, forced
+          to 0 on a seeded closed day whose total falls below the threshold.
+          Guaranteed non-null only when a museum scan exists for the day.
+      - name: mus_passes_scanned
+        description: Museum passes before the closed-day zeroing (audit companion).
+      - name: is_museum_closed_day
+        description: TRUE when a seeded zeroing rule fired for the day.
+        data_tests: [not_null]
       - name: mem_attendance
-        description: Valid scans at memorial-classified facilities.
-        data_tests: [not_null]
-      - name: mus_attendance_scanned
-        description: Valid scans at museum-classified facilities (QA only).
-        data_tests: [not_null]
+        description: >
+          Memorial attendance: SUM(passes_scanned) from stg_memorial__attendance
+          at the seeded memorial key_facility. Deliberately NOT tested not_null:
+          a day the feed has no row for must read NULL, never 0.
+      - name: uncounted_passes_scanned
+        description: >
+          Monitor. Net passes that resolved to neither attendance line (Gateway
+          facility 12 -> key_facility 5000, and the legacy else '0' bucket).
+      - name: mem_passes_scanned_gateway
+        description: >
+          Monitor, not a measure. Net GATEWAY scans that classify as memorial.
+          Must stay NULL: no Gateway ACP resolves to key_facility 2000, and
+          memorial attendance is authored from stg_memorial__attendance. A value
+          here means the memorial line has acquired a second writer and is
+          double counting. Never join this to a report.
 
   - name: int_gateway__item_attributes
     description: >
@@ -133,8 +163,13 @@ models:
     description: >
       Gate scan lines with ticket market segment category. One row per scan
       event joined to the ticket's attribute for segment classification.
-      Feeds fct_daily_scan.
+      Carries the signed net_scanned_qty (legacy code-0 minus code-11 rule,
+      8.7.0) alongside the gross qty. Feeds fct_daily_scan.
     columns:
+      - name: net_scanned_qty
+        description: >
+          Signed passes-scanned contribution for the scan. Summed directly by
+          fct_daily_scan.passes_scanned; can be negative.
       - name: usage_id
         description: "PK. Natural key (scan event identifier). The visual_id ticket join is deduped upstream (7.9.0); uniqueness guarded at warn per the inherited-grain rule."
         constraints:
@@ -217,8 +252,10 @@ models:
 
   - name: int_ticket_scans
     description: >
-      Gate scan events, one row per usage_id (scan) where use_time is not null.
-      Feeds fct_daily_operations visitor/scan measures.
+      Gate scan events, one row per usage_id (scan) where use_time is not null,
+      with the legacy scan-validity rule and the ACP -> facility resolution
+      applied (8.7.0). Feeds int_gateway__scan_lines, int_dpr__attendance and
+      fct_daily_operations.
     columns:
       - name: scan_id
         description: "PK. Scan event id (usage_id), grain from source."
@@ -229,12 +266,38 @@ models:
         description: "Scan date."
         data_tests:
           - not_null: { config: { severity: warn } }
+      - name: key_facility
+        description: >
+          911dw facility resolved through Usage.ACP -> ACPs.AcpId ->
+          ACPs.FacilityID -> Facility.IDNo -> Facility.FacilityID and
+          seed_gateway_facility_map. 0 = the legacy else bucket; never null.
+        data_tests: [not_null]
+      - name: scan_sign
+        description: "+1 = code-0 entry, -1 = code-11 reversal, 0 = does not count."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [-1, 0, 1]
       - name: is_valid_scan
-        description: "True = admitted scan, False = rejected."
+        description: "True = admitted entry scan (Status 0, Code 0, facility not excluded)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: is_reversing_scan
+        description: "True = code-11 reversal leg (subtracts from passes scanned)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: is_counted_scan
+        description: "True = the scan contributes to passes scanned in either direction."
         data_tests:
           - not_null: { config: { severity: warn } }
       - name: visitor_count
-        description: "Visitors admitted on this scan."
+        description: "Raw source quantity on the scan (unsigned)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: net_visitor_count
+        description: >
+          Signed passes-scanned contribution (quantity * scan_sign). 0 for scans
+          the legacy rule drops. This is the column every attendance measure sums.
         data_tests:
           - not_null: { config: { severity: warn } }
 

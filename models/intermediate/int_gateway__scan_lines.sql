@@ -8,9 +8,17 @@
 -- the ticket's matrix/attribute, to recover the MARKET CATEGORY that the Daily
 -- Scan Report breaks out (CityPASS, C3, Explorer, School Groups, ...).
 --
--- Scan qty = usage.quantity (scannedQty). Tickets-sold qty for the same segment
--- is the ticket quantity. Category is resolved downstream against
+-- Scan qty is now the SIGNED net_scanned_qty from int_ticket_scans: the legacy
+-- passes-scanned rule adds Usage.Code = 0 and SUBTRACTS Usage.Code = 11 at
+-- Status = 0, and drops everything else (8.7.0). Tickets-sold qty for the same
+-- segment is still the ticket quantity. Category is resolved downstream against
 -- seed_scan_market_segment.
+--
+-- SCOPE NOTE (ADR-005 gate) — owner Chris Wogas: passes_scanned changes value in
+-- this release because the validity rule changed upstream. It can also now be
+-- NEGATIVE for a segment on a day whose reversals exceed its entries; that is
+-- the legacy behaviour (the UNION's negative leg is not floored) and it nets to
+-- the correct day total. See DECISION_MEMO question 1.
 --
 -- JOIN PATH (verify against live data): usage.visual_id = jnltickets.visual_id.
 -- The market "category" string is derived from the ticket's sales channel /
@@ -29,8 +37,12 @@ with scans as (
         visual_id,
         scan_date,
         gate_id,
-        try_to_decimal(visitor_count::varchar, 18, 0) as scanned_qty,
-        is_valid_scan
+        key_facility,
+        try_to_decimal(visitor_count::varchar, 18, 0)     as scanned_qty,
+        try_to_decimal(net_visitor_count::varchar, 18, 0) as net_scanned_qty,
+        is_valid_scan,
+        is_reversing_scan,
+        is_counted_scan
     from {{ ref('int_ticket_scans') }}
 ),
 
@@ -63,8 +75,12 @@ joined as (
         s.usage_id,
         s.scan_date                        as date_key,
         s.gate_id,
+        s.key_facility,
         s.is_valid_scan,
+        s.is_reversing_scan,
+        s.is_counted_scan,
         s.scanned_qty,
+        s.net_scanned_qty,
         t.ticket_qty,
         t.plu,
         a.itm_matrix_code                  as matrix_code,

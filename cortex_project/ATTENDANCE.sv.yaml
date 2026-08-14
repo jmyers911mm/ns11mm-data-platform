@@ -35,7 +35,16 @@ tables:
         data_type: DATE
     facts:
       - name: PASSES_SCANNED
+        description: Net passes scanned under the legacy scan-validity rule (Usage.Status = 0 with Usage.Code = 0 adding and Usage.Code = 11 subtracting; all other usage codes contribute nothing; Gateway facility 13 excluded). Can be negative for a segment on a day whose reversals exceed its entries. Redefined 8.7.0 (ADR-005).
         expr: PASSES_SCANNED
+        data_type: NUMBER
+      - name: GROSS_PASSES_SCANNED
+        description: Positive (code 0) leg only, before code-11 reversals. Reconciliation companion to PASSES_SCANNED; do not publish as attendance.
+        expr: GROSS_PASSES_SCANNED
+        data_type: NUMBER
+      - name: REVERSED_PASSES_SCANNED
+        description: Quantity on code-11 reversal scans, expressed positive. PASSES_SCANNED = GROSS_PASSES_SCANNED - REVERSED_PASSES_SCANNED.
+        expr: REVERSED_PASSES_SCANNED
         data_type: NUMBER
       - name: TICKETS_SOLD
         expr: TICKETS_SOLD
@@ -47,7 +56,15 @@ tables:
       - name: TOTAL_PASSES_SCANNED
         expr: SUM(PASSES_SCANNED)
         data_type: NUMBER
-        description: Total passes scanned (attendance count)
+        description: Total net passes scanned (attendance count). Legacy t_fact_museum_passes_scanned rule as of 8.7.0 - code 0 adds, code 11 subtracts, other usage codes and Gateway facility 13 are excluded. Values differ from pre-8.7.0 history; do not compare across the release boundary without restating.
+      - name: TOTAL_GROSS_PASSES_SCANNED
+        expr: SUM(GROSS_PASSES_SCANNED)
+        data_type: NUMBER
+        description: Total code-0 (entry) passes before reversals. Reconciliation only - TOTAL_PASSES_SCANNED is the governed attendance measure.
+      - name: TOTAL_REVERSED_PASSES_SCANNED
+        expr: SUM(REVERSED_PASSES_SCANNED)
+        data_type: NUMBER
+        description: Total code-11 reversal quantity (positive). Added 8.7.0.
       - name: TOTAL_TICKETS_SCANNED
         synonyms:
           - tickets scanned

@@ -74,8 +74,17 @@ models:
           - unique
           - not_null
       - name: total_visitors
+        description: >
+          Net passes scanned across all gates (legacy scan-validity rule, 8.7.0):
+          code 0 adds, code 11 subtracts, all other usage codes and Gateway
+          facility 13 contribute nothing. Lower than the pre-8.7.0 value, which
+          admitted status 1 and never subtracted reversals.
         data_tests:
           - not_null
+      - name: reversing_scans
+        description: "Count of code-11 reversal scans (added 8.7.0)."
+        data_tests:
+          - not_null: { config: { severity: warn } }
       - name: ticket_revenue
         data_tests:
           - not_null
@@ -172,11 +181,22 @@ models:
         data_tests: [not_null]
       - name: ticket_revenue
         data_tests: [not_null]
+      - name: mus_attendance
+        description: >
+          Museum attendance: net scanned passes at key_facility 1006/3000 under
+          the legacy scan-validity rule, with the closed-day zeroing applied
+          (int_dpr__attendance, 8.7.0). Redefined from the pre-8.7.0 GA ticket
+          quantity — do not compare across the release boundary.
       - name: mem_attendance
         description: >
-          Memorial attendance (valid Gateway scans at memorial facilities).
-          Scan component only; Sensource blend gated (see int_dpr__attendance).
-        data_tests: [not_null]
+          Memorial attendance: SUM(passes_scanned) from stg_memorial__attendance
+          (911dw.memorial_attendance) at the seeded memorial key_facility, via
+          int_dpr__attendance. Redefined in 8.7.0 from a facility-name
+          pattern-match artefact ('%MEMORIAL%' on the Gateway facility
+          catalogue) to the legacy measure — do not compare across the release
+          boundary. The not_null test stays REMOVED: NULL is the correct value
+          for a day the feed has no row for, and must never become 0. Layout
+          seeds mark the row 'Available'.
       - name: mem_guided_tour_revenue
         description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
         data_tests: [not_null]
@@ -184,8 +204,20 @@ models:
   - name: fct_daily_scan
     description: >
       Day x segment grain Daily Scan fact. Passes scanned, tickets sold, and
-      budget by market segment per day. Feeds rpt_daily_scan.
+      budget by market segment per day. passes_scanned is the NET legacy measure
+      as of 8.7.0 (code 0 adds, code 11 subtracts, all other usage codes and
+      Gateway facility 13 excluded); gross_passes_scanned and
+      reversed_passes_scanned are carried for reconciliation. Feeds rpt_daily_scan.
     columns:
+      - name: passes_scanned
+        description: >
+          Net passes scanned. Can be negative for a single segment on a day whose
+          reversals exceed its entries — deliberately not floored (legacy
+          behaviour); it nets correctly at the day total.
+      - name: gross_passes_scanned
+        description: Code-0 (entry) quantity only, before reversals. Reconciliation companion.
+      - name: reversed_passes_scanned
+        description: Code-11 reversal quantity, expressed positive.
       - name: date_key
         description: "FK to dim_date.date_key."
         constraints:

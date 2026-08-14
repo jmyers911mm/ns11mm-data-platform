@@ -1,0 +1,3 @@
+rule_key,attendance_group,rule_type,day_of_week_name,exception_date,min_threshold,notes
+closed_tuesday,museum,day_of_week,Tue,,300,"t_reporting_mus_attendance: CASE WHEN DAYOFWEEK(key_date) IN (3) AND SUM(v.passes_scanned) < 300 THEN 0. MySQL DAYOFWEEK 3 = Tuesday (1 = Sunday). Encoded as a day NAME so the rule is independent of the Snowflake WEEK_START session parameter."
+closed_2022_06_15,museum,exception_date,,2022-06-15,300,"t_reporting_mus_attendance: OR key_date = '20220615'. A single hard-coded closed day carried in the legacy CASE alongside the Tuesday test, under the same <300 threshold."

@@ -1,16 +1,15 @@
--- Silver intermediate: general-admission tickets sold, ticket revenue, pass revenue, attendance
+-- Silver intermediate: general-admission tickets sold, ticket revenue, pass revenue
 -- ---------------------------------------------------------------------------
 -- Domain: admissions
 -- Grain: one row per date_key
 --
--- The GA cohort (ga_flag = 1) drives tickets_sold, ticket_revenue and the
--- Galaxy-scanned museum attendance proxy. Pass revenue (CityPASS / C3 / third-
--- party resellers) is a separate set of cohorts, five in legacy, keyed by
--- matrix code, PLU and transaction customer.
+-- The GA cohort (ga_flag = 1) drives tickets_sold and ticket_revenue. Pass
+-- revenue (CityPASS / C3 / third-party resellers) is a separate set of cohorts,
+-- five in legacy, keyed by matrix code, PLU and transaction customer.
 --
 -- Legacy lineage: t_reporting_tickets_sold_issued_new,
 -- t_reporting_ticket_revenue_new, t_reporting_pass_revenue_new,
--- t_reporting_mus_attendance, fact_museum_tickets_issued_fordate_new,
+-- fact_museum_tickets_issued_fordate_new,
 -- fact_museum_citypass, fact_museum_citypass_booklets,
 -- fact_museum_citypass_scanchange, fact_additional_revenue_new.
 --
@@ -18,11 +17,20 @@
 -- change in this file alters what a certified metric counts. It must not ship
 -- without sign-off. See DECISION_MEMO.md in this release.
 --
--- SCOPE NOTE (unchanged from 7.x): legacy mus_attendance blends Sensource
--- turnstile counts with scanned GA passes, and legacy tickets_sold subtracts a
--- child-ticket adjustment from a bulk-tickets feed. Neither source is staged.
--- This model produces the SCANNED-GA and JOURNAL-REVENUE components, plus
--- typed-NULL placeholders for the unstaged cohorts.
+-- SCOPE NOTE (ADR-005 gate, 8.7.0): ATTENDANCE MOVED OUT. This model used to
+-- publish mus_attendance as the GA ticket QUANTITY. That is a tickets-issued
+-- count, not a gate count, and it carried none of the legacy museum-attendance
+-- rules. The legacy museum attendance line is t_reporting_mus_attendance --
+-- SUM(fact_visitors.passes_scanned) WHERE key_facility IN (1006,3000) with the
+-- closed-day zeroing CASE -- which is now authored ONCE in int_dpr__attendance,
+-- and fct_daily_performance reads it from there. The GA quantity survives here
+-- as mus_attendance_ga_proxy for reconciliation only: it is wired to nothing
+-- and must stay that way (composites authored once).
+--
+-- SCOPE NOTE (unchanged from 7.x): legacy tickets_sold subtracts a child-ticket
+-- adjustment from a bulk-tickets feed, which is not staged. This model produces
+-- the JOURNAL-ISSUED components, plus typed-NULL placeholders for the unstaged
+-- cohorts.
 --
 -- Config-as-data. Four seeds drive the cohorts; edit the seed, not this SQL:
 --   seed_gateway_tickets_sold_excluded_plu    tickets sold/issued exclusions
@@ -110,10 +118,12 @@ ga as (
                   and not is_reseller_customer
                  then amount else 0 end)                             as ticket_revenue_ga,
 
-        -- Scanned GA quantity as an attendance proxy (partial; see scope note).
-        -- Deliberately NOT narrowed by the tickets-sold exclusions: this is an
-        -- attendance proxy, not the tickets-sold line.
-        sum(case when ga_flag = 1 then quantity else 0 end)          as mus_attendance_scanned_ga,
+        -- RECONCILIATION ONLY (8.7.0): the pre-8.7.0 museum attendance value.
+        -- Deliberately NOT narrowed by the tickets-sold exclusions, and
+        -- deliberately consumed by nothing. Compare against
+        -- int_dpr__attendance.mus_attendance to size the tickets-issued vs.
+        -- gate-scan gap.
+        sum(case when ga_flag = 1 then quantity else 0 end)          as mus_attendance_ga_proxy,
 
         -- ── Pass revenue cohort 1: CityPASS matrix (pre scan change) ─────────
         -- Legacy "CityPASS Revenue (prior to scan change)":
@@ -173,7 +183,7 @@ select
     date_key,
     tickets_sold_ga                                                  as tickets_sold,
     ticket_revenue_ga                                                as ticket_revenue,
-    mus_attendance_scanned_ga                                        as mus_attendance,
+    mus_attendance_ga_proxy,
 
     -- Pass revenue cohorts, carried individually so the roll-up is auditable
     -- against the five legacy steps rather than being a single opaque number.

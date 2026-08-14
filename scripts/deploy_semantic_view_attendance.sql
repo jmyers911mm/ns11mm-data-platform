@@ -19,7 +19,9 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.ATTENDANCE
     TODAY_SALES_TO_DATE AS TS (DATE_KEY) REFERENCES DT (DATE_KEY)
   )
   FACTS (
-    DS.PASSES_SCANNED AS PASSES_SCANNED,
+    DS.PASSES_SCANNED AS PASSES_SCANNED COMMENT = 'Net passes scanned under the legacy scan-validity rule (Usage.Status = 0 with Usage.Code = 0 adding and Usage.Code = 11 subtracting; all other usage codes contribute nothing; Gateway facility 13 excluded). Can be negative for a segment on a day whose reversals exceed its entries. Redefined 8.7.0 (ADR-005).',
+    DS.GROSS_PASSES_SCANNED AS GROSS_PASSES_SCANNED COMMENT = 'Positive (code 0) leg only, before code-11 reversals. Reconciliation companion to PASSES_SCANNED; do not publish as attendance.',
+    DS.REVERSED_PASSES_SCANNED AS REVERSED_PASSES_SCANNED COMMENT = 'Quantity on code-11 reversal scans, expressed positive. PASSES_SCANNED = GROSS_PASSES_SCANNED - REVERSED_PASSES_SCANNED.',
     DS.TICKETS_SOLD AS TICKETS_SOLD,
     DS.PASSES_BUDGET AS PASSES_BUDGET,
     TD.TICKET_COUNT AS TICKET_COUNT,
@@ -108,7 +110,9 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.ATTENDANCE
     SM.NOTES AS NOTES
   )
   METRICS (
-    DS.TOTAL_PASSES_SCANNED AS SUM(PASSES_SCANNED) COMMENT = 'Total passes scanned (attendance count)',
+    DS.TOTAL_PASSES_SCANNED AS SUM(PASSES_SCANNED) COMMENT = 'Total net passes scanned (attendance count). Legacy t_fact_museum_passes_scanned rule as of 8.7.0 - code 0 adds, code 11 subtracts, other usage codes and Gateway facility 13 are excluded. Values differ from pre-8.7.0 history; do not compare across the release boundary without restating.',
+    DS.TOTAL_GROSS_PASSES_SCANNED AS SUM(GROSS_PASSES_SCANNED) COMMENT = 'Total code-0 (entry) passes before reversals. Reconciliation only - TOTAL_PASSES_SCANNED is the governed attendance measure.',
+    DS.TOTAL_REVERSED_PASSES_SCANNED AS SUM(REVERSED_PASSES_SCANNED) COMMENT = 'Total code-11 reversal quantity (positive). Added 8.7.0.',
     DS.TOTAL_TICKETS_SCANNED AS SUM(TICKETS_SOLD) WITH SYNONYMS = ('tickets scanned', 'scans', 'gate scans') COMMENT = 'Scan-side ticket count from the daily gate-scan fact (by segment). Reconcile against DPR TOTAL_TICKETS_SOLD, the canonical tickets-sold measure.',
     DS.TOTAL_PASSES_BUDGET AS SUM(PASSES_BUDGET) COMMENT = 'Total forecast passes (DSR forecast). Added 1.6.0 for the Daily Scan Report forecast/variance columns.',
     TD.TOTAL_FORECAST_TICKET_REVENUE AS SUM(TOTAL_REVENUE) WITH SYNONYMS = ('forecast ticket revenue', 'expected ticket revenue') COMMENT = 'Total forecast-side ticket order revenue (demand/presale analysis). For actual admission revenue use the DPR view''s TOTAL_TICKET_REVENUE.',

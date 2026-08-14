@@ -17,6 +17,16 @@
 -- and always correct; do not switch this back to incremental without moving to
 -- delete+insert on the affected visit_dates recomputed from full history.
 --
+-- SCOPE NOTE (ADR-005 gate, 8.7.0) — owner Chris Wogas: total_visitors is now
+-- the legacy NET passes-scanned measure. int_ticket_scans applies the
+-- t_fact_museum_passes_scanned rule (Status = 0 + Code = 0 adds, Status = 0 +
+-- Code = 11 subtracts, all other codes contribute nothing, Gateway facility 13
+-- excluded), so total_visitors falls relative to the previous
+-- `status in (0,1)` definition. valid_scans / rejected_scans follow the same
+-- rule: an admitted entry is code 0, a reversal is code 11 and is counted in
+-- reversing_scans (not in either of the other two), and everything else is
+-- rejected. gates_active counts gates that produced a COUNTED scan.
+--
 -- RETAIL SCOPE: retail_revenue is CounterPoint top-line merchandise sales
 -- (sale + return amount) EXCLUDING donation-ask lines (is_donation), so it can
 -- be added to ticket_revenue for total_revenue without double-counting DPR
@@ -53,10 +63,14 @@ with ticket_sales as (
 scans as (
     select
         scan_date                                           as visit_date,
-        sum(case when is_valid_scan then visitor_count else 0 end) as total_visitors_admitted,
+        -- net_visitor_count is signed and already 0 for uncounted scans, so
+        -- this single SUM reproduces the legacy UNION of the +code-0 and
+        -- -code-11 legs.
+        sum(coalesce(net_visitor_count, 0))                 as total_visitors_admitted,
         count(case when is_valid_scan then 1 end)           as valid_scans,
-        count(case when not is_valid_scan then 1 end)       as rejected_scans,
-        count(distinct gate_id)                             as gates_active
+        count(case when is_reversing_scan then 1 end)       as reversing_scans,
+        count(case when not is_counted_scan then 1 end)     as rejected_scans,
+        count(distinct case when is_counted_scan then gate_id end) as gates_active
     from {{ ref('int_ticket_scans') }}
     group by 1
 ),
@@ -91,6 +105,7 @@ select
     coalesce(t.visit_date, s.visit_date, r.visit_date)      as visit_date,
     coalesce(s.total_visitors_admitted, 0)                  as total_visitors,
     coalesce(s.valid_scans, 0)                              as valid_scans,
+    coalesce(s.reversing_scans, 0)                          as reversing_scans,
     coalesce(s.rejected_scans, 0)                           as rejected_scans,
     coalesce(s.gates_active, 0)                             as gates_active,
     coalesce(t.ticket_transactions, 0)                      as ticket_transactions,

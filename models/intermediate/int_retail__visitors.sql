@@ -4,10 +4,10 @@
 -- Grain:  one row per date_key x key_facility (REPORTING facility)
 --
 -- Holds the two measures the Retail Performance Report needs that do NOT come
--- from CounterPoint: Sensource visitor counts (capture / conversion /
--- per-visitor denominators) and Shopify ecommerce order counts. The visitor
--- leg joins seed_sensource_facility_map, which does three things the old model
--- did none of: it translates the sensor-side facility id into the REPORTING
+-- from CounterPoint: visitor counts (capture / conversion / per-visitor
+-- denominators) and Shopify ecommerce order counts. The visitor leg joins
+-- seed_sensource_facility_map, which does three things the pre-8.4.0 model did
+-- none of: it translates the feed-side facility id into the REPORTING
 -- key_facility the marts join on, it names which measure column that facility
 -- reports on (num_entry vs num_exit vs passes_scanned), and it names which
 -- WRITER the row reads (source_system). Feeds fct_retail_daily,
@@ -22,18 +22,25 @@
 -- acp = 0 is the Sensource API leg (num_entry / num_exit populated,
 -- passes_scanned 0); acp = a gate id is the Gateway leg (passes_scanned
 -- populated, num_entry / num_exit NULL). The seed's source_system distinguishes
--- them, and the sensource leg is filtered to acp_id = 0 explicitly. The Gateway
--- rows carry NULL entry/exit so the filter is arithmetically harmless today --
--- it is here to make the leg separation legible and to guard against a future
--- writer landing a non-zero acp on the Sensource leg.
--- NOTE (8.7.0 re-source): the Gateway leg's passes_scanned is the LEGACY scan
--- count. 8.7.0 recomputes that measure in int_ticket_scans under the legacy
--- validity rule (code 0 adds, code 11 subtracts, Gateway facility 13 excluded)
--- and re-sources this leg to it, so one measure has one authority (ADR-021).
--- It cannot move earlier: int_ticket_scans resolves the ACP -> facility path
--- only as of 8.7.0; before that it returns the raw usage.facility_id (7, not
--- 1006) and the join would not resolve.
--- STATUS: Sensource leg is LIVE (feed landed 1.6.2; the facility crosswalk that
+-- them, and the sensource leg is filtered to acp_id = 0 explicitly.
+--
+-- SCOPE NOTE (ADR-005 gate, 8.7.0) — owner Chris Wogas. The GATEWAY leg is
+-- re-sourced. Through 8.6.0 it read 911dw.fact_visitors.passes_scanned, which is
+-- the LEGACY scan count. 8.7.0 recomputes that same measure in int_ticket_scans
+-- under the legacy validity rule -- usage code 0 adds, code 11 subtracts,
+-- Gateway facility 13 excluded, resolved through the ACP path -- so continuing
+-- to read the seeded column would leave one measure with two authorities that
+-- disagree by construction (ADR-021). This leg now sums
+-- int_ticket_scans.net_visitor_count at the seeded gateway_scan facility, so the
+-- Atrium visitor count on the carts and retail reports moves by exactly the same
+-- delta as museum attendance on the DPR, which is the point.
+--
+-- This could not be done in 8.4.0: int_ticket_scans resolved the ACP -> facility
+-- path only as of this release. Before it, key_facility was the raw
+-- usage.facility_id (7, not 1006) and the join to the crosswalk would not have
+-- resolved at all.
+--
+-- STATUS: visitor legs are LIVE (feed landed 1.6.2; the facility crosswalk that
 -- made it reachable landed 8.4.0). Shopify leg still reads an unpopulated
 -- source and returns no rows -- ecom_orders is 0 until ADR-008 lands.
 -- SCOPE NOTE: entry-vs-exit is a per-facility property, not a preference --
@@ -52,6 +59,10 @@ with sensource as (
     select * from {{ ref('stg_sensource__visitors') }}
 ),
 
+scans as (
+    select * from {{ ref('int_ticket_scans') }}
+),
+
 facility_map as (
     select * from {{ ref('seed_sensource_facility_map') }}
 ),
@@ -60,21 +71,28 @@ shopify as (
     select * from {{ ref('stg_shopify__orders') }}
 ),
 
--- The rows of the crosswalk this model is entitled to read: the two legs that
--- land in 911dw.fact_visitors, and only those with a reporting home. The
--- memorial_feed row reads a different table entirely (stg_memorial__attendance,
--- consumed by int_attendance__sensource); is_reporting = FALSE rows are
--- declared sensors with no verified reporting facility (1008, 1009) and are
--- deliberately not published — assert_sensource_facilities_resolve reports
--- their volume so they are visible rather than silently dropped.
-visitor_map as (
+-- The Sensource API leg of 911dw.fact_visitors: entries and exits at acp 0.
+-- is_reporting = FALSE rows are declared sensors with no verified reporting
+-- facility (1008, 1009) and are deliberately not published --
+-- assert_sensource_facilities_resolve reports their volume.
+sensource_map as (
     select
         sensource_facility,
         reporting_facility,
-        measure_column,
-        source_system
+        measure_column
     from facility_map
-    where source_system in ('sensource', 'gateway_scan')
+    where source_system = 'sensource'
+      and is_reporting
+),
+
+-- The Gateway pass-scan leg. measure_column is 'passes_scanned' on these rows
+-- and names the legacy measure; the VALUE now comes from int_ticket_scans.
+gateway_map as (
+    select
+        sensource_facility,
+        reporting_facility
+    from facility_map
+    where source_system = 'gateway_scan'
       and is_reporting
 ),
 
@@ -88,19 +106,43 @@ sensource_mapped as (
         m.reporting_facility                            as key_facility,
         sum(
             case m.measure_column
-                when 'num_entry'      then s.num_entry
-                when 'num_exit'       then s.num_exit
-                when 'passes_scanned' then s.passes_scanned
+                when 'num_entry' then s.num_entry
+                when 'num_exit'  then s.num_exit
             end
         )                                               as visitor_count
     from sensource s
-    inner join visitor_map m
+    inner join sensource_map m
         on s.key_facility = m.sensource_facility
-       -- Leg separation, per the seed's own source_system.
-       and (
-               (m.source_system = 'sensource'    and s.acp_id = 0)
-            or  m.source_system = 'gateway_scan'
-           )
+    where s.acp_id = 0
+    group by 1, 2
+),
+
+-- Gate grain -> reporting facility grain. int_ticket_scans.key_facility is
+-- already the resolved 911dw key (1006 / 5000 / 0), which is what the
+-- crosswalk's gateway_scan rows are keyed on.
+gateway_mapped as (
+    select
+        s.scan_date                                     as date_key,
+        m.reporting_facility                            as key_facility,
+        sum(s.net_visitor_count)                        as visitor_count
+    from scans s
+    inner join gateway_map m
+        on s.key_facility = m.sensource_facility
+    where s.is_counted_scan
+      and s.scan_date is not null
+    group by 1, 2
+),
+
+visitors as (
+    select
+        date_key,
+        key_facility,
+        sum(visitor_count)                              as visitor_count
+    from (
+        select date_key, key_facility, visitor_count from sensource_mapped
+        union all
+        select date_key, key_facility, visitor_count from gateway_mapped
+    )
     group by 1, 2
 ),
 
@@ -116,14 +158,14 @@ ecom as (
 
 combined as (
     select
-        coalesce(s.date_key, e.date_key)                as date_key,
-        coalesce(s.key_facility, e.key_facility)        as key_facility,
-        coalesce(s.visitor_count, 0)                    as visitor_count,
+        coalesce(v.date_key, e.date_key)                as date_key,
+        coalesce(v.key_facility, e.key_facility)        as key_facility,
+        coalesce(v.visitor_count, 0)                    as visitor_count,
         coalesce(e.ecom_orders, 0)                      as ecom_orders
-    from sensource_mapped s
+    from visitors v
     full outer join ecom e
-      on s.date_key = e.date_key
-     and s.key_facility = e.key_facility
+      on v.date_key = e.date_key
+     and v.key_facility = e.key_facility
 )
 
 select

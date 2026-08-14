@@ -1,0 +1,98 @@
+version: 2
+
+# Attendance / scan-validity seeds (8.7.0). Kept in their own schema file so the
+# main seeds/_seeds.yml is untouched; dbt merges seed properties across files as
+# long as no seed is declared twice.
+
+seeds:
+  - name: seed_gateway_facility_map
+    description: >
+      Gateway (Galaxy) Facility.FacilityID -> 911dw key_facility map for the
+      scan/attendance path, plus the facility exclusion carried by the legacy
+      passes-scanned query. Enumerable code->label mapping (CONVENTIONS class 3):
+      the only two mapped facilities and the one excluded facility that
+      t_fact_museum_passes_scanned hard-codes. Consumed by int_ticket_scans;
+      any facility not listed resolves to key_facility 0 (the legacy else branch).
+    config:
+      # key_facility is blank for the excluded facility row; pin the types so
+      # dbt does not infer VARCHAR for the column and break the numeric join.
+      column_types:
+        gateway_facility_id: integer
+        key_facility: integer
+        facility_label: varchar
+        is_excluded: boolean
+        notes: varchar
+    columns:
+      - name: gateway_facility_id
+        description: "Galaxy Facility.FacilityID (NOT Facility.IDNo — see int_ticket_scans header)."
+        data_tests: [not_null, unique]
+      - name: key_facility
+        description: "911dw facility surrogate the gate rolls up to. NULL only on the excluded row."
+      - name: is_excluded
+        description: "TRUE = drop these scans from passes scanned entirely (legacy Facility.FacilityID <> 13)."
+        data_tests: [not_null]
+
+  - name: seed_attendance_facility_group
+    description: >
+      key_facility -> attendance line (museum / memorial / none / unmapped) for
+      the DPR and Attendance Report attendance measures. Enumerable code->label
+      mapping. is_primary_definition = FALSE marks a key_facility that ONE legacy
+      query includes and another excludes; those rows are carried for visibility
+      and are deliberately not counted until the ADR-005 decision lands.
+      Consumed by int_dpr__attendance.
+    config:
+      column_types:
+        key_facility: integer
+        attendance_group: varchar
+        is_primary_definition: boolean
+        notes: varchar
+    columns:
+      - name: key_facility
+        description: "911dw facility surrogate."
+        data_tests: [not_null, unique]
+      - name: attendance_group
+        description: "Attendance line this facility rolls into."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [museum, memorial, none, unmapped]
+      - name: is_primary_definition
+        description: "TRUE = counted. FALSE = disputed between legacy queries, carried but not counted."
+        data_tests: [not_null]
+
+  - name: seed_attendance_zeroing_rule
+    description: >
+      The legacy "museum closed" zeroing rule from t_reporting_mus_attendance:
+      on a matching day, if the day's scanned passes fall below min_threshold the
+      printed attendance is forced to 0. Both the day-of-week rule and the single
+      hard-coded exception date live here rather than inline, so the threshold and
+      the date list are reviewable without a model change (ADR-005).
+      Consumed by int_dpr__attendance.
+    config:
+      column_types:
+        rule_key: varchar
+        attendance_group: varchar
+        rule_type: varchar
+        day_of_week_name: varchar
+        exception_date: date
+        min_threshold: integer
+        notes: varchar
+    columns:
+      - name: rule_key
+        description: "PK. Stable rule identifier."
+        data_tests: [not_null, unique]
+      - name: attendance_group
+        description: "Attendance line the rule applies to."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [museum, memorial]
+      - name: rule_type
+        description: "'day_of_week' reads day_of_week_name; 'exception_date' reads exception_date."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [day_of_week, exception_date]
+      - name: min_threshold
+        description: "Scanned-passes threshold below which the day is zeroed."
+        data_tests: [not_null]

@@ -1,0 +1,4 @@
+gateway_facility_id,key_facility,facility_label,is_excluded,notes
+7,1006,Museum Admissions,FALSE,"Legacy t_fact_museum_passes_scanned: case when Facility.FacilityID = 7 then '1006'. Resolved through Usage.ACP -> ACPs.AcpId -> ACPs.FacilityID -> Facility.IDNo, then read off Facility.FacilityID."
+12,5000,Gate Facility 12 (non-attendance),FALSE,"Legacy t_fact_museum_passes_scanned: when Facility.FacilityID = 12 then '5000'. 5000 is not a member of the museum (1006,3000) or memorial (2000) attendance sets, so these scans resolve but do not roll into either attendance line."
+13,,Gate Facility 13 (excluded),TRUE,"Legacy t_fact_museum_passes_scanned: and Facility.FacilityID <> 13. Scans at this facility are dropped from passes scanned entirely (both the code-0 and the code-11 leg)."

@@ -33,6 +33,22 @@
 --  * The pass-revenue cohort columns from int_dpr__admissions are carried
 --    individually alongside the pass_revenue roll-up so the DPR line can be
 --    audited against the five legacy cohorts.
+--
+-- 8.7.0 (ADR-005 GATED — see DECISION_MEMO.md):
+--  * mus_attendance now comes from int_dpr__attendance (net scanned passes at
+--    key_facility 1006/3000 under the legacy scan-validity rule, with the
+--    closed-day zeroing applied), NOT from int_dpr__admissions' GA ticket
+--    quantity. This changes museum attendance and therefore every per-capita
+--    ratio computed against it in the rpt_ layer.
+--  * mem_attendance now comes from int_dpr__attendance reading
+--    stg_memorial__attendance (911dw.memorial_attendance, staged in 8.4.0) --
+--    the table every legacy reader uses. It replaces a facility-name
+--    pattern-match artefact ('%MEMORIAL%' on the Gateway facility catalogue)
+--    with the legacy measure, so the value changes. It is still NOT coalesced
+--    to zero: NULL now means the feed has no row for that day. Do not
+--    re-introduce coalesce(...,0) here -- a zero would be indistinguishable
+--    from a genuine no-visitor day and would silently deflate memorial
+--    per-caps.
 
 {{ config(
     materialized='table',
@@ -104,10 +120,15 @@ combined as (
         coalesce(a.ticket_revenue, 0)
           + coalesce(a.pass_revenue, 0)
           + coalesce(f.service_fees, 0)                                    as total_admission_revenue,
-        coalesce(a.mus_attendance, 0)                                      as mus_attendance,
-        -- Memorial attendance: valid scans at memorial facilities (Gateway).
-        -- See int_dpr__attendance scope note (facility-name classification).
-        coalesce(att.mem_attendance, 0)                                    as mem_attendance,
+        -- Museum attendance: net scanned passes at key_facility 1006/3000 with
+        -- the legacy closed-day zeroing. Authored once in int_dpr__attendance.
+        att.mus_attendance                                                 as mus_attendance,
+        att.mus_passes_scanned                                             as mus_passes_scanned,
+        att.is_museum_closed_day,
+        -- Memorial attendance: SUM(passes_scanned) from 911dw.memorial_attendance
+        -- at the seeded memorial facility. NULL only where the feed has no row
+        -- for the day. Never zero-filled. See int_dpr__attendance.
+        att.mem_attendance                                                 as mem_attendance,
 
         -- Tours (quantities)
         coalesce(t.mus_guided_tours, 0)                                    as mus_guided_tours,

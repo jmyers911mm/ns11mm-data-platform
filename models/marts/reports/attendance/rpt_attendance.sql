@@ -18,6 +18,24 @@
 -- measures; Memorial Only is the Sensource pair, per legacy. The two
 -- definitions do not tie, so the printed rows will not subtract cleanly until
 -- ADR-005 reconciles them (owner: Chris Wogas).
+-- SCOPE NOTE (ADR-005 gate, 8.7.0) — owner Chris Wogas:
+--  * museum_attendance now carries the legacy definition (net scanned passes at
+--    key_facility 1006/3000 with the closed-day zeroing), so its values change.
+--  * memorial_attendance now carries the legacy definition too:
+--    SUM(passes_scanned) from 911dw.memorial_attendance (stg_memorial__
+--    attendance, staged in 8.4.0) at the seeded memorial key_facility, in place
+--    of the '%MEMORIAL%' facility-name pattern-match artefact it published
+--    before. Values change; the layout seed returns MEM_ATTENDANCE to
+--    'Available'. It is still NOT coalesced to zero -- NULL means the feed has
+--    no row for that day.
+--  * The reconciliation note above now BITES rather than being theoretical.
+--    memorial_attendance and memorial_only are both real numbers drawn from the
+--    same 911dw.memorial_attendance table, but museum_attendance here is the
+--    zeroed DPR scan measure while the museum term inside memorial_only is the
+--    un-zeroed Atrium count from int_attendance__sensource. Printed Memorial -
+--    printed Museum will therefore differ from printed Memorial Only on every
+--    closed day, by exactly the zeroed amount. Legacy has the same seam; it is
+--    ADR-005's to close.
 -- ADR-004: no logic in Power BI.
 
 {{ config(materialized='view') }}
@@ -40,7 +58,7 @@ select
     d.date_key,
     d.date_value,
     d.is_commemoration_day,
-    d.mem_attendance                                   as memorial_attendance,
+    d.mem_attendance                                   as memorial_attendance,  -- 911dw.memorial_attendance; NULL = no feed row that day
     d.mus_attendance                                   as museum_attendance,
     coalesce(s.memorial_only, 0)                       as memorial_only,
     coalesce(s.museum_store, 0)                        as museum_store,
