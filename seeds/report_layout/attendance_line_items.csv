@@ -1,6 +1,6 @@
 line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
 MEM_ATTENDANCE,10,Attendance,10,Memorial Attendance,1,Number0,additive,Available,,,,
 MUS_ATTENDANCE,20,Attendance,10,Museum Attendance,1,Number0,additive,Available,,,,
-MEMORIAL_ONLY,30,Attendance,10,Memorial Only,1,Number0,additive,Stub,,,,
-MUSEUM_STORE,40,Attendance,10,Museum Store,1,Number0,additive,Stub,,,,
-MUSEUM_STORE_VESEY,50,Attendance,10,Museum Store (at Vesey),1,Number0,additive,Stub,,,,
+MEMORIAL_ONLY,30,Attendance,10,Memorial Only,1,Number0,additive,Available,,,,
+MUSEUM_STORE,40,Attendance,10,Museum Store,1,Number0,additive,Available,,,,
+MUSEUM_STORE_VESEY,50,Attendance,10,Museum Store (at Vesey),1,Number0,additive,Available,,,,

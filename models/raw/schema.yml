@@ -206,10 +206,29 @@ models:
           - unique:   { config: { severity: warn } }
 
   - name: stg_sensource__visitors
-    description: "Sensource visitor counts per business_date x key_facility x acp_id."
+    description: "Sensource visitor counts per business_date x key_facility x acp_id. Two writers land on SEPARATE rows, distinguished by acp_id: acp_id = 0 is the Sensource API leg (num_entry / num_exit populated, passes_scanned 0); acp_id = a gate id is the Gateway leg from t_fact_museum_passes_scanned (passes_scanned populated, num_entry / num_exit NULL)."
     data_tests:
       - unique:
           column_name: "business_date || '~' || key_facility || '~' || acp_id"
+          config: { severity: warn }
+
+  - name: stg_memorial__attendance
+    description: >
+      Memorial plaza scanned passes per business_date x key_facility
+      (911dw.memorial_attendance). Separate legacy table from fact_visitors —
+      no fact_visitors writer emits key_facility 2000. The landed table may also
+      carry an acp column, which is not projected, so business_date +
+      key_facility uniqueness is guarded at warn rather than asserted.
+    columns:
+      - name: business_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: key_facility
+        data_tests:
+          - not_null: { config: { severity: warn } }
+    data_tests:
+      - unique:
+          column_name: "business_date || '~' || key_facility"
           config: { severity: warn }
 
   - name: stg_shopify__cost_values

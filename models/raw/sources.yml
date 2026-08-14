@@ -92,6 +92,7 @@ sources:
         description: Sensource entries/exits/passes by facility (fact_visitors). Feeds visitor ratios + true attendance.
       - name: seed_sensource_attendance
         description: Pre-aggregated daily attendance by area (mem/mus + memorial-only/store/Vesey). Feeds Attendance Report.
+
       # seed_retail_budget: retired 7.9.0 — duplicate landing of the retail
       # forecast (same workbook as SEEDS.SEED_RETAIL_FORECASTS, the canonical
       # source). Table may remain in RAW but is deliberately unread.

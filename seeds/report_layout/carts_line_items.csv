@@ -1,7 +1,7 @@
 line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
 MEM_VISITORS,10,Carts Analysis,10,Memorial Visitors,1,Number0,additive,Stub,Memorial Carts,1020,,
 MEM_VISITORS_LESS_25,20,Carts Analysis,10,Memorial Visitors less 25%,1,Number0,additive,Stub,Memorial Carts,1020,,
-MUS_VISITORS,30,Carts Analysis,10,Museum Visitors,1,Number0,additive,Stub,Memorial Carts,1020,,
+MUS_VISITORS,30,Carts Analysis,10,Museum Visitors,1,Number0,additive,Available,Memorial Carts,1020,,
 ADJ_VISITORS,40,Carts Analysis,10,25 less of Memorial minus Museum Visitors,1,Number0,additive,Stub,Memorial Carts,1020,,
 CART_CUSTOMERS,50,Carts Analysis,10,Memorial Cart Customers,1,Number0,additive,Available,Memorial Carts,1020,,
 CAPTURE_RATE,60,Carts Analysis,10,Memorial Carts Capture Rate,1,Percent2,ratio,Stub,Memorial Carts,1020,mem_cart_customers,adj_visitors

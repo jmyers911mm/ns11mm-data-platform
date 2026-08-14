@@ -1,5 +1,41 @@
 version: 2
 seeds:
+  - name: seed_memorial_attendance
+    description: >
+      Memorial plaza scanned passes, landed from 911dw.memorial_attendance. This
+      is a SEPARATE legacy table from 911dw.fact_visitors and the only source of
+      the Memorial Attendance line: neither writer of fact_visitors can emit
+      key_facility 2000 (t_fact_museum_passes_scanned emits only 1006, 5000 and
+      0; the Sensource API leg covers ParentFacility 1000-1009). Read by
+      t_fact_attendance_all_locations.sql:14-19,
+      t_fact_attendance_all_facilities.sql:10-15 and :42-47, and
+      t_reporting_mem_attendance.sql:8-12 — every reader filters key_facility and
+      sums passes_scanned. Landed unfiltered per ADR-001; the memorial facility
+      set is chosen downstream in seed_attendance_facility_group, where the
+      legacy disagreement (2000 vs 1000+2000) stays reviewable.
+      Consumed by stg_memorial__attendance.
+    config:
+      column_types:
+        key_date: integer
+        key_facility: integer
+        passes_scanned: integer
+    columns:
+      - name: key_date
+        description: "Business date as YYYYMMDD. Recast by the staging model."
+        data_tests: [not_null]
+      - name: key_facility
+        description: "Legacy facility surrogate. 2000 is the memorial plaza."
+        data_tests: [not_null]
+      - name: passes_scanned
+        description: "Scanned passes. The measure; every legacy reader sums it."
+        data_tests: [not_null]
+    data_tests:
+      # Grain is inherited from the landed extract, not enforced in-model — warn
+      # per the severity rule. Promote to error once the source grain is confirmed.
+      - unique:
+          column_name: "key_date || '~' || key_facility"
+          name: seed_memorial_attendance_grain_unique
+          config: { severity: warn }
   - name: dpr_line_items
     description: >
       Report-layout catalog for the Daily Performance Report: one row per printed
@@ -410,9 +446,14 @@ seeds:
       Report-layout catalog for the Attendance Report: one row per printed
       line (section, label, sort order, indent, number format,
       additive-vs-ratio, availability). All five lines are additive counts,
-      so num_source/den_source are blank; the three Sensource-backed lines
-      are Stub until sensordata lands. Report scaffolding, not a business
-      dimension. Consumed by dim_attendance_line_item.
+      so num_source/den_source are blank. The three Sensource-backed lines
+      (MEMORIAL_ONLY, MUSEUM_STORE, MUSEUM_STORE_VESEY) became Available in
+      8.4.0 when seed_sensource_facility_map made the sensor feed reachable.
+      MEM_ATTENDANCE was already Available and stays Available: 8.4.0 gives it a
+      real source (stg_memorial__attendance, the 911dw.memorial_attendance table
+      every legacy reader uses) in place of the unreachable facility-2000 rows of
+      the visitors feed. Report scaffolding, not a business dimension. Consumed
+      by dim_attendance_line_item.
     columns:
       - name: line_item_code
         description: Stable key joined from rpt_attendance_report_long. Grain of this table.
@@ -429,9 +470,11 @@ seeds:
       printed workbook column (section, label, sort order, number format,
       additive-vs-ratio, availability, and — for ratio lines — numerator/
       denominator source measures). Single-area report: facility fixed to
-      Memorial Carts (1020). Visitor-derived lines are Stub until Sensource
-      lands. Report scaffolding, not a business dimension. Consumed by
-      dim_carts_line_item.
+      Memorial Carts (1020). MUS_VISITORS became Available in 8.4.0 (the
+      crosswalk publishes museum attendance at the Atrium, 1030); the memorial
+      side and everything built on it stays Stub pending the 8.5.0 carts
+      denominator decision (ADR-005). Report scaffolding, not a business
+      dimension. Consumed by dim_carts_line_item.
     columns:
       - name: line_item_code
         description: Stable key joined from rpt_carts_report_long. Grain of this table.
@@ -483,3 +526,121 @@ seeds:
       - name: metric_code
         description: The metric in rpt_dpr_mtd_ytd_long this printed row reads (unmatched = Stub).
         data_tests: [not_null]
+  - name: seed_sensource_facility_map
+    description: >
+      Visitor-feed facility -> reporting facility crosswalk, with the measure
+      column each facility reports on and the WRITER each row reads. The feed
+      estate numbers its facilities 1000-1009 on the Sensource API leg
+      (t_fact_visitors: SERVERS.ParentFacility in (1000..1009)), 1006 / 5000 / 0
+      on the Gateway pass-scan leg (t_fact_museum_passes_scanned), and 2000 in
+      the separate 911dw.memorial_attendance table; the reporting estate numbers
+      selling/reporting areas 1001, 1003, 1030, 2000 (seed_facility_area). Before
+      8.4.0 the two vocabularies were joined directly and never matched, so
+      visitor_count was 0 regardless of the feed. Entry vs exit vs passes-scanned
+      is a per-facility property carried here, not a preference: the Museum Store
+      counts entries, Vesey counts exits, the museum and memorial count scanned
+      passes. Every row cites the legacy file and line it was verified from.
+      Consumed by int_retail__visitors and int_attendance__sensource.
+
+      8.4.0, after a sample of 911dw.fact_visitors confirmed the shape
+      (key_date, key_facility, acp, num_entry, num_exit, passes_scanned, with the
+      two writers on SEPARATE rows distinguished by acp):
+
+      * source_system added. Each row now states which leg it reads --
+        `sensource` (acp = 0, entries/exits), `gateway_scan` (acp = gate id,
+        passes) or `memorial_feed` (a different table entirely). Without it the
+        crosswalk implied one feed where there are three.
+      * is_reporting added, so a known facility with no verified reporting home
+        can be DECLARED rather than left absent. 1008 and 1009 are carried this
+        way; int_retail__visitors reads only is_reporting rows, and
+        assert_sensource_facilities_resolve reports the declared ones with their
+        volume so a busy unmapped door does not stay invisible.
+      * 3000 -> 1030 DELETED. 3000 is emitted by neither writer --
+        t_fact_museum_passes_scanned emits only 1006, 5000 and 0, and the
+        Sensource leg covers 1000-1009 -- so the museum/Atrium measure is
+        facility 1006 alone. 8.7.0 reaches the same conclusion independently
+        (seed_attendance_facility_group carries 3000 as a record of the legacy
+        IN list, contributing nothing).
+      * 2000 RE-POINTED to source_system = memorial_feed. Memorial attendance
+        lives in 911dw.memorial_attendance, now staged as
+        stg_memorial__attendance; the visitors feed cannot carry 2000.
+      * 1007 -> 1003 (num_entry) and 1001 -> 1001 (num_exit) retained unchanged.
+        1001 is inside the Sensource ParentFacility range; its absence from a
+        single 1-Jan sample is a closed-day artifact, not a missing feed.
+    config:
+      column_types:
+        sensource_facility: integer
+        reporting_facility: integer
+        measure_column: varchar
+        area_name: varchar
+        source_system: varchar
+        is_reporting: boolean
+        notes: varchar
+    columns:
+      - name: sensource_facility
+        description: >
+          Feed-side facility id as it lands in stg_sensource__visitors.key_facility
+          (sensource / gateway_scan rows) or stg_memorial__attendance.key_facility
+          (memorial_feed rows). Grain of this table.
+        data_tests: [not_null, unique]
+      - name: reporting_facility
+        description: >
+          Reporting key_facility the measure is published against (joins
+          fct_retail_daily / seed_facility_area). NULL on is_reporting = FALSE
+          rows, which have no verified reporting home yet — hence the
+          conditional not_null.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_reporting"
+      - name: measure_column
+        description: >
+          Which staged column this facility's visitor count reads. NULL on
+          is_reporting = FALSE rows. On gateway_scan rows this names the LEGACY
+          measure; from 8.7.0 the value itself is re-sourced from
+          int_ticket_scans, which recomputes it under the legacy validity rule.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_reporting"
+          - accepted_values:
+              values: ['num_entry', 'num_exit', 'passes_scanned']
+              config:
+                where: "is_reporting"
+      - name: area_name
+        description: >
+          Reporting-area label. int_attendance__sensource pivots on this rather
+          than on raw facility numbers. NULL on is_reporting = FALSE rows.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_reporting"
+      - name: source_system
+        description: >
+          Which writer this row reads. 'sensource' = the Sensource API leg of
+          911dw.fact_visitors (acp = 0, num_entry / num_exit populated,
+          passes_scanned 0). 'gateway_scan' = the t_fact_museum_passes_scanned
+          leg of the same table (acp = gate id, passes_scanned populated,
+          num_entry / num_exit NULL). 'memorial_feed' = the separate
+          911dw.memorial_attendance table. int_retail__visitors reads the first
+          two; int_attendance__sensource reads the third directly.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['sensource', 'gateway_scan', 'memorial_feed']
+      - name: is_reporting
+        description: >
+          TRUE = the row publishes a measure at reporting_facility. FALSE = a
+          facility confirmed present in the feed with NO verified reporting home
+          (1008, 1009): declared here so it is enumerated in a governed artifact
+          instead of being an absence, excluded from every model, and reported by
+          assert_sensource_facilities_resolve. Do not flip to TRUE without a
+          verified legacy mapping — an invented one is worse than a gap.
+        data_tests: [not_null]
+      - name: notes
+        description: >
+          Legacy file and line the mapping was verified from, or — for a
+          non-reporting row — what was observed and what is still unknown.
+          Required on every row; an unsourced mapping is not a mapping.
+        data_tests: [not_null]
+
