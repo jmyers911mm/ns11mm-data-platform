@@ -1,0 +1,155 @@
+version: 2
+
+# earned_income report family — see docs/adr/ADR_021_report_serving_layer.md for
+# the role grammar these models follow.
+#
+# Family placement (8.11.0): a NEW subdirectory rather than more models inside
+# dpr/. The Earned Income Variance Report is a separate live workbook with its
+# own producer (t_earned_income_variance_tabs), its own recipient list (the CFO
+# and finance leadership), its own budget seed, and same-named lines that are
+# DIFFERENT numbers from the DPR's. Ticket Revenue here has no reseller carve-out
+# and the DPR's does; the budget lines come from SEED_FORECASTED_VALUE_FOR_DATE
+# and the DPR's come from SEED_DPR_FORECASTS. Sharing dpr/'s layout catalog would
+# put two definitions of "ticket revenue" one row apart with nothing to explain
+# the difference. See NOTES.md sections 3 and 4.
+#
+# No *_powerbi wrapper and no *_period_windows model: 8.11.0 adds no semantic
+# view, and the workbook prints day rows inside a year sheet rather than period
+# columns. No *_print / *_excel_export model either — the legacy Excel writer is
+# a raw dump of the query with no row catalog of its own.
+#
+# The DPR budget is NOT re-authored here. rpt_dpr_budget_daily supplies ten of
+# the eighteen budget lines and is read as-is; the other eight come from the
+# budget facts directly because the two reports budget from different seeds.
+
+models:
+  - name: rpt_earned_income_variance_budget_daily
+    description: >
+      Day-grain BUDGET for the Earned Income Variance Report, conformed so its
+      column names match fct_earned_income exactly and the two unpivot
+      identically. Ten lines are read from rpt_dpr_budget_daily (same column,
+      same seed, no second authoring); five admissions lines are read from
+      fct_budget_admissions_forecasts because the legacy EIV forecasts them from
+      SEED_FORECASTED_VALUE_FOR_DATE while the DPR forecasts its same-named lines
+      from SEED_DPR_FORECASTS; youth_fam_tours comes from fct_budget_dpr_forecasts
+      (the DPR conform does not project the count); and the two operating-expense
+      budgets are read back out of fct_earned_income, whose single manual feed
+      carries actual and budget on one row. ADR-021 comparison conform role:
+      renaming, typed NULLs and cross-domain joins only, no measure defined here.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date and to fct_earned_income.date_value.
+        data_tests:
+          - not_null
+          - unique
+      - name: tickets
+        description: >
+          Forecast tickets, summed across facilities from
+          fct_budget_admissions_forecasts. NOT the same number as
+          rpt_dpr_budget_daily.tickets_sold — different budget seed, by design.
+      - name: ticket_revenue
+        description: >
+          Forecast ticket revenue from fct_budget_admissions_forecasts. NOT the
+          same number as rpt_dpr_budget_daily.ticket_revenue.
+      - name: est_operating_expenses
+        description: >
+          Forecast estimated operating expenses. Typed NULL until
+          seed_budgeted_expense has rows — cause NO DATA FEED. Do not add
+          not_null.
+      - name: total_operating_expenses
+        description: >
+          Forecast total operating expenses. Typed NULL until
+          seed_budgeted_expense has rows — cause NO DATA FEED. Do not add
+          not_null.
+
+  - name: rpt_earned_income_variance_report_long
+    description: >
+      Tidy Earned Income Variance presentation, one row per (report_date,
+      line_item_code) carrying actual + budget. The AVG_TICKET_PRICE line carries
+      numerator and denominator so it recomputes as a ratio-of-sums at any grain
+      (ADR-021). The nineteen legacy *_diff columns are NOT stored: variance is
+      actual minus budget at display grain, and variance percent is that
+      difference over budget, so monthly and YTD variance is a difference of sums
+      rather than a sum of daily differences. The legacy workbook's thirteen
+      sheets are calendar years 2014-2026 and are a dim_date slicer, not
+      sections. The two operating-expense lines are Stub and emit NULL amounts by
+      design.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: line_item_code
+        description: Joins to dim_earned_income_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('earned_income_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item (NULL for the ratio row and the Stub rows).
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows). AVG_TICKET_PRICE only.
+      - name: denominator
+        description: Ratio denominator (NULL for additive rows). AVG_TICKET_PRICE only.
+      - name: budget_amount
+        description: Forecast additive value. NULL where the line has no forecast source.
+      - name: budget_numerator
+        description: Forecast ratio numerator.
+      - name: budget_denominator
+        description: Forecast ratio denominator.
+
+  - name: rpt_earned_income_variance_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Earned Income Variance facts
+      (every printed line with budget variance in both amount and percent,
+      DoD/WoW/YoY, MTD/YTD against summed budget, 7-day direction, top movers,
+      and average ticket price as a ratio-of-sums from carried components). Reads
+      the long serving shape so the note and the matrix cannot disagree. The two
+      Stub lines are excluded from metrics and listed in unavailable_lines, and
+      the seven Partial lines are listed in partial_lines, so the prompt can
+      refuse to report a typed NULL as zero or a subset as a whole. Sole input to
+      the Cortex narrative — unit-test this, not the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: brief_json
+        description: The full deterministic brief. Every sentence in the narrative must trace to a field here.
+
+  - name: rpt_earned_income_variance_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the source
+      SQL for the daily task in
+      scripts/setup_earned_income_variance_narrative.sql (not shipped in 8.11.0).
+      Narrates only the pre-computed brief_json from
+      rpt_earned_income_variance_narrative_brief. The prompt carries two
+      CFO-specific constraints described in the model header; do not relax them.
+
+  - name: dim_earned_income_line_item
+    description: >
+      Earned Income Variance Report line-item metadata: section, display order,
+      indent, number format, additive-vs-ratio, honest availability, and (for the
+      one ratio line) the numerator/denominator source measures on
+      fct_earned_income. Twin of dim_dpr_line_item.
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: availability
+        data_tests:
+          - accepted_values:
+              values: ['Available', 'Partial', 'Stub', 'Gap']
+      - name: value_type
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']

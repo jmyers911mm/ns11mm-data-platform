@@ -1,0 +1,91 @@
+version: 2
+
+# Sidecar property file for the 8.11.0 mart fact. Not a copy of
+# models/marts/facts/schema.yml — see the note in
+# models/intermediate/schema_earned_income.yml for why.
+
+models:
+  - name: fct_earned_income
+    description: >
+      Day-grain ACTUAL side of the Earned Income Variance Report — the platform
+      equivalent of the actual columns of legacy
+      911dw.earned_income_report_analysis. Carries every printed line plus the
+      component detail behind it so each line can be audited against its legacy
+      step. The two report composites (Total Tickets Sold, Total Admissions
+      Revenue) are deliberately NOT columns here: legacy defines each as a sum of
+      lines this fact already carries, so storing them would be the same total
+      authored twice. They resolve once, in
+      rpt_earned_income_variance_report_long. Average ticket price is likewise
+      carried as a numerator/denominator pair, never as a stored quotient.
+
+      Total Estimated Revenue is not built here either. The legacy EIV variant
+      (t_fact_dpr_totals) differs from the DPR's in three named ways and the DPR
+      semantic view already owns a metric of that name. See NOTES.md section 5.
+    config:
+      materialized: table
+      cluster_by: ['date_key']
+    columns:
+      - name: date_key
+        description: "PK. FK to dim_date.date_key."
+        constraints:
+          - type: primary_key
+        data_tests: [not_null, unique]
+      - name: date_value
+        description: Calendar date. Joins to rpt_earned_income_variance_budget_daily.report_date.
+        data_tests: [not_null]
+      - name: museum_attendance
+        description: Scanned passes at key_facility 1006 / 3000, unzeroed (legacy EIV definition).
+      - name: tickets
+        description: Tickets line (GA issued + unissued + C3 booklet). Partial — three unstaged cohorts absent.
+        data_tests: [not_null]
+      - name: ticket_revenue
+        description: Ticket Revenue line (DPR ticket revenue + reseller cohort). Partial — four unstaged cohorts absent.
+        data_tests: [not_null]
+      - name: service_fees
+        description: Museum + memorial service fees, from int_dpr__fees_and_services (8.6.0 corrected).
+        data_tests: [not_null]
+      - name: citypass_tickets
+        description: CityPASS matrix + booklet cohorts. C3 is on the Tickets line, not here.
+        data_tests: [not_null]
+      - name: citypass_revenue
+        description: CityPASS matrix + booklet cohorts, sum(amount). Partial — see the intermediate.
+        data_tests: [not_null]
+      - name: mus_guided_tours
+        description: >
+          Museum guided tours, issued + unissued + buyout (quantity-suppressed),
+          re-projected from int_dpr__tour_revenue. Legacy EIV adds the buyout
+          quantity a second time; that double count is not reproduced.
+        data_tests: [not_null]
+      - name: mem_mus_tour_revenue
+        description: Memorial & Museum combined tour revenue, from int_dpr__fees_and_services.
+        data_tests: [not_null]
+      # ── Typed-NULL placeholders. Do NOT add not_null to any of these. ──────
+      - name: tickets_scanchange_ga
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_citypass_scanchange)."
+      - name: tickets_bulk_scan
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_bulk_tickets_test)."
+      - name: child_evg_tickets
+        description: "Typed NULL — cause NO DATA FEED (pricePointID = 84 is not staged)."
+      - name: ticket_revenue_scanchange
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_citypass_scanchange)."
+      - name: ticket_revenue_nyp_add
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_nyp_add / fact_additional_revenue_new is a manual workbook)."
+      - name: ticket_revenue_bulk_add
+        description: "Typed NULL — cause NO DATA FEED (fact_bulk_tickets_add)."
+      - name: ticket_revenue_bulk_scan
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_bulk_tickets_test)."
+      - name: citypass_tickets_scanchange
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_citypass_scanchange)."
+      - name: citypass_revenue_scanchange
+        description: "Typed NULL — cause NO DATA FEED (fact_museum_citypass_scanchange)."
+      - name: est_operating_expenses
+        description: "Typed NULL — cause NO DATA FEED. seed_budgeted_expense is an empty contract. See DECISION_MEMO.md."
+      - name: est_operating_expenses_budget
+        description: >
+          Forecast estimated operating expenses. The only budget value in an
+          actuals fact in the estate, because the legacy feed is one manual
+          workbook carrying both scenarios on one row. Typed NULL — NO DATA FEED.
+      - name: total_operating_expenses
+        description: "Typed NULL — cause NO DATA FEED."
+      - name: total_operating_expenses_budget
+        description: "Typed NULL — cause NO DATA FEED."

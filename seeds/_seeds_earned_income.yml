@@ -1,0 +1,166 @@
+version: 2
+
+# Earned Income Variance Report seeds (8.11.0). Own schema file so
+# seeds/_seeds.yml is untouched: 8.10.0 performed the cumulative merge of that
+# file across 8.2.0 / 8.4.0 / 8.5.0 / 8.6.0 and appending here would re-diverge
+# it. dbt merges seed properties across files as long as no seed is declared
+# twice; both seeds below are new in this release. Same pattern as
+# _seeds_attendance.yml (8.7.0), _seeds_tour_buyout.yml (8.8.0) and
+# _seeds_donations.yml (8.9.0).
+
+seeds:
+  - name: earned_income_line_items
+    description: >
+      Report-layout catalog for the Earned Income Variance Report: one row per
+      printed line (section, label, sort order, indent, number format,
+      additive-vs-ratio, availability, and for the one ratio line the
+      numerator/denominator source measures). 21 lines in 4 sections. Report
+      scaffolding, not a business dimension. Consumed by
+      dim_earned_income_line_item.
+
+      The legacy XLSX is one sheet per calendar year (2014 .. 2026, thirteen
+      TypeExitExcelWriterStep steps in t_earned_income_variance_tabs), every
+      sheet carrying the same layout: nineteen measures, each printed as actual,
+      forecast and difference. The nineteen difference columns are NOT lines in
+      this catalog — variance is the difference between the two scenarios each
+      line already carries, taken at display grain (ADR-021). The two
+      operating-expense lines are not on the XLSX at all; they come from
+      t_fact_operating_expenses_graphs, which writes into the same legacy table
+      and feeds the Pentaho dashboard and the DPR's Estimated Operating Expenses
+      line. They are catalogued so the gap is visible on the report surface.
+
+      This seed carries num_source / den_source but NOT facility_group /
+      key_facility: the Earned Income Variance Report has no facility axis at
+      any grain, and columns that are blank on every row are worse than absent.
+
+      AVAILABILITY on this report:
+        Available — produced from staged sources at the legacy definition.
+        Partial   — produced, but from a subset of the legacy components.
+                    Seven lines. Two distinct causes:
+                      (a) unstaged 911dw facts — fact_museum_citypass_scanchange,
+                          fact_museum_bulk_tickets_test, fact_bulk_tickets_add,
+                          fact_museum_nyp_add — which drop cohorts from Tickets,
+                          Ticket Revenue and CityPASS Tickets and therefore from
+                          both totals and from Average Ticket Price;
+                      (b) key_coupon_category is not staged, so the legacy
+                          Adult/Youth quantity * amount extension on CityPASS
+                          Revenue cannot be reproduced.
+        Stub      — typed NULL with a stated cause. Two rows,
+                    EST_OPERATING_EXPENSES and TOTAL_OPERATING_EXPENSES, cause
+                    NO DATA FEED. See DECISION_MEMO.md.
+    config:
+      column_types:
+        line_item_code: varchar
+        sort_order: integer
+        section: varchar
+        section_sort_order: integer
+        line_item: varchar
+        indent: integer
+        format: varchar
+        value_type: varchar
+        availability: varchar
+        num_source: varchar
+        den_source: varchar
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_earned_income_variance_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: sort_order
+        description: Global printed order.
+        data_tests: [not_null, unique]
+      - name: section
+        description: Printed section heading.
+        data_tests: [not_null]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['additive', 'ratio']
+      - name: availability
+        description: Honest per-line coverage state. See the description above.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Available', 'Partial', 'Stub', 'Gap']
+      - name: num_source
+        description: >
+          Numerator measure for the ratio line; empty for additive lines.
+          Documents the ADR-021 ratio components that
+          rpt_earned_income_variance_report_long carries.
+      - name: den_source
+        description: Denominator measure for the ratio line; empty for additive lines.
+
+  - name: seed_budgeted_expense
+    description: >
+      INGEST CONTRACT, NOT DATA. Ships with a header and zero rows.
+
+      This is the platform's declaration of what the operating-expense feed must
+      supply, and it is empty because the feed does not exist. In the legacy
+      estate 911dw.fact_budgeted_expenses is populated by t_import_budgeted_expenses,
+      a two-step Pentaho transformation whose only input is an ExcelInput step
+      reading /opt/pentaho/budgets/BudgetedExpensesDailies.xlsx — a workbook
+      maintained by hand, outside every system of record, by a person the
+      transformation does not name. There is no SQL to migrate. There is nothing
+      in Galaxy, CounterPoint, Sensource or the budget seed set that reproduces
+      it, and dbt's three existing budget seeds (SEED_DPR_FORECASTS,
+      SEED_FORECASTED_VALUE_FOR_DATE, SEED_RETAIL_FORECASTS) carry revenue
+      forecasts only. Expenses have no platform equivalent at all.
+
+      THE FOUR COLUMNS AND WHAT READS THEM. Derived from the three live
+      consumers of the legacy table, which between them read exactly these five
+      columns and no others:
+        t_fact_operating_expenses_graphs  reads key_date, budgeted_expense,
+            budgeted_total_expense, budgeted_expense_budget_value,
+            budgeted_total_expense_budget_value into earned_revenue_report_values
+            (the Pentaho operating-expenses dashboard).
+        t_reporting_est_operating_expenses reads sum(budgeted_expense) as
+            est_operating_expenses and sum(budgeted_expense_budget_value) as
+            est_operating_expenses_budget_value into fact_dpr_report_data. This
+            aliasing is what settles the naming trap below.
+        t_fact_update_budgeted_expenses    reads key_date, budgeted_expense into
+            fact_all_budgets.
+
+      NAMING TRAP, RESOLVED. Despite the column name, `budgeted_expense` is the
+      ACTUAL-side value on every report that prints it, and
+      `budgeted_expense_budget_value` is the budget-side value. The proof is
+      t_reporting_est_operating_expenses, which aliases the pair to
+      est_operating_expenses / est_operating_expenses_budget_value. Whoever fills
+      this seed must preserve that convention or the DPR's Estimated Operating
+      Expenses line will invert. `budgeted_total_expense` and its _budget_value
+      twin behave the same way at the total-expense grain.
+
+      TO ACTIVATE: land the workbook as a seed (or, better, as a governed source
+      table with an owner and a load schedule), fill these five columns, and the
+      four typed-NULL columns on int_earned_income__line_items become real
+      measures with NO model change. The two Stub rows in
+      earned_income_line_items flip to Available and
+      assert_earned_income_expense_feed_absent goes silent by itself.
+
+      Owner of the open question: Mike Cartier's team. See DECISION_MEMO.md.
+    config:
+      column_types:
+        key_date: integer
+        budgeted_expense: number(38,4)
+        budgeted_expense_budget_value: number(38,4)
+        budgeted_total_expense: number(38,4)
+        budgeted_total_expense_budget_value: number(38,4)
+    columns:
+      - name: key_date
+        description: >
+          Legacy date key in YYYYMMDD form (NUMBER), matching the other budget
+          seeds. int_earned_income__line_items converts it with
+          to_date(key_date::varchar, 'YYYYMMDD'). Grain of this table: one row
+          per day. Untested (unique/not_null) while the seed is empty — add both
+          tests in the release that lands the feed.
+      - name: budgeted_expense
+        description: >
+          ACTUAL estimated operating expense for the day, despite the name.
+          Prints as the DPR's Estimated Operating Expenses actual and as this
+          report's EST_OPERATING_EXPENSES.
+      - name: budgeted_expense_budget_value
+        description: BUDGET counterpart to budgeted_expense.
+      - name: budgeted_total_expense
+        description: ACTUAL total operating expense for the day. Prints as TOTAL_OPERATING_EXPENSES.
+      - name: budgeted_total_expense_budget_value
+        description: BUDGET counterpart to budgeted_total_expense.

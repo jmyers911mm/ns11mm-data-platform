@@ -1,0 +1,75 @@
+version: 2
+
+# Sidecar property file for the 8.11.0 intermediate model.
+#
+# NOT a copy of models/intermediate/schema.yml. 8.10.0 shipped a genuinely
+# cumulative full-file copy of that schema (reconciling 8.7.0 / 8.8.0 / 8.9.0),
+# and re-shipping it here with one block appended would immediately re-diverge
+# the thing 8.10.0 just merged. dbt merges model properties across files as long
+# as no model is declared twice, and int_earned_income__line_items is declared
+# nowhere else. Same argument as seeds/_seeds_earned_income.yml.
+
+models:
+  - name: int_earned_income__line_items
+    description: >
+      Day-grain component table behind the Earned Income Variance Report — the
+      platform equivalent of legacy 911dw.earned_revenue_report_values. Every
+      printed actual line is assembled here from the corrected DPR silver chain
+      (int_dpr__admissions, int_dpr__tour_revenue, int_dpr__fees_and_services,
+      int_dpr__attendance) plus the empty operating-expense seed. Ten cohorts
+      that legacy sourced from unstaged 911dw facts are typed NULLs with the
+      cause stated in the model header; none of them is zero-filled and none of
+      them is folded into a roll-up.
+
+      Two deliberate divergences from legacy, both documented in the model
+      header and in NOTES.md: the C3 booklet cohort is counted on the Tickets
+      line and not also on the CityPASS Tickets line (legacy's matrix predicate
+      has no coupon carve-out and may count it twice), and the museum guided-tour
+      buyout quantity is counted once (legacy adds it to a total that already
+      contains it).
+    columns:
+      - name: date_key
+        description: "PK. Natural key (calendar date)."
+        constraints:
+          - type: primary_key
+        data_tests: [not_null, unique]
+      - name: museum_attendance
+        description: >
+          Scanned passes at key_facility 1006 / 3000, UNZEROED. The legacy EIV
+          step has no closed-day CASE, so this takes
+          int_dpr__attendance.mus_passes_scanned rather than .mus_attendance.
+          The DPR line takes the zeroed value; the two reports therefore differ
+          on the museum's closed days. Deliberate.
+      - name: tickets
+        description: >
+          Tickets line. GA (issued + unissued, incl. the memorial-tour museum
+          admission cohort) plus the C3 booklet quantity. Excludes the three
+          unstaged cohorts, which is why the layout line is 'Partial'.
+        data_tests: [not_null]
+      - name: ticket_revenue
+        description: >
+          Ticket Revenue line. DPR ticket revenue PLUS the reseller cohort — the
+          legacy EIV revenue step has no customer_id predicate and the legacy DPR
+          step does. This is the single place the two definitions are reconciled.
+        data_tests: [not_null]
+      - name: citypass_tickets
+        description: CityPASS matrix cohort + booklet cohort. Excludes C3 (counted on Tickets) and the unstaged scan-change cohort.
+        data_tests: [not_null]
+      - name: citypass_revenue
+        description: >
+          CityPASS matrix cohort + booklet cohort, sum(amount) throughout. Legacy
+          extends the Adult/Youth coupon subset as quantity * amount;
+          key_coupon_category is not staged, so that extension cannot be
+          reproduced. Cause of the 'Partial': PENDING AN UPSTREAM ADDITION.
+        data_tests: [not_null]
+      - name: tickets_scanchange_ga
+        description: "Typed NULL placeholder — cause NO DATA FEED (fact_museum_citypass_scanchange). Never add not_null."
+      - name: child_evg_tickets
+        description: "Typed NULL placeholder — cause NO DATA FEED (fact_museum_bulk_tickets_test.pricePointID = 84). Never add not_null."
+      - name: est_operating_expenses
+        description: >
+          Typed NULL placeholder — cause NO DATA FEED. Reads seed_budgeted_expense,
+          which ships as a header-only contract for the manual workbook
+          /opt/pentaho/budgets/BudgetedExpensesDailies.xlsx. See DECISION_MEMO.md.
+      - name: total_operating_expenses
+        description: "Typed NULL placeholder — cause NO DATA FEED. See est_operating_expenses."
