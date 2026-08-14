@@ -1,5 +1,9 @@
 version: 2
 
+# 8.9.0 donations fact. Own schema file so models/marts/facts/schema.yml is
+# untouched; dbt merges model properties across files as long as no model is
+# declared twice. fct_donations is new in this release.
+
 models:
   - name: fct_ticket_availability
     description: "Real-time ticket capacity and utilization by date/window/type"
@@ -378,3 +382,178 @@ models:
           name: fct_budget_retail_forecasts_grain_unique
           # Inherited seed grain -> warn (severity rule; matches the int twin)
           config: { severity: warn }
+  - name: fct_donations
+    description: >
+      Day-grain donations fact. Replaces legacy 911dw.fact_donations_analysis_report.
+      Carries fifteen atomic donation components, four Sensource visitor /
+      attendance denominators, and four legacy-parity composites, using the
+      LEGACY column names because five already-migrated live reports (DPR-New,
+      DPR-MTD, DPR-YTD, Tracker-YTD, Retail Performance) bind to this table
+      independently of the Donations Analysis Report surface. The six
+      pre-divided ratio columns legacy stored are NOT reproduced (ADR-021 ratio
+      rule); numerators and denominators are carried and divided once at display
+      grain in rpt_donations_report_long.
+    config:
+      materialized: table
+    columns:
+      - name: date_key
+        description: "PK / FK to dim_date.date_key."
+        constraints:
+          - type: primary_key
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: date_value
+        description: Calendar date. Equal to date_key; carried to match fct_daily_performance's shape.
+        data_tests: [not_null]
+      - name: is_commemoration_day
+        description: September 11 anniversary flag, from dim_date.
+
+      # ── Visitor / attendance denominators (Sensource) ─────────────────────
+      - name: mem_attendance
+        description: >
+          Memorial attendance, SENSOURCE reporting facility 2000 (legacy
+          911dw.memorial_attendance). This is NOT fct_daily_performance.mem_attendance,
+          which is a typed NULL placeholder on the scan chain. The two memorial
+          definitions are unreconciled — ADR-005 open item, owner Chris Wogas.
+          Not coalesced to zero: a missing sensor day is not a zero-visitor day.
+      - name: mus_attendance
+        description: >
+          Museum attendance, Sensource passes_scanned at sensors 1006 + 3000
+          (legacy fact_visitors key_facility in (1006,3000)). This is the measure
+          the legacy Donations Analysis Report divides by, NOT the scan-based
+          fct_daily_performance.mus_attendance.
+      - name: mem_only_visitors
+        description: >
+          memorial_attendance - museum_attendance, re-projected from
+          int_attendance__sensource.memorial_only (authored once there). The
+          denominator of the legacy cart_don_per_mem_only_visitor ratio.
+      - name: mus_store_visitors
+        description: Museum Store door entries (Sensource sensor 1007, num_entry).
+      - name: vesey_visitors
+        description: Vesey Street exits (Sensource sensor 1001, num_exit).
+
+      # ── Donation components ───────────────────────────────────────────────
+      - name: ticketing_donations
+        description: >
+          Gateway ticketing donations, issued + unissued (8.8.0 recognition
+          change). Re-projected from int_dpr__donations; identical to
+          fct_daily_performance.ticketing_donations by construction.
+        data_tests: [not_null]
+      - name: memorial_kiosk_don
+        description: >
+          NEW in 8.9.0. The %DON-OPS-MEM% Gateway cohort excluding the plaza
+          box-office PLU (DONOPSMEM003) that int_dpr__donations already authors.
+          quantity <> 0 guard per t_fact_all_gateway_donations_new.
+        data_tests: [not_null]
+      - name: box_office_mem_don
+        description: >
+          Box office memorial plaza donation box (PLU DONOPSMEM003).
+          Consumed by new_dpr.prpt and 911dw.dayofdata.prpt.
+        data_tests: [not_null]
+      - name: coatcheck_don
+        description: >
+          Coat check donations: the %DON-OPS-MUS% cohort EXCLUDING the museum
+          exit-box PLU. Note this is narrower than the legacy Donations Analysis
+          Report's coatcheck_don, which is the whole cohort — the legacy figure
+          equals coatcheck_don + box_office_mus_exit_don. The platform split is
+          pre-existing (7.x, hardened 8.6.0) and is what DPR-New and Tracker-YTD
+          already read. See NOTES.md finding 2.
+        data_tests: [not_null]
+      - name: box_office_mus_exit_don
+        description: >
+          Box office museum exit donation box (PLU DONOPSMUS003).
+          Consumed by new_dpr.prpt and 911dw.dayofdata.prpt.
+        data_tests: [not_null]
+      - name: mus_exit_don
+        description: >
+          Museum exit donation box, CounterPoint item 101375 (legacy
+          dim_item_descr 886). Re-projected from int_dpr__retail.mus_exit_donations.
+        data_tests: [not_null]
+      - name: mus_store_don
+        description: >
+          Museum Store donations: category-6 lines at facility_group
+          'museum_store' excluding the exit box. Partial vs legacy, which
+          additionally filters an unstaged SKU whitelist.
+        data_tests: [not_null]
+      - name: mem_cart_ask_don
+        description: >
+          Memorial cart donation ask, CounterPoint item 7-999 (legacy 483).
+          Partial vs legacy mem_cart_ask_don, which also includes dim_item_descr
+          5156 and 5179 — surrogate keys that cannot be resolved.
+        data_tests: [not_null]
+      - name: mus_plaza_box_don
+        description: >
+          Museum plaza donation box, CounterPoint item 101165 (legacy 3375).
+          Re-projected from int_dpr__retail.donation_box.
+        data_tests: [not_null]
+      - name: mem_cart_other_don
+        description: >
+          NEW in 8.9.0. Memorial Carts donation lines that are neither the
+          donation ask nor the plaza box — the complement that lets
+          retail_cart_don recompose without authoring the total twice.
+        data_tests: [not_null]
+      - name: shopify_don
+        description: >
+          E-commerce donation ask, CounterPoint facility 1234 category 6
+          (legacy t_run_donations_shopify). Re-projected from
+          int_dpr__retail.ecom_donation_ask.
+        data_tests: [not_null]
+      - name: cafe1_donations
+        description: >
+          Museum Cafe donations, CounterPoint facility 4007 from 2022-11-28.
+          The single most widely consumed column on this table — all five
+          downstream reports read it.
+        data_tests: [not_null]
+      - name: vesey_donations
+        description: >
+          NEW in 8.9.0. Preview Site / Vesey Street donation lines. Report-only:
+          no legacy leg, no DPR line, nothing else in the platform reads it.
+        data_tests: [not_null]
+      - name: mask_don
+        description: >
+          Disposable mask donations, CounterPoint item 200704 (legacy 4618).
+          Dormant since 2021; zeros are expected, not a defect.
+        data_tests: [not_null]
+      - name: cafe_donations
+        description: >
+          Vendor-era cafe donations (legacy 911dw.cafe_performance, 2018-01-01
+          .. 2023-01-01). TYPED NULL PLACEHOLDER — cause NO DATA FEED: that
+          table has no writer in the migrated Pentaho set and no staged
+          equivalent. Never zero-filled; no not_null test by design. Layout seed
+          marks CAFE_DONATIONS and LEG_CAFE 'Stub'.
+
+      # ── Legacy-parity composites ──────────────────────────────────────────
+      - name: vs_cart_don
+        description: >
+          Visitor Services cart donations = memorial_kiosk_don + box_office_mem_don,
+          i.e. the whole %DON-OPS-MEM% cohort legacy reads. Consumed by
+          911dw.dayofdata.prpt (Retail Performance).
+        data_tests: [not_null]
+      - name: retail_cart_don
+        description: >
+          Retail cart donations = mem_cart_ask_don + mus_plaza_box_don +
+          mem_cart_other_don, i.e. the whole category-6 cohort at Memorial
+          Carts. Consumed by 911dw.dayofdata.prpt.
+        data_tests: [not_null]
+      - name: kiosk_coatcheck_donations
+        description: >
+          fact_all_donations leg 2 (t_run_donations_kiosk_coatcheck): the whole
+          of fact_all_gateway_donations, both matrix cohorts including the two
+          box-office PLUs. Consumed by finance_mtd_dpr / finance_ytd_dpr.
+        data_tests: [not_null]
+      - name: mus_exit_leg_donations
+        description: >
+          fact_all_donations leg 3 (t_run_donations_exit) = mus_exit_don +
+          box_office_mus_exit_don. Legacy UNIONs the retail exit box with the
+          analysis report's box-office exit box, so the exit-box PLU appears in
+          BOTH this leg and kiosk_coatcheck_donations. That overlap is legacy's
+          and is reproduced verbatim so the two finance reports tie. Adding the
+          seven legs together double-counts it — see NOTES.md finding 3.
+        data_tests: [not_null]

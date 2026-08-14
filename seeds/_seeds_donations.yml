@@ -1,0 +1,77 @@
+version: 2
+
+# Donations Analysis Report layout seed (8.9.0). Own schema file so
+# seeds/_seeds.yml is untouched; dbt merges seed properties across files as long
+# as no seed is declared twice. donations_line_items is new in this release.
+
+seeds:
+  - name: donations_line_items
+    description: >
+      Report-layout catalog for the Donations Analysis Report: one row per
+      printed line (section, label, sort order, indent, number format,
+      additive-vs-ratio, availability, facility mapping, and — for ratio lines —
+      numerator/denominator source measures). 36 lines in 12 sections. Report
+      scaffolding, not a business dimension. Consumed by dim_donations_line_item.
+
+      The legacy XLSX is one sheet per calendar year (2014 .. 2026, thirteen
+      TypeExitExcelWriterStep steps in t_donations_analysis_tabs), every sheet
+      carrying the same 22-column layout. Those columns, plus the five
+      fact_donations_analysis_report columns the sheet does not print but the
+      downstream .prpt reports do read, plus the seven fact_all_donations legs,
+      are what this catalog enumerates; the Power BI date slicer replaces the
+      sheet tabs.
+
+      AVAILABILITY on this report:
+        Available — produced from staged sources at the legacy definition.
+        Partial   — produced, but from the donation CATEGORY at the right
+                    facility rather than legacy's 911dw.dim_item_descr SKU
+                    whitelist. dim_item_descr is not staged and its surrogate
+                    keys (482, 485, 2168-2173, 3373, 3753, 5156, 5179, 583,
+                    598, 931) cannot be resolved to CounterPoint item numbers.
+                    Six lines are supersets of the legacy cohort as a result.
+        Stub      — typed NULL with a stated cause. Two rows: CAFE_DONATIONS and
+                    LEG_CAFE, cause NO DATA FEED (911dw.cafe_performance has no
+                    writer in the migrated Pentaho set).
+    config:
+      column_types:
+        line_item_code: varchar
+        sort_order: integer
+        section: varchar
+        section_sort_order: integer
+        line_item: varchar
+        indent: integer
+        format: varchar
+        value_type: varchar
+        availability: varchar
+        facility_group: varchar
+        key_facility: integer
+        num_source: varchar
+        den_source: varchar
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_donations_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: sort_order
+        description: Global printed order.
+        data_tests: [not_null, unique]
+      - name: section
+        description: Printed section heading.
+        data_tests: [not_null]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['additive', 'ratio']
+      - name: availability
+        description: Honest per-line coverage state. See the description above.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Available', 'Partial', 'Stub', 'Gap']
+      - name: num_source
+        description: >
+          Numerator measure for ratio lines; empty for additive lines. Documents
+          the ADR-021 ratio components that rpt_donations_report_long carries.
+      - name: den_source
+        description: Denominator measure for ratio lines; empty for additive lines.

@@ -1,0 +1,37 @@
+line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
+MEM_ATTENDANCE,10,Attendance,10,Memorial Attendance,1,Number0,additive,Available,,2000,,
+MUS_ATTENDANCE,20,Attendance,10,Museum Attendance,1,Number0,additive,Available,,1030,,
+MEM_ONLY_VISITORS,30,Attendance,10,Memorial Only Visitors,1,Number0,additive,Available,,,,
+TICKETING_DONATIONS,110,Ticketing Donations,20,Ticketing Donations,1,Currency0,additive,Available,,,,
+MUS_STORE_VISITORS,210,Museum Store,30,Museum Store Visitors,1,Number0,additive,Available,museum_store,1003,,
+MUS_STORE_DON,220,Museum Store,30,Museum Store Donations,1,Currency0,additive,Partial,museum_store,1003,,
+MS_DON_PER_STORE_VISITOR,230,Museum Store,30,Donations / Store Visitor,1,Currency2,ratio,Partial,museum_store,1003,mus_store_don,mus_store_visitors
+MS_DON_PER_MUS_VISITOR,240,Museum Store,30,Donations / Museum Visitor,1,Currency2,ratio,Partial,museum_store,1003,mus_store_don,mus_attendance
+VESEY_VISITORS,310,Vesey Street,40,Vesey Street Visitors,1,Number0,additive,Available,preview_vesey,1001,,
+VESEY_DONATIONS,320,Vesey Street,40,Vesey Street Donations,1,Currency0,additive,Partial,preview_vesey,1001,,
+VESEY_DON_PER_VESEY_VISITOR,330,Vesey Street,40,Donations / Vesey Visitor,1,Currency2,ratio,Partial,preview_vesey,1001,vesey_donations,vesey_visitors
+RETAIL_CART_DON,410,Donation Carts,50,Retail Cart Donations,1,Currency0,additive,Partial,memorial_carts,1020,,
+VS_CART_DON,420,Donation Carts,50,Visitor Services Cart Donations,1,Currency0,additive,Available,,,,
+TOTAL_CART_DON,430,Donation Carts,50,Total Cart Donations,0,Currency0,additive,Partial,,,,
+CART_DON_PER_MEM_ONLY_VISITOR,440,Donation Carts,50,Cart Donations / Memorial Only Visitor,1,Currency2,ratio,Partial,,,retail_cart_don+vs_cart_don,mem_only_visitors
+CAFE_DONATIONS,510,Cafe,60,Cafe Donations (vendor era),1,Currency0,additive,Stub,,,,
+CAFE1_DONATIONS,520,Cafe,60,Museum Cafe Donations,1,Currency0,additive,Available,museum_cafe,4007,,
+COATCHECK_DON,610,Coat Check,70,Coat Check Donations,1,Currency0,additive,Available,,,,
+COATCHECK_DON_PER_MUS_VISITOR,620,Coat Check,70,Coat Check Donations / Museum Visitor,1,Currency2,ratio,Available,,,coatcheck_don,mus_attendance
+MUS_EXIT_DON,710,Museum Exit,80,Museum Exit Donations,1,Currency0,additive,Available,museum_store,1003,,
+MUS_EXIT_DON_PER_MUS_VISITOR,720,Museum Exit,80,Museum Exit Donations / Museum Visitor,1,Currency2,ratio,Available,museum_store,1003,mus_exit_don,mus_attendance
+BOX_OFFICE_MEM_DON,810,Box Office Donations,90,Box Office Memorial Plaza Box,1,Currency0,additive,Available,,,,
+BOX_OFFICE_MUS_EXIT_DON,820,Box Office Donations,90,Box Office Museum Exit Box,1,Currency0,additive,Available,,,,
+MEM_CART_ASK_DON,910,Memorial Cart Detail,100,Memorial Cart Donation Ask,1,Currency0,additive,Partial,memorial_carts,1020,,
+MUS_PLAZA_BOX_DON,920,Memorial Cart Detail,100,Museum Plaza Donation Box,1,Currency0,additive,Available,memorial_carts,1020,,
+MEM_CART_OTHER_DON,930,Memorial Cart Detail,100,Memorial Cart Other Donations,1,Currency0,additive,Available,memorial_carts,1020,,
+MEMORIAL_KIOSK_DON,940,Memorial Cart Detail,100,Memorial Kiosk Donations,1,Currency0,additive,Available,,,,
+SHOPIFY_DON,1010,Other Donation Sources,110,E-Commerce Donation Ask,1,Currency0,additive,Available,ecommerce,1234,,
+MASK_DON,1020,Other Donation Sources,110,Disposable Mask Donations,1,Currency0,additive,Available,,,,
+LEG_TICKETING,1110,All-Sources Legs,120,Leg - Ticketing Donations,1,Currency0,additive,Available,,,,
+LEG_KIOSK_COATCHECK,1120,All-Sources Legs,120,Leg - Kiosk and Coat Check Donations,1,Currency0,additive,Available,,,,
+LEG_MUS_EXIT,1130,All-Sources Legs,120,Leg - Museum Exit Donations,1,Currency0,additive,Available,,,,
+LEG_MUS_STORE,1140,All-Sources Legs,120,Leg - Museum Store Donations,1,Currency0,additive,Partial,museum_store,1003,,
+LEG_RETAIL_CART,1150,All-Sources Legs,120,Leg - Retail Cart Donations,1,Currency0,additive,Partial,memorial_carts,1020,,
+LEG_SHOPIFY,1160,All-Sources Legs,120,Leg - Shopify Donations,1,Currency0,additive,Available,ecommerce,1234,,
+LEG_CAFE,1170,All-Sources Legs,120,Leg - Cafe Donations,1,Currency0,additive,Stub,,,,

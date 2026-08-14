@@ -1,5 +1,9 @@
 version: 2
 
+# Canonical property file for models/intermediate/. Cumulative across the v8 series:
+# each release adds its models here rather than to a sidecar, so a model is
+# declared exactly once.
+
 models:
   - name: int_gateway__ticket_journal_lines
     description: >
@@ -569,3 +573,76 @@ models:
         description: "Buyout revenue. Always counts, suppression or not."
         data_tests: [not_null]
 
+  - name: int_donations__all_sources
+    description: >
+      Platform equivalent of legacy 911dw.fact_all_donations, carried one level
+      finer than legacy: one row per (date_key, donation_component), each
+      component tagged with the fact_all_donations column it rolls into
+      (legacy_leg). Eleven of the fifteen components are RE-PROJECTED from their
+      existing authored homes (int_dpr__donations, int_dpr__retail) rather than
+      re-derived — a donation total authored twice is an ADR-021 defect. Three
+      are NEW in 8.9.0 (MEMORIAL_KIOSK_DON, MEM_CART_OTHER_DON, VESEY_DON), each
+      defined as the COMPLEMENT of what is already authored so no dollar is
+      authored twice. One is a typed NULL placeholder (CAFE_VENDOR_DON, cause
+      NO DATA FEED). Feeds fct_donations.
+    config:
+      materialized: view
+    data_tests:
+      - unique:
+          column_name: "date_key || '~' || donation_component"
+          name: int_donations__all_sources_grain_unique
+    columns:
+      - name: date_key
+        description: Calendar date (DATE). Grain component.
+        data_tests: [not_null]
+      - name: donation_component
+        description: >
+          Atomic donation cohort code. Fifteen values; non-overlapping by
+          construction, so components may be summed freely. The seven legacy
+          legs are NOT — see fct_donations.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values:
+                - TICKETING_DON
+                - MEMORIAL_KIOSK_DON
+                - BOX_OFFICE_MEM_DON
+                - COATCHECK_DON
+                - BOX_OFFICE_MUS_EXIT_DON
+                - MUS_EXIT_DON
+                - MUS_STORE_DON
+                - MEM_CART_ASK_DON
+                - MUS_PLAZA_BOX_DON
+                - MEM_CART_OTHER_DON
+                - SHOPIFY_DON
+                - CAFE_VENDOR_DON
+                - CAFE1_DON
+                - VESEY_DON
+                - MASK_DON
+      - name: legacy_leg
+        description: >
+          The fact_all_donations column this component rolls into, or NULL for
+          components legacy carries only on fact_donations_analysis_report
+          (CAFE1_DON, VESEY_DON, MASK_DON).
+        data_tests:
+          - accepted_values:
+              values:
+                - ticketing_donations
+                - kiosk_coatcheck_donations
+                - mus_exit_donations
+                - mus_store_donations
+                - retail_cart_donations
+                - shopify_donations
+                - cafe_donations
+              config:
+                where: "legacy_leg is not null"
+      - name: source_system
+        description: Which system the dollars originate in.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['gateway', 'counterpoint', 'vendor_cafe']
+      - name: donation_amount
+        description: >
+          Net donation dollars. NULL only on CAFE_VENDOR_DON (typed placeholder,
+          cause NO DATA FEED). Deliberately NOT tested not_null.

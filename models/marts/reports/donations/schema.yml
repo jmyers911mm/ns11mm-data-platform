@@ -1,0 +1,120 @@
+version: 2
+
+# donations report family (8.9.0) — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+#
+# Roles present:  *_report_long (serving shape) · *_narrative_brief · *_narrative
+#                 · dim_*_line_item (row catalog)
+# Roles absent:   *_powerbi, *_budget_daily, *_period_windows, *_print.
+#   - *_powerbi is the ONLY permitted caller of SEMANTIC_VIEW() and exists solely
+#     to project one. There is no DONATIONS semantic view (see
+#     models/marts/reports/_reports__sources.yml — dpr_semantic,
+#     attendance_semantic, retail_semantic are the three that exist), and
+#     authoring one would add a metric surface that needs Data & AI Committee
+#     sign-off under ADR-005. rpt_donations_report_long carries the POWERBI_ROLE
+#     grant and is the Power BI surface for this family until a DONATIONS
+#     semantic view is proposed on its own gate.
+#   - *_budget_daily is absent because the Donations Analysis Report prints no
+#     goal column on any sheet.
+#   - *_period_windows / *_print are absent because the legacy workbook is a
+#     per-year sheet of daily rows, not an as-of period grid — the Power BI date
+#     slicer replaces the sheet tabs.
+
+models:
+  - name: rpt_donations_report_long
+    description: >
+      Tidy Donations Analysis Report presentation, one row per (report_date,
+      line_item_code) across 36 lines in 12 sections. Additive lines carry
+      `amount`; the six per-visitor lines carry numerator + denominator so
+      Power BI recomputes ratio-of-sums at any grain (ADR-021 ratio rule — the
+      six pre-divided columns legacy stored are reproduced nowhere). No budget
+      side: the legacy report has no goal column. The LEG_* lines in section 12
+      are the seven fact_all_donations columns the two finance DPR reports bind
+      to; they are roll-ups of the lines above them and must not be summed with
+      them, nor with each other (LEG_KIOSK_COATCHECK and LEG_MUS_EXIT share the
+      box-office exit box, reproducing legacy's own overlap).
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    data_tests:
+      # Grain enforced by the in-model unpivot -> error (severity rule).
+      - unique:
+          column_name: "report_date || '~' || line_item_code"
+          name: rpt_donations_report_long_grain_unique
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.date_key.
+        data_tests: [not_null]
+      - name: is_commemoration_day
+        description: September 11 anniversary flag, carried from dim_date via fct_donations.
+      - name: line_item_code
+        description: Joins to dim_donations_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('donations_line_items')
+              field: line_item_code
+      - name: amount
+        description: >
+          Actual additive value for the line (NULL for ratio rows). NULL on
+          CAFE_DONATIONS and LEG_CAFE for every date — typed placeholder, cause
+          NO DATA FEED.
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: >
+          Ratio denominator (NULL for additive rows). Divide
+          SUM(numerator) / SUM(denominator) at display grain; never average
+          daily ratios.
+
+  - name: rpt_donations_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Donations Analysis facts (nine
+      live donation lines with DoD / same-weekday-last-week / YoY / MTD / YTD,
+      the four per-visitor ratios as numerator + denominator + resolved value,
+      7-day direction, top movers, and an explicit data_gaps list). Sole input
+      to the Cortex narrative — unit-test this, not the LLM output. Carries no
+      budget and no cross-source total, both by design. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        description: The latest actuals date strictly before today.
+        data_tests:
+          - not_null: { config: { severity: warn } }
+          - unique: { config: { severity: warn } }
+      - name: brief_json
+        description: The full structured brief handed to the model verbatim.
+
+  - name: rpt_donations_narrative
+    description: >
+      DISABLED (enabled=false). Documents the Cortex COMPLETE logic and is the
+      source SQL for the daily task in scripts/setup_donations_narrative.sql.
+      Narrates only the pre-computed brief_json from
+      rpt_donations_narrative_brief. The prompt explicitly forbids budget
+      language (this report has none) and forbids stating a cross-source total
+      (the platform certifies none).
+
+  - name: dim_donations_line_item
+    description: >
+      Donations Analysis Report line-item metadata: section, display order,
+      indent, number format, additive-vs-ratio type, availability, facility
+      mapping, and (for ratio lines) numerator/denominator source measures.
+      Report scaffolding, not a business dimension. 'Partial' on this report
+      means the line is built from the donation CATEGORY at the right facility
+      because legacy's 911dw.dim_item_descr SKU whitelist is not staged.
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: availability
+        data_tests:
+          - accepted_values:
+              values: ['Available', 'Partial', 'Stub', 'Gap']
+      - name: value_type
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
