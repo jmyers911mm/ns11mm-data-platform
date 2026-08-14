@@ -197,8 +197,8 @@ tables:
         synonyms: ["transactions", "carts", "orders count"]
         expr: SUM(TRANSACTIONS)
       - name: total_visitors
-        synonyms: ["retail visitors", "store visitors", "foot traffic"]
-        description: Visitor count for conversion/per-visitor ratios. STUB until Sensource lands.
+        synonyms: ["retail visitors", "store visitors", "door count", "store entries", "foot traffic"]
+        description: "Sensource door count at the selling area (entries at the Museum Store, exits at Vesey). Numerator of capture_rate, denominator of conversion_rate. Live since 8.4.0."
         expr: SUM(VISITOR_COUNT)
       - name: total_ecom_orders
         synonyms: ["ecommerce orders", "online orders"]
@@ -213,13 +213,25 @@ tables:
         description: "Non-additive: net sales / transactions, recomputed at the query grain."
         expr: SUM(NET_SALES) / NULLIF(SUM(TRANSACTIONS), 0)
       - name: conversion_rate
-        synonyms: ["conversion", "conversion rate", "capture rate"]
-        description: "Non-additive: transactions / visitors. Depends on stubbed visitor counts."
+        synonyms: ["conversion", "conversion rate", "purchase rate", "buy rate", "share of store visitors who bought"]
+        description: "Non-additive: transactions / store door count, recomputed at the query grain. The share of the people who came INTO the store who bought something. This is NOT the capture rate -- use capture_rate for that. Legacy definition of record: t_fact_mus_store_analysis.sql:19."
         expr: SUM(TRANSACTIONS) / NULLIF(SUM(VISITOR_COUNT), 0)
+      - name: capture_rate
+        synonyms: ["capture", "capture rate", "store capture", "draw rate", "share of museum visitors who entered the store"]
+        description: "Non-additive: store door count / museum attendance (Sensource passes scanned), recomputed at the query grain. The share of museum visitors who came INTO the store. Distinct from conversion_rate, which divides by the door count rather than into it. Legacy definition of record: t_fact_mus_store_analysis.sql:17."
+        expr: SUM(VISITOR_COUNT) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0)
       - name: rev_per_visitor
-        synonyms: ["revenue per visitor", "sales per visitor", "per capita retail"]
-        description: "Non-additive: net sales / visitors. Depends on stubbed visitor counts."
+        synonyms: ["revenue per store visitor", "sales per store visitor"]
+        description: "Non-additive: net sales / store door count, recomputed at the query grain. Per-STORE-visitor. For per-museum-visitor use sales_per_cap."
         expr: SUM(NET_SALES) / NULLIF(SUM(VISITOR_COUNT), 0)
+      - name: sales_per_cap
+        synonyms: ["sales per cap", "sales per capita", "retail spend per museum visitor", "per cap sales"]
+        description: "Non-additive: net sales / museum attendance, recomputed at the query grain. Legacy per-cap basis."
+        expr: SUM(NET_SALES) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0)
+      - name: profit_per_cap
+        synonyms: ["profit per cap", "profit per capita", "retail profit per museum visitor"]
+        description: "Non-additive: net profit / museum attendance, recomputed at the query grain. Legacy per-cap basis."
+        expr: SUM(NET_PROFIT) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0)
 
   - name: retail_category
     description: Retail category-grain fact. One row per day per selling area per product category.
@@ -372,7 +384,9 @@ module_custom_instructions:
     full Sensource turnstile-blended attendance (only the scan component is
     available); membership and ecommerce gross profit; monthly online/website
     recurring revenue (fundraising/ecom domain model not yet deployed) and
-    same-day hourly sales (see the attendance domain model). Visitor-based retail ratios (conversion_rate,
-    rev_per_visitor) and ecom orders rest on stubbed feeds -- flag as provisional
-    until Sensource/Shopify land; flag market-segment splits as provisional
-    pending channel-mapping validation.
+    same-day hourly sales (see the attendance domain model). Retail capture rate and
+    conversion rate are DISTINCT metrics with different denominators -- capture divides
+    by museum attendance, conversion divides by the store door count; never answer one
+    with the other. Ecom orders rest on a stubbed feed -- flag as provisional until
+    Shopify lands; flag market-segment splits as provisional pending channel-mapping
+    validation.

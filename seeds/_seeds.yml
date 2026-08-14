@@ -1,41 +1,5 @@
 version: 2
 seeds:
-  - name: seed_memorial_attendance
-    description: >
-      Memorial plaza scanned passes, landed from 911dw.memorial_attendance. This
-      is a SEPARATE legacy table from 911dw.fact_visitors and the only source of
-      the Memorial Attendance line: neither writer of fact_visitors can emit
-      key_facility 2000 (t_fact_museum_passes_scanned emits only 1006, 5000 and
-      0; the Sensource API leg covers ParentFacility 1000-1009). Read by
-      t_fact_attendance_all_locations.sql:14-19,
-      t_fact_attendance_all_facilities.sql:10-15 and :42-47, and
-      t_reporting_mem_attendance.sql:8-12 — every reader filters key_facility and
-      sums passes_scanned. Landed unfiltered per ADR-001; the memorial facility
-      set is chosen downstream in seed_attendance_facility_group, where the
-      legacy disagreement (2000 vs 1000+2000) stays reviewable.
-      Consumed by stg_memorial__attendance.
-    config:
-      column_types:
-        key_date: integer
-        key_facility: integer
-        passes_scanned: integer
-    columns:
-      - name: key_date
-        description: "Business date as YYYYMMDD. Recast by the staging model."
-        data_tests: [not_null]
-      - name: key_facility
-        description: "Legacy facility surrogate. 2000 is the memorial plaza."
-        data_tests: [not_null]
-      - name: passes_scanned
-        description: "Scanned passes. The measure; every legacy reader sums it."
-        data_tests: [not_null]
-    data_tests:
-      # Grain is inherited from the landed extract, not enforced in-model — warn
-      # per the severity rule. Promote to error once the source grain is confirmed.
-      - unique:
-          column_name: "key_date || '~' || key_facility"
-          name: seed_memorial_attendance_grain_unique
-          config: { severity: warn }
   - name: dpr_line_items
     description: >
       Report-layout catalog for the Daily Performance Report: one row per printed
@@ -470,11 +434,12 @@ seeds:
       printed workbook column (section, label, sort order, number format,
       additive-vs-ratio, availability, and — for ratio lines — numerator/
       denominator source measures). Single-area report: facility fixed to
-      Memorial Carts (1020). MUS_VISITORS became Available in 8.4.0 (the
-      crosswalk publishes museum attendance at the Atrium, 1030); the memorial
-      side and everything built on it stays Stub pending the 8.5.0 carts
-      denominator decision (ADR-005). Report scaffolding, not a business
-      dimension. Consumed by dim_carts_line_item.
+      Memorial Carts (1020). MUS_VISITORS became Available in 8.4.0; the
+      memorial-side counts followed in 8.5.0. The three denominator-driven
+      ratios are Partial, not Available: the legacy year switch
+      (seed_carts_denominator_rule) has no rule past 2020, so they are blank
+      for 2021 onward exactly as the legacy workbook prints them. Report
+      scaffolding, not a business dimension. Consumed by dim_carts_line_item.
     columns:
       - name: line_item_code
         description: Stable key joined from rpt_carts_report_long. Grain of this table.
@@ -642,5 +607,36 @@ seeds:
           Legacy file and line the mapping was verified from, or — for a
           non-reporting row — what was observed and what is still unknown.
           Required on every row; an unsourced mapping is not a mapping.
+        data_tests: [not_null]
+
+  - name: seed_carts_denominator_rule
+    description: >
+      Calendar-year switch for the Retail Carts Analysis capture / per-cap
+      denominator. The legacy workbook does not use one denominator: 2019 uses
+      (memorial visitors less 25%) less museum visitors, 2020 uses memorial
+      visitors unadjusted, and the CASE at t_retail_cart_analysis_tabs.sql:19-22
+      has no ELSE — so every printed row from 2021 onward has a NULL capture
+      rate, NULL profit-per-cap and NULL sales-per-cap. That fall-through is
+      reproduced, not repaired: a year absent from this seed produces a NULL
+      denominator. Adding a rule for 2021+ is a one-row data edit once the Data
+      & AI Committee decides which form applies (ADR-005 — see the 8.5.0
+      DECISION_MEMO). Consumed by rpt_retail_carts_analysis.
+    config:
+      column_types:
+        calendar_year: integer
+        denominator_rule: varchar
+        notes: varchar
+    columns:
+      - name: calendar_year
+        description: Calendar year of the report date. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: denominator_rule
+        description: "Which legacy denominator form applies in this year."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['adjusted_memorial_less_museum', 'memorial_visitors']
+      - name: notes
+        description: Legacy file and line the rule was verified from.
         data_tests: [not_null]
 

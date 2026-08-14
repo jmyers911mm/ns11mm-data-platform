@@ -1,6 +1,6 @@
 line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
 ATTENDANCE,10,Attendance,10,Attendance,0,Number0,additive,Available,attendance,,,
-MUSEUM_STORE__CAPTURE_RATE,110,Museum Store Performance,20,Capture Rate,1,Percent1,ratio,Stub,museum_store,1003,visitor_count,attendance
+MUSEUM_STORE__CAPTURE_RATE,110,Museum Store Performance,20,Capture Rate,1,Percent1,ratio,Available,museum_store,1003,visitor_count,museum_attendance
 MUSEUM_STORE__VISITORS,120,Museum Store Performance,20,Visitors,1,Number0,additive,Available,museum_store,1003,,
 MUSEUM_STORE__CUSTOMERS,130,Museum Store Performance,20,Customers,1,Number0,additive,Available,museum_store,1003,,
 MUSEUM_STORE__CONVERSION_RATE,140,Museum Store Performance,20,Conversion Rate,1,Percent1,ratio,Available,museum_store,1003,transactions,visitor_count

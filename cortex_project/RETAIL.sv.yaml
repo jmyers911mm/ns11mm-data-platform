@@ -131,6 +131,11 @@ tables:
       - name: VISITOR_COUNT
         expr: VISITOR_COUNT
         data_type: NUMBER
+        description: "Sensource door count at the selling area (entries at the Museum Store, exits at Vesey). Live since 8.4.0."
+      - name: MUSEUM_ATTENDANCE
+        expr: MUSEUM_ATTENDANCE
+        data_type: NUMBER
+        description: "Sensource museum attendance (passes scanned, 1006+3000), repeated on every facility row. Capture-rate and per-cap denominator. NOT the DPR scan attendance -- see the UNIFIED view's dpr.total_museum_attendance."
       - name: ECOM_ORDERS
         expr: ECOM_ORDERS
         data_type: NUMBER
@@ -162,17 +167,39 @@ tables:
         data_type: NUMBER
         description: Total transaction count (customers)
       - name: TOTAL_VISITORS
+        synonyms: ["store visitors", "door count", "store entries"]
         expr: SUM(VISITOR_COUNT)
         data_type: NUMBER
-        description: Total visitor count to retail areas (Sensource stub until fed)
+        description: "Total Sensource door count at retail areas. Numerator of CAPTURE_RATE, denominator of CONVERSION_RATE."
       - name: TOTAL_ECOM_ORDERS
         expr: SUM(ECOM_ORDERS)
         data_type: NUMBER
         description: Total ecommerce orders (Shopify stub until fed)
       - name: REVENUE_PER_VISITOR
+        synonyms: ["revenue per store visitor", "sales per store visitor"]
         expr: SUM(NET_SALES) / NULLIF(SUM(VISITOR_COUNT), 0)
         data_type: NUMBER
-        description: Net sales per visitor
+        description: "Non-additive: net sales / store door count. Per-STORE-visitor; for per-museum-visitor use SALES_PER_CAP."
+      - name: CONVERSION_RATE
+        synonyms: ["conversion", "conversion rate", "purchase rate", "buy rate"]
+        expr: SUM(TRANSACTIONS) / NULLIF(SUM(VISITOR_COUNT), 0)
+        data_type: NUMBER
+        description: "Non-additive: transactions / store door count. The share of people who came INTO the store who bought. NOT the capture rate. Legacy: t_fact_mus_store_analysis.sql:19."
+      - name: CAPTURE_RATE
+        synonyms: ["capture", "capture rate", "store capture", "draw rate"]
+        expr: SUM(VISITOR_COUNT) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0)
+        data_type: NUMBER
+        description: "Non-additive: store door count / museum attendance. The share of museum visitors who came INTO the store. Legacy: t_fact_mus_store_analysis.sql:17."
+      - name: SALES_PER_CAP
+        synonyms: ["sales per cap", "sales per capita", "retail spend per museum visitor"]
+        expr: SUM(NET_SALES) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0)
+        data_type: NUMBER
+        description: "Non-additive: net sales / museum attendance. Legacy per-cap basis."
+      - name: PROFIT_PER_CAP
+        synonyms: ["profit per cap", "profit per capita", "retail profit per museum visitor"]
+        expr: SUM(NET_PROFIT) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0)
+        data_type: NUMBER
+        description: "Non-additive: net profit / museum attendance. Legacy per-cap basis."
   - name: DIM_DATE
     description: Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)
     base_table:
@@ -216,7 +243,7 @@ tables:
   - name: SEED_FACILITY_AREA
     description: Retail selling-area facility reference
     base_table:
-      database: NS11MM_DW_PROD
+      database: NS11MM_DW_DEV
       schema: SEEDS
       table: SEED_FACILITY_AREA
     primary_key:

@@ -1,4 +1,5 @@
 -- GENERATED FILE -- do not edit by hand.
+-- 8.5.0 (ADR-005 GATED): CAPTURE_RATE, CONVERSION_RATE, SALES_PER_CAP, PROFIT_PER_CAP added.
 -- Source of truth: cortex_project/RETAIL.sv.yaml
 -- Regenerate: python3 scripts/generate_semantic_view_ddl.py
 -- Run as the MARTS owner role. Equivalent to redeploying the .sv.yaml via the
@@ -9,7 +10,7 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.RETAIL
     FCT_RETAIL_PERFORMANCE AS MARTS.FCT_RETAIL_PERFORMANCE COMMENT = 'Category-grain retail fact (one row per date x facility x category). Additive sales/profit/units/donations.',
     FCT_RETAIL_DAILY AS MARTS.FCT_RETAIL_DAILY COMMENT = 'Facility-grain retail fact (one row per date x facility). Transaction and visitor counts plus facility rollups of sales/profit/units/donations. This is the single-fact projection the Retail Performance Power BI wrapper (RPT_RETAIL_POWERBI) reads.',
     DIM_DATE AS MARTS.DIM_DATE PRIMARY KEY (DATE_KEY) COMMENT = 'Calendar date spine spanning 2000-2035 with commemoration day flag (no fiscal columns yet; fiscal calendar pending Data & AI Committee definition)',
-    SEED_FACILITY_AREA AS SEEDS.SEED_FACILITY_AREA PRIMARY KEY (KEY_FACILITY) COMMENT = 'Retail selling-area facility reference'
+    SEED_FACILITY_AREA AS NS11MM_DW_DEV.SEEDS.SEED_FACILITY_AREA PRIMARY KEY (KEY_FACILITY) COMMENT = 'Retail selling-area facility reference'
   )
   RELATIONSHIPS (
     RETAIL_PERF_TO_DATE AS FCT_RETAIL_PERFORMANCE (DATE_KEY) REFERENCES DIM_DATE (DATE_KEY),
@@ -30,7 +31,8 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.RETAIL
     FCT_RETAIL_DAILY.NET_UNITS AS NET_UNITS,
     FCT_RETAIL_DAILY.DONATIONS AS DONATIONS,
     FCT_RETAIL_DAILY.TRANSACTIONS AS TRANSACTIONS,
-    FCT_RETAIL_DAILY.VISITOR_COUNT AS VISITOR_COUNT,
+    FCT_RETAIL_DAILY.VISITOR_COUNT AS VISITOR_COUNT COMMENT = 'Sensource door count at the selling area (entries at the Museum Store, exits at Vesey). Live since 8.4.0.',
+    FCT_RETAIL_DAILY.MUSEUM_ATTENDANCE AS MUSEUM_ATTENDANCE COMMENT = 'Sensource museum attendance (passes scanned, 1006+3000), repeated on every facility row. Capture-rate and per-cap denominator. NOT the DPR scan attendance -- see the UNIFIED view''s dpr.total_museum_attendance.',
     FCT_RETAIL_DAILY.ECOM_ORDERS AS ECOM_ORDERS
   )
   DIMENSIONS (
@@ -73,8 +75,12 @@ CREATE OR REPLACE SEMANTIC VIEW MARTS.RETAIL
     FCT_RETAIL_DAILY.TOTAL_RETAIL_NET_UNITS AS SUM(NET_UNITS) COMMENT = 'Facility-grain units rollup',
     FCT_RETAIL_DAILY.TOTAL_RETAIL_DONATION_ASK AS SUM(DONATIONS) COMMENT = 'Facility-grain donation-ask rollup (same measure as the category-grain TOTAL_RETAIL_DONATIONS, which keeps the locked name and synonyms)',
     FCT_RETAIL_DAILY.TOTAL_TRANSACTIONS AS SUM(TRANSACTIONS) COMMENT = 'Total transaction count (customers)',
-    FCT_RETAIL_DAILY.TOTAL_VISITORS AS SUM(VISITOR_COUNT) COMMENT = 'Total visitor count to retail areas (Sensource stub until fed)',
+    FCT_RETAIL_DAILY.TOTAL_VISITORS AS SUM(VISITOR_COUNT) WITH SYNONYMS = ('store visitors', 'door count', 'store entries') COMMENT = 'Total Sensource door count at retail areas. Numerator of CAPTURE_RATE, denominator of CONVERSION_RATE.',
     FCT_RETAIL_DAILY.TOTAL_ECOM_ORDERS AS SUM(ECOM_ORDERS) COMMENT = 'Total ecommerce orders (Shopify stub until fed)',
-    FCT_RETAIL_DAILY.REVENUE_PER_VISITOR AS SUM(NET_SALES) / NULLIF(SUM(VISITOR_COUNT), 0) COMMENT = 'Net sales per visitor'
+    FCT_RETAIL_DAILY.REVENUE_PER_VISITOR AS SUM(NET_SALES) / NULLIF(SUM(VISITOR_COUNT), 0) WITH SYNONYMS = ('revenue per store visitor', 'sales per store visitor') COMMENT = 'Non-additive: net sales / store door count. Per-STORE-visitor; for per-museum-visitor use SALES_PER_CAP.',
+    FCT_RETAIL_DAILY.CONVERSION_RATE AS SUM(TRANSACTIONS) / NULLIF(SUM(VISITOR_COUNT), 0) WITH SYNONYMS = ('conversion', 'conversion rate', 'purchase rate', 'buy rate') COMMENT = 'Non-additive: transactions / store door count. The share of people who came INTO the store who bought. NOT the capture rate. Legacy: t_fact_mus_store_analysis.sql:19.',
+    FCT_RETAIL_DAILY.CAPTURE_RATE AS SUM(VISITOR_COUNT) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0) WITH SYNONYMS = ('capture', 'capture rate', 'store capture', 'draw rate') COMMENT = 'Non-additive: store door count / museum attendance. The share of museum visitors who came INTO the store. Legacy: t_fact_mus_store_analysis.sql:17.',
+    FCT_RETAIL_DAILY.SALES_PER_CAP AS SUM(NET_SALES) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0) WITH SYNONYMS = ('sales per cap', 'sales per capita', 'retail spend per museum visitor') COMMENT = 'Non-additive: net sales / museum attendance. Legacy per-cap basis.',
+    FCT_RETAIL_DAILY.PROFIT_PER_CAP AS SUM(NET_PROFIT) / NULLIF(SUM(MUSEUM_ATTENDANCE), 0) WITH SYNONYMS = ('profit per cap', 'profit per capita', 'retail profit per museum visitor') COMMENT = 'Non-additive: net profit / museum attendance. Legacy per-cap basis.'
   )
-  COMMENT = 'Retail analytics model for museum store operations. Covers category-grain sales performance (net sales, profit, units, donations) and facility-grain daily aggregates (transactions, visitors, ecommerce orders, plus facility rollups of sales/profit/units/donations). Supports per-store and per-category profitability analysis, and is the natural-language / Cortex Analyst surface for the Retail Performance Report cluster.';
+  COMMENT = 'Retail analytics model for museum store operations. Covers category-grain sales performance (net sales, profit, units, donations) and facility-grain daily aggregates (transactions, visitors, ecommerce orders, plus facility rollups of sales/profit/units/donations). Supports per-store and per-category profitability analysis, and is the natural-language / Cortex Analyst surface for the Retail Performance Report cluster. CAPTURE_RATE and CONVERSION_RATE are DISTINCT metrics with different denominators: capture divides by museum attendance, conversion divides by the store door count. Never answer a capture-rate question with the conversion number.';

@@ -11,13 +11,27 @@
 -- dim_retail_line_item for section/layout and dim_date for the period columns
 -- (Current Day / SDLY / WTD / MTD / QTD / YTD).
 -- NOTE: ratio rows carry numerator/denominator (never a pre-divided ratio) so
--- Power BI re-computes ratio-of-sums at any period grain. Visitor-based ratios
--- resolve to NULL until the Sensource feed lands (visitor_count stub = 0); the
--- line-item seed marks those 'Stub'. Attendance (the Attendance row and the
--- Revenue/Visitor denominators) is cross-domain: actual from
--- fct_daily_performance (mus_attendance), goal from the retail forecast's
--- museum_attendance.
+-- Power BI re-computes ratio-of-sums at any period grain.
+-- 8.5.0: CAPTURE_RATE and CONVERSION_RATE no longer share a definition.
+--   CAPTURE_RATE    = visitor_count / museum_attendance
+--                     (store entries as a share of museum attendance)
+--   CONVERSION_RATE = transactions  / visitor_count
+--                     (buyers as a share of the people who came in)
+-- They were both being computed and answered as transactions/visitor_count.
+-- Legacy keeps them distinct at t_fact_mus_store_analysis.sql:17-19.
+-- Two attendance numbers are now in play and they are NOT interchangeable:
+--   `attendance`        -- DPR scan component (fct_daily_performance.
+--                          mus_attendance) / the retail forecast's
+--                          museum_attendance. Denominator of REV_PER_VISITOR,
+--                          unchanged, and the standalone ATTENDANCE line.
+--   `museum_attendance` -- Sensource passes scanned at 1006+3000, carried on
+--                          fct_retail_daily. Denominator of CAPTURE_RATE, per
+--                          legacy. Budget side reads the forecast's own
+--                          museum_attendance column.
 --
+-- SCOPE NOTE: ADR-005 GATED. Splitting capture from conversion changes what
+-- the certified CAPTURE_RATE line reports. Owners: Gennady Zaritsky,
+-- Chris Wogas -- see DECISION_MEMO.md.
 -- ADR-004: all business logic in dbt, never Power BI.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
@@ -25,14 +39,15 @@
 {#- ------------------------------------------------------------------ -#}
 {#- Area map. Each selling area lists its additive lines (code suffix -> -#}
 {#- wrapper column) and ratio lines (suffix -> numerator, denominator). -#}
-{#- 'attendance' as a num/den source resolves to the per-date attendance -#}
-{#- value (actual mus_attendance / budget museum_attendance). Areas are  -#}
-{#- selected by dim_facility.facility_group (the conformed name), never  -#}
-{#- by raw key_facility numbers.                                         -#}
+{#- 'attendance' as a num/den source resolves to the per-date DPR/forecast -#}
+{#- attendance value; 'museum_attendance' resolves to the Sensource        -#}
+{#- passes-scanned denominator (actual) or the forecast's museum_attendance -#}
+{#- column (budget). Areas are selected by dim_facility.facility_group     -#}
+{#- (the conformed name), never by raw key_facility numbers.               -#}
 {% set areas = [
   {'prefix':'MUSEUM_STORE',  'fg':'museum_store',
      'additive':[('GROSS_MERCH_SALES','net_sales'),('GROSS_MARGIN_PROFIT','net_profit'),('DONATION_ASK','donations'),('CUSTOMERS','transactions'),('VISITORS','visitor_count')],
-     'ratios':[('CAPTURE_RATE','visitor_count','attendance'),('CONVERSION_RATE','transactions','visitor_count'),('AVG_DAILY_SALE','net_sales','transactions'),('REV_PER_VISITOR','net_sales','attendance')] },
+     'ratios':[('CAPTURE_RATE','visitor_count','museum_attendance'),('CONVERSION_RATE','transactions','visitor_count'),('AVG_DAILY_SALE','net_sales','transactions'),('REV_PER_VISITOR','net_sales','attendance')] },
   {'prefix':'MEMORIAL_CARTS','fg':'memorial_carts',
      'additive':[('GROSS_MERCH_SALES','net_sales'),('GROSS_MARGIN_PROFIT','net_profit'),('DONATIONS','donations'),('CUSTOMERS','transactions')],
      'ratios':[('CONVERSION_RATE','transactions','visitor_count'),('AVG_DAILY_SALE','net_sales','transactions'),('REV_PER_VISITOR','net_sales','attendance')] },
@@ -59,12 +74,22 @@ att_budget as (
     from {{ ref('rpt_retail_budget_daily') }}
     group by 1
 ),
+-- Sensource capture denominator (day-level, identical across facility rows).
+-- Read from the fact rather than the wrapper: the semantic view publishes
+-- capture_rate as a metric, not its denominator as a standalone total, so the
+-- two attendance definitions cannot be confused in Cortex.
+att_capture as (
+    select cast(date_value as date) as report_date, max(museum_attendance) as museum_attendance
+    from {{ ref('fct_retail_daily') }}
+    group by 1
+),
 
 -- Actuals per (date, facility) + the day's attendance + conformed facility name
 act as (
-    select w.*, aa.attendance, df.facility_group
+    select w.*, aa.attendance, ac.museum_attendance, df.facility_group
     from {{ ref('rpt_retail_powerbi') }} w
-    left join att_actual aa on w.report_date = aa.report_date
+    left join att_actual  aa on w.report_date = aa.report_date
+    left join att_capture ac on w.report_date = ac.report_date
     left join {{ ref('dim_facility') }} df on w.key_facility = df.key_facility
 ),
 -- Budget/goal per (date, facility) + the day's attendance goal + conformed facility name

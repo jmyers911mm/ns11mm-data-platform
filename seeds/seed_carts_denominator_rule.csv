@@ -1,0 +1,3 @@
+calendar_year,denominator_rule,notes
+2019,adjusted_memorial_less_museum,"t_retail_cart_analysis_tabs.sql:20 — when year(key_date) = 2019 then mem_cart_customers/((mem_visitors - 0.25 * mem_visitors) - mus_visitors). Same expression at :27 (profit_per_cap) and :31 (sales_per_cap)."
+2020,memorial_visitors,"t_retail_cart_analysis_tabs.sql:21 — when year(key_date) = 2020 then mem_cart_customers/mem_visitors. Same expression at :28 (profit_per_cap) and :32 (sales_per_cap)."
