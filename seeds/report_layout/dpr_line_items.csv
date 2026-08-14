@@ -18,8 +18,8 @@ VIRTUAL_TOUR_REVENUE,160,Guided Tours,30,Virtual Tour Revenue,1,Currency0,additi
 TOTAL_TOUR_REVENUE,170,Guided Tours,30,Total Tour Revenue,0,Currency0,additive,Available
 MUS_STORE_GROSS_PROFIT,180,Retail & Cafe,40,Museum Store Gross Profit,1,Currency0,additive,Available
 RETAIL_CARTS_GROSS_PROFIT,190,Retail & Cafe,40,Retail Carts Gross Profit,1,Currency0,additive,Available
-ECOM_GROSS_PROFIT,200,Retail & Cafe,40,E-Commerce Gross Profit,1,Currency0,additive,Stub
-TOTAL_RETAIL_GROSS_PROFIT,210,Retail & Cafe,40,Total Retail Gross Profit,0,Currency0,additive,Partial
+ECOM_GROSS_PROFIT,200,Retail & Cafe,40,E-Commerce Gross Profit,1,Currency0,additive,Available
+TOTAL_RETAIL_GROSS_PROFIT,210,Retail & Cafe,40,Total Retail Gross Profit,0,Currency0,additive,Available
 CAFE_PROFIT,220,Retail & Cafe,40,Total Museum Cafe Gross Profit,0,Currency0,additive,Available
 AUDIO_TOUR_HEADSET,230,Other Revenue,50,Museum Audio Tour,0,Currency0,additive,Available
 TOTAL_MEMORIAL_DONATIONS,240,Other Revenue,50,Total Memorial Visitor Donations,0,Currency0,additive,Available

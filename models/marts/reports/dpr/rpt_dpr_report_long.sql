@@ -27,12 +27,20 @@
 --  2. ECOM_GROSS_PROFIT symmetry. The budget side carried an
 --     ECOM_GROSS_PROFIT row AND folded it into the budget
 --     TOTAL_RETAIL_GROSS_PROFIT, while the actual side had neither, so the
---     variance on that composite compared unlike totals. The budget composite
---     now matches the actual composite (store + carts) and the actual side
---     emits an explicit typed-NULL ECOM_GROSS_PROFIT placeholder. Cause:
---     PENDING AN UPSTREAM ADDITION -- the measure is buildable from
---     CounterPoint facility 1234 sales less fact_cogs cost and is scheduled
---     for release 8.6.0 under the ADR-005 gate.
+--     variance on that composite compared unlike totals. 8.1.0 made the two
+--     sides symmetrical by dropping ecom from the budget composite and
+--     emitting a typed-NULL actual placeholder.
+--
+-- 8.6.0 changes in this model (ADR-005 GATED — see DECISION_MEMO.md):
+--  3. ECOM_GROSS_PROFIT is now a real actual (int_dpr__retail ->
+--     fct_daily_performance -> DPR.TOTAL_ECOM_GROSS_PROFIT), so the 8.1.0
+--     typed-NULL placeholder is removed, the line is unpivoted on the actual
+--     side like any other measure, and ecom is restored to BOTH sides of
+--     TOTAL_RETAIL_GROSS_PROFIT and therefore of TOTAL_ESTIMATED_REVENUE.
+--  4. ADMISSION_REVENUE and the AVG_TICKET_PRICE numerator both move, on both
+--     scenarios, because total_admission_revenue now includes service fees.
+--     No change is needed in this file for that: both sides read the governed
+--     column through their wrappers.
 --
 -- ADR-004: all business logic in dbt, never Power BI.
 -- ADR-021: composites authored once; placeholders are typed NULLs with a cause.
@@ -61,6 +69,7 @@ a_prep as (
         cast(virtual_tour_revenue      as number(38,4)) as virtual_tour_revenue,
         cast(mus_store_gross_profit    as number(38,4)) as mus_store_gross_profit,
         cast(retail_carts_gross_profit as number(38,4)) as retail_carts_gross_profit,
+        cast(ecom_gross_profit         as number(38,4)) as ecom_gross_profit,
         cast(cafe_profit               as number(38,4)) as cafe_profit,
         cast(audio_tour_headset        as number(38,4)) as audio_tour_headset,
         cast(virtual_yf_tour_revenue   as number(38,4)) as virtual_yf_tour_revenue
@@ -76,8 +85,8 @@ a_base as (
         pass_revenue, admission_revenue, revealed_tour_revenue, mem_mus_tours,
         mem_mus_tour_revenue, museum_guided_tours, mus_guided_tour_revenue,
         memorial_guided_tours, mem_guided_tour_revenue, virtual_tour_revenue,
-        mus_store_gross_profit, retail_carts_gross_profit, cafe_profit,
-        audio_tour_headset, virtual_yf_tour_revenue
+        mus_store_gross_profit, retail_carts_gross_profit, ecom_gross_profit,
+        cafe_profit, audio_tour_headset, virtual_yf_tour_revenue
     ) )
 ),
 
@@ -106,21 +115,6 @@ a_composite as (
            cast(total_estimated_revenue as number(38,4)), null, null from a_wide
 ),
 
-a_placeholder as (
-    -- ECOM_GROSS_PROFIT actual: typed NULL, not zero and not omitted (ADR-021).
-    -- Cause: PENDING AN UPSTREAM ADDITION. Both inputs are staged
-    -- (int_counterpoint__retail_lines facility_group = 'ecommerce' for sales,
-    -- its sale_cost for the fact_cogs equivalent); the measure is built in
-    -- 8.6.0. Until then the ECOM_GROSS_PROFIT budget row has no actual
-    -- counterpart, and this row makes that explicit and typed rather than
-    -- an incidental NULL produced by the outer join.
-    select report_date, 'ECOM_GROSS_PROFIT' as line_item_code,
-           cast(null as number(38,4)) as amount,
-           cast(null as number(38,4)) as numerator,
-           cast(null as number(38,4)) as denominator
-    from a_wide
-),
-
 a_ratio as (
     select report_date, 'AVG_TICKET_PRICE' as line_item_code,
            cast(null as number(38,4)) as amount,
@@ -132,7 +126,6 @@ a_ratio as (
 actual_long as (
     select report_date, line_item_code, amount, numerator, denominator from a_base
     union all select report_date, line_item_code, amount, numerator, denominator from a_composite
-    union all select report_date, line_item_code, amount, numerator, denominator from a_placeholder
     union all select report_date, line_item_code, amount, numerator, denominator from a_ratio
 ),
 
@@ -186,14 +179,14 @@ b_composite as (
                 + mem_guided_tour_revenue as number(38,4)) as amount,
            cast(null as number(38,4)) as numerator, cast(null as number(38,4)) as denominator from b_wide
     union all
-    -- Total Retail GP: store + carts on BOTH scenarios. ecom_gross_profit is
-    -- dropped from the budget composite because the actual composite has no
-    -- ecom component to compare it against -- the variance column was
-    -- differencing unlike totals. The ECOM_GROSS_PROFIT budget row itself is
-    -- unchanged and still printed; only the composite changes. Both sides get
-    -- ecom back in 8.6.0 when the actual measure exists.
+    -- Total Retail GP: store + carts + e-commerce on BOTH scenarios. 8.1.0 had
+    -- to drop ecom from this budget composite because the actual side had no
+    -- ecom measure and the variance differenced unlike totals; 8.6.0 builds the
+    -- actual, so the component is restored here and the two sides match again.
+    -- The actual side reads the same three components through the governed
+    -- metric TOTAL_RETAIL_GROSS_PROFIT_EX_CAFE.
     select report_date, 'TOTAL_RETAIL_GROSS_PROFIT',
-           cast(mus_store_gross_profit + retail_carts_gross_profit as number(38,4)),
+           cast(mus_store_gross_profit + retail_carts_gross_profit + ecom_gross_profit as number(38,4)),
            null, null from b_wide
 ),
 

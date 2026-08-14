@@ -23,6 +23,28 @@
 -- NOTE: from 2024-01-16 the MUS AG audio revenue also has a CounterPoint
 -- component (facility 1060). That portion is added in the mart join, not here,
 -- to keep the Galaxy and CounterPoint grains separate (ADR-001 hygiene).
+--
+-- 8.6.0 (ADR-005 GATED — see DECISION_MEMO.md): MUSEUM service fees read only
+-- half the journal. t_fact_service_fees_new has two steps, and they are not
+-- symmetrical:
+--   Memorial Service Fees  -> JnlHeaders + JnlDetails + JnlItems (102,103,104)
+--                             + Items, matrix %MEF% and %FEE%
+--   Museum Service Fees    -> JnlHeaders + JnlDetails
+--                             + LEFT JOIN jnlTickets ON jnlCodeID = 101
+--                             + LEFT JOIN JnlItems   ON jnlCodeID in (102,103,104)
+--                             + LEFT JOIN Items ON ISNULL(JnlItems.plu, jnlTickets.plu)
+--                             matrix %MUF% and %FEE%
+-- The museum step deliberately coalesces the item PLU with the TICKET PLU, so a
+-- museum service fee posted against a ticket line (jnl_code_id 101) counts.
+-- This model read int_gateway__item_journal_lines only, so every museum service
+-- fee booked on a ticket line was missing. The ticket-line half is now added
+-- from int_gateway__ticket_journal_lines.
+--
+-- Both halves recognize on JnlHeaders.TranDate, which is why the ticket-line
+-- component keys on tran_date_key (added to the ticket journal in 8.6.0) and
+-- NOT on date_key -- date_key is the ticket recognize-basis date and would put
+-- the fee on the visit date instead of the transaction date.
+-- MEMORIAL service fees are NOT changed: legacy reads item lines only there.
 
 {{ config(materialized='view') }}
 
@@ -54,9 +76,9 @@ mem_mus_tour_plu as (
 fees as (
     select
         il.date_key,
-        -- Museum service fees: matrix like %MUF% and %FEE%
+        -- Museum service fees, ITEM-line half: matrix like %MUF% and %FEE%
         sum(case when il.matrix_code like '%MUF%' and il.matrix_code like '%FEE%'
-                 then il.amount else 0 end)                                 as museum_service_fees,
+                 then il.amount else 0 end)                                 as museum_service_fees_item,
         -- Memorial service fees: matrix like %MEF% and %FEE%
         sum(case when il.matrix_code like '%MEF%' and il.matrix_code like '%FEE%'
                  then il.amount else 0 end)                                 as memorial_service_fees,
@@ -76,6 +98,20 @@ fees as (
     group by il.date_key
 ),
 
+-- Museum service fees, TICKET-line half (jnl_code_id 101). Legacy reaches these
+-- through ISNULL(JnlItems.plu, jnlTickets.plu) in t_fact_service_fees_new;
+-- here the two halves are aggregated separately and added, which is equivalent
+-- and keeps each grain's date basis explicit.
+museum_fees_ticket as (
+    select
+        tl.tran_date_key                                                    as date_key,
+        sum(case when tl.matrix_code like '%MUF%' and tl.matrix_code like '%FEE%'
+                 then tl.amount else 0 end)                                 as museum_service_fees_ticket
+    from ticket_lines tl
+    where tl.tran_date_key is not null
+    group by tl.tran_date_key
+),
+
 mem_mus_tour as (
     -- Product-178 PLUs from the mem_mus_tour_plu cohort (see note above).
     select
@@ -90,14 +126,18 @@ mem_mus_tour as (
 date_spine as (
     select date_key from fees
     union
+    select date_key from museum_fees_ticket
+    union
     select date_key from mem_mus_tour
 )
 
 select
     d.date_key,
-    coalesce(f.museum_service_fees, 0)
+    coalesce(f.museum_service_fees_item, 0)
+      + coalesce(mft.museum_service_fees_ticket, 0)
       + coalesce(f.memorial_service_fees, 0)                               as service_fees,
-    coalesce(f.museum_service_fees, 0)                                     as museum_service_fees,
+    coalesce(f.museum_service_fees_item, 0)
+      + coalesce(mft.museum_service_fees_ticket, 0)                        as museum_service_fees,
     coalesce(f.memorial_service_fees, 0)                                  as memorial_service_fees,
     coalesce(f.mus_audio_guide_revenue, 0)                               as mus_audio_guide_revenue,
     coalesce(f.mus_audio_guide_units, 0)                                 as mus_audio_guide_units,
@@ -105,5 +145,6 @@ select
     coalesce(t.mem_mus_tours, 0)                                          as mem_mus_tours,
     coalesce(t.mem_mus_tour_revenue, 0)                                  as mem_mus_tour_revenue
 from date_spine d
-left join fees          f on d.date_key = f.date_key
-left join mem_mus_tour  t on d.date_key = t.date_key
+left join fees              f   on d.date_key = f.date_key
+left join museum_fees_ticket mft on d.date_key = mft.date_key
+left join mem_mus_tour      t   on d.date_key = t.date_key

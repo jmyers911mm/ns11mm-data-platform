@@ -59,6 +59,20 @@
 --   dp.total_retail_gross_profit_ex_cafe (store + carts), projected on the
 --   wrapper as total_retail_gross_profit_ex_cafe.
 --
+-- 8.6.0 (ADR-005 GATED — see DECISION_MEMO.md):
+--   * ECOM_GROSS_PROFIT is emitted as a metric for the first time (print line
+--     EC_GROSS_PROFIT, previously Stub), and it is now a component of
+--     TOTAL_RETAIL_GROSS_PROFIT_EX_CAFE, which is where the print catalog puts
+--     it: section 70 runs Museum Store GP, Retail Carts GP, E-Commerce GP,
+--     Total Retail GP.
+--   * ADMISSION_REVENUE gains service fees (governed on the fact), so
+--     TOTAL_ESTIMATED_REVENUE gains them too. SERVICE_FEES continues to print
+--     as its own line (MUS_SERVICE_FEES, print order 2050) exactly as the
+--     legacy workbook prints it above Total Admission Revenue -- the line and
+--     the total are both correct, the fee is a component of the total, not an
+--     addition to it. TOTAL_ESTIMATED_REVENUE does NOT add SERVICE_FEES
+--     separately, so there is no double count.
+--
 -- TOTAL_ESTIMATED_REVENUE duplication: rpt_dpr_report_long authors the same
 -- composite inline (its own union branch). The two component sets are NOT
 -- identical -- this one carries virtual_yf_tour, mem_audio_guide and
@@ -113,6 +127,7 @@
     ('VIRTUAL_TOUR_REVENUE', 'virtual_tour_revenue'),
     ('MUS_STORE_GROSS_PROFIT', 'mus_store_gross_profit'),
     ('RETAIL_CARTS_GROSS_PROFIT', 'retail_carts_gross_profit'),
+    ('ECOM_GROSS_PROFIT', 'ecom_gross_profit'),
     ('TOTAL_RETAIL_GROSS_PROFIT', 'total_retail_gross_profit_ex_cafe'),
     ('CAFE_PROFIT', 'cafe_profit'),
     ('AUDIO_TOUR_HEADSET', 'audio_tour_headset'),

@@ -42,7 +42,7 @@ RC_CUSTOMERS,6010,Retail Carts,60,Customers,1,Number0,CARTS_CUSTOMERS,Available
 RC_AVG_SALE,6020,Retail Carts,60,Average Sale,1,Currency2,CARTS_AVG_SALE,Available
 RC_GROSS_PROFIT,6030,Retail Carts,60,Gross Profit from Retail Carts,1,Currency0,RETAIL_CARTS_GROSS_PROFIT,Available
 EC_ORDERS,7010,E-Commerce,70,# of Orders,1,Number0,ECOM_ORDERS,Stub
-EC_GROSS_PROFIT,7020,E-Commerce,70,Gross Profit from E-Commerce,1,Currency0,ECOM_GROSS_PROFIT,Stub
+EC_GROSS_PROFIT,7020,E-Commerce,70,Gross Profit from E-Commerce,1,Currency0,ECOM_GROSS_PROFIT,Available
 EC_TOTAL_RETAIL_GP,7030,E-Commerce,70,Total Retail Gross Profit,1,Currency0,TOTAL_RETAIL_GROSS_PROFIT,Available
 CAFE_TRANSACTIONS,8010,Museum Cafe,80,# of Transactions,1,Number0,CAFE_TRANSACTIONS,Available
 CAFE_TOTAL_PROFIT,8020,Museum Cafe,80,Total Profit,1,Currency0,CAFE_PROFIT,Available

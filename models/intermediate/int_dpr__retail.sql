@@ -13,24 +13,46 @@
 -- resolved to a donation_line via seed_retail_donation_item (was inline item_no
 -- literals) -- edit the seed to re-point a donation product.
 --
--- 8.3.0: every cost line reads `net_cost` instead of `sale_cost`. Legacy
--- t_fact_cogs sums EXT_COST over sale AND return lines; taking the sale side
--- only returned a customer's money while keeping the item's cost on the books,
--- so mus_store_gross_profit / retail_carts_gross_profit / cafe1_all_profit /
--- musag_profit were all overstated on any day with a return. All four DROP.
---
 -- Legacy lineage: t_reporting_mus_store_profit, t_reporting_mem_cart_profit,
 -- t_reporting_museum_audio_headset_revenue (CounterPoint portion, fac 1060),
 -- t_reporting_mus_donation_box (fact_retail item 886 at Museum Store),
 -- t_reporting_cart_ask (fact_retail item 483 at Memorial Carts),
 -- t_reporting_cafe_revenue_donations, and fact_cogs.
 --
+-- 8.3.0: every cost line reads `net_cost` instead of `sale_cost`. Legacy
+-- t_fact_cogs sums EXT_COST over sale AND return lines; taking the sale side
+-- only returned a customer's money while keeping the item's cost on the books,
+-- so mus_store_gross_profit / retail_carts_gross_profit / cafe1_all_profit /
+-- musag_profit were all overstated on any day with a return. All four DROP.
+-- 8.6.0's ecom_cost follows the same convention (t_fact_cogs step 5 nets
+-- returns at 1234 exactly as it does at every other facility).
+--
+-- 8.6.0 (ADR-005 GATED — see DECISION_MEMO.md): ECOM_GROSS_PROFIT actual.
+-- t_reporting_ecom_profit builds the modern-era (>= 2017-07-01) figure from
+-- two CounterPoint inputs, both of which are staged:
+--   sales -> "Ecommerce Sales from Counterpoint (synced from Shopify)":
+--            fact_retail, key_facility = 1234, key_summary_category <> 6,
+--            (sum(Amount) + sum(Return_Amount))
+--   cost  -> "Ecommerce cost from Counterpoint":
+--            fact_cogs, key_facility = 1234, sum(Cost)
+-- key_facility 1234 is facility_group 'ecommerce' (seed_facility_area);
+-- key_summary_category 6 is is_donation; (Amount + Return_Amount) is net_amount
+-- under the 7.9.0 single-netting convention; and t_fact_cogs step 5 builds the
+-- 1234 cost as SUM(LINE.EXT_COST) over the same PS_TKT_HIST_LIN rows that
+-- int_counterpoint__retail_lines already reads as net_cost. Nothing new is
+-- staged for this measure.
+-- Note the asymmetry, which is legacy's and is reproduced here: the SALES leg
+-- excludes donation lines, the COST leg does not (fact_cogs has no category
+-- filter at 1234). Donation SKUs carry no cost, so the two agree in practice.
+-- The pre-Shopify era (< 2017-07-01: fact_ecommerce_2 x 0.66, fact_shopify_*)
+-- has no staged source and is NOT reconstructed -- the DPR window starts
+-- 2020-07-04, well inside the CounterPoint era.
+--
 -- Donation SKU roles (seed_retail_donation_item, resolved 2026-07-08):
 -- cart_ask -> '7-999' (legacy 483, Donation Ask, Memorial Carts)
 -- mus_exit -> '101375' (legacy 886, Donation Box Store Exit)
 -- mask -> '200704' (legacy 4618, Mask donations; dormant since 2021)
 -- plaza_box -> '101165' (legacy 3375, Plaza donation box)
--- ecom_ask -> '7-00003' (8.2.0; store-3 reclass, feeds ecom_donation_ask)
 
 {{ config(materialized='view') }}
 
@@ -66,12 +88,18 @@ daily as (
                  then r.net_cost else 0 end)                               as cafe1_cost,
 
         -- Memorial Audio Guide, CounterPoint portion (mag_cart = item 201114
-        -- via seed_retail_item_facility, stores 11-14 from 2023-09-04).
-        -- Primary MAG source since 2023; previously carved out of the carts but
-        -- aggregated NOWHERE, so the mart undercounted mem_audio_guide_revenue
-        -- (Galaxy %MAG% only).
+        -- via seed_retail_item_facility). Primary MAG source since 2023;
+        -- previously carved out of the carts but aggregated NOWHERE, so the
+        -- mart undercounted mem_audio_guide_revenue (Galaxy %MAG% only).
         sum(case when r.facility_group = 'mag_cart' and not r.is_donation
                  then r.net_amount else 0 end)          as mag_cp_revenue,
+
+        -- E-commerce gross profit inputs (legacy t_reporting_ecom_profit).
+        -- Sales exclude donation lines; cost does not (see header).
+        sum(case when r.facility_group = 'ecommerce' and not r.is_donation
+                 then r.net_amount else 0 end)          as ecom_sales,
+        sum(case when r.facility_group = 'ecommerce'
+                 then r.net_cost else 0 end)                               as ecom_cost,
 
         -- MUS AG profit + units for the audio_tour_headset roll-up
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
@@ -96,8 +124,6 @@ daily as (
                  then r.net_amount else 0 end)          as cart_donation_ask,
         sum(case when r.facility_group = 'museum_store' and di.donation_line = 'mus_exit'
                  then r.net_amount else 0 end)          as mus_exit_donations,
-        -- Ecommerce ask: CATEG_COD='DONATE' plus the 7-00003 reclass that
-        -- legacy t_fact_retail Sales 5 applies at store 3 only (8.2.0).
         sum(case when r.facility_group = 'ecommerce' and r.is_donation
                  then r.net_amount else 0 end)          as ecom_donation_ask,
         sum(case when r.facility_group = 'museum_cafe' and r.is_donation
@@ -124,10 +150,11 @@ daily as (
 select
     date_key,
 
-    -- Gross profit line items (net sales - net cost)
+    -- Gross profit line items (sales - cost)
     mus_store_sales - mus_store_cost                                       as mus_store_gross_profit,
     mem_cart_sales  - mem_cart_cost                                        as retail_carts_gross_profit,
     cafe1_sales     - cafe1_cost                                           as cafe1_all_profit,
+    ecom_sales      - ecom_cost                                            as ecom_gross_profit,
 
     -- MUS AG components (added to Galaxy audio revenue in the mart)
     musag_sales - musag_cost                                               as musag_profit,

@@ -1,0 +1,13 @@
+plu,pass_cohort,coupon_category,notes
+CPBOOKAD007,c3_booklet,C3 Adult,"t_reporting_pass_revenue_new step 'C3 Revenue prior to scan change'. Revenue is sum(quantity*amount), not sum(amount)."
+CPBOOKYS007,c3_booklet,C3 Youth,"t_reporting_pass_revenue_new step 'C3 Revenue prior to scan change'. Revenue is sum(quantity*amount), not sum(amount)."
+MUSGADADCP005,citypass_booklet,Adult,"t_reporting_pass_revenue_new step 'CityPASS Booklet revenue' via fact_museum_citypass_booklets. Revenue is sum(amount)."
+MUSGADYSCP005,citypass_booklet,Youth,"t_reporting_pass_revenue_new step 'CityPASS Booklet revenue' via fact_museum_citypass_booklets. Revenue is sum(amount)."
+CPBOOKAD005,excluded,,"t_fact_museum_citypass PLU exclusion list."
+CPBOOKYS005,excluded,,"t_fact_museum_citypass PLU exclusion list."
+CPBOOKAD008,excluded,,"t_fact_museum_citypass PLU exclusion list. NOTE: legacy writes 'CPBOOKAD008''CPBOOKYS008' with no separating comma, so SQL Server concatenated them into the single literal CPBOOKAD008'CPBOOKYS008 and NEITHER value was ever excluded. Read as two values here; flagged in the decision memo."
+CPBOOKYS008,excluded,,"t_fact_museum_citypass PLU exclusion list. See the CPBOOKAD008 note - the legacy literal was malformed and this value was never actually excluded."
+CPBOOKAD009,excluded,,"t_fact_museum_citypass PLU exclusion list."
+CPBOOKYS009,excluded,,"t_fact_museum_citypass PLU exclusion list."
+CPBOOKAD010,excluded,,"t_fact_museum_citypass PLU exclusion list (also excluded from tickets sold - see seed_gateway_tickets_sold_excluded_plu)."
+CPBOOKYS010,excluded,,"t_fact_museum_citypass PLU exclusion list (also excluded from tickets sold - see seed_gateway_tickets_sold_excluded_plu)."

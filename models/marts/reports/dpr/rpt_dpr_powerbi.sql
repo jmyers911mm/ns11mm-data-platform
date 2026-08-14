@@ -88,5 +88,9 @@ select * from semantic_view(
         dp.total_memorial_donations          as total_memorial_donations,
         dp.total_museum_donations            as total_museum_donations,
         dp.total_retail_gross_profit_ex_cafe as total_retail_gross_profit_ex_cafe,
-        dp.total_estimated_revenue           as total_estimated_revenue
+        dp.total_estimated_revenue           as total_estimated_revenue,
+
+        -- 8.6.0: e-commerce gross profit actual (ADR-005 gated). The DPR line
+        -- had a budget and no actual until this release.
+        dp.total_ecom_gross_profit           as ecom_gross_profit
 )

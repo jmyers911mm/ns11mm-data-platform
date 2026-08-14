@@ -16,6 +16,23 @@
 --
 -- Grain integrity is enforced by the unique/not_null test on date_key in
 -- the accompanying schema.yml.
+--
+-- 8.6.0 (ADR-005 GATED — see DECISION_MEMO.md):
+--  * total_admission_revenue now includes service_fees. Legacy definition of
+--    record, t_dpr_excel_data_update "Actuals Museum":
+--      (ifnull(sum(dpr.ticket_revenue),0) + ifnull(sum(dpr.pass_revenue),0)
+--       + ifnull(sum(dpr.service_fees),0)) as total_adm_rev
+--    The budget side agrees: "Forecasted values 2" builds
+--    ticket_revenue_budget as ticket_revenue + service_fees + pass_revenue.
+--    This column is the governed numerator for avg_ticket_price and the
+--    definition of record behind DPR.TOTAL_ADMISSION_REVENUE and
+--    UNIFIED.total_admission_revenue -- both semantic views are updated in the
+--    same release, and assert_sv_admission_revenue_matches_fct is the guard
+--    that keeps them equal.
+--  * ecom_gross_profit added (int_dpr__retail, legacy t_reporting_ecom_profit).
+--  * The pass-revenue cohort columns from int_dpr__admissions are carried
+--    individually alongside the pass_revenue roll-up so the DPR line can be
+--    audited against the five legacy cohorts.
 
 {{ config(
     materialized='table',
@@ -67,10 +84,26 @@ combined as (
         coalesce(a.tickets_sold, 0)                                        as tickets_sold,
         coalesce(a.ticket_revenue, 0)                                      as ticket_revenue,
         coalesce(a.pass_revenue, 0)                                        as pass_revenue,
+        -- Pass-revenue cohorts, carried for auditability against the five
+        -- legacy steps in t_reporting_pass_revenue_new. Two cohorts have no
+        -- staged feed and arrive here as typed NULLs (ADR-021); they are NOT
+        -- folded into pass_revenue, and they are NOT zero-filled.
+        coalesce(a.pass_revenue_citypass_matrix, 0)                        as pass_revenue_citypass_matrix,
+        coalesce(a.pass_revenue_c3_booklet, 0)                             as pass_revenue_c3_booklet,
+        coalesce(a.pass_revenue_citypass_booklet, 0)                       as pass_revenue_citypass_booklet,
+        coalesce(a.pass_revenue_reseller, 0)                               as pass_revenue_reseller,
+        a.pass_revenue_scanchange,
+        a.pass_revenue_additional,
+        a.ticket_revenue_additional,
+        a.child_tickets_subtracted,
+        coalesce(a.pass_tickets, 0)                                        as pass_tickets,
+        coalesce(f.service_fees, 0)                                        as service_fees,
         -- Governed numerator for admission-yield rates. Additive, defined ONCE here;
         -- every avg_ticket_price everywhere references this column.
+        -- 8.6.0: + service_fees, per t_dpr_excel_data_update's total_adm_rev.
         coalesce(a.ticket_revenue, 0)
-          + coalesce(a.pass_revenue, 0)                                    as total_admission_revenue,
+          + coalesce(a.pass_revenue, 0)
+          + coalesce(f.service_fees, 0)                                    as total_admission_revenue,
         coalesce(a.mus_attendance, 0)                                      as mus_attendance,
         -- Memorial attendance: valid scans at memorial facilities (Gateway).
         -- See int_dpr__attendance scope note (facility-name classification).
@@ -98,8 +131,8 @@ combined as (
         coalesce(t.virtual_yf_mem_tour_revenue, 0)                         as virtual_yf_mem_tour_revenue,
         coalesce(f.mem_mus_tour_revenue, 0)                                as mem_mus_tour_revenue,
 
-        -- Fees & audio
-        coalesce(f.service_fees, 0)                                        as service_fees,
+        -- Audio (service_fees is projected above, next to the admission total
+        -- it now feeds)
         coalesce(f.mem_audio_guide_revenue, 0)
           + coalesce(r.mag_cp_revenue, 0)                                  as mem_audio_guide_revenue,
         -- Audio tour & headset: Galaxy guide/headset + CounterPoint MUS AG (2024-01-16+)
@@ -112,6 +145,9 @@ combined as (
         coalesce(r.mus_store_gross_profit, 0)                              as mus_store_gross_profit,
         coalesce(r.retail_carts_gross_profit, 0)                           as retail_carts_gross_profit,
         coalesce(r.cafe1_all_profit, 0)                                    as cafe1_all_profit,
+        -- E-commerce gross profit (legacy t_reporting_ecom_profit, CounterPoint
+        -- facility 1234 non-donation sales less facility 1234 cost).
+        coalesce(r.ecom_gross_profit, 0)                                   as ecom_gross_profit,
 
         -- Donations
         coalesce(d.ticketing_donations, 0)                                 as ticketing_donations,

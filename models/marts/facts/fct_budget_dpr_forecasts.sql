@@ -6,6 +6,16 @@
 -- Budget/forecast counterpart to fct_daily_performance. All additive DPR
 -- budget lines — tickets, revenue, audio, donations, ecommerce, cafe, tours.
 -- Joined to dim_date for the conformed date key.
+--
+-- 8.6.0 (ADR-005 GATED — see DECISION_MEMO.md): total_admission_revenue now
+-- includes service_fees, matching the actuals fix in fct_daily_performance and
+-- the legacy budget definition. t_dpr_excel_data_update "Forecasted values 2":
+--   (ifnull(sum(ticket_revenue),0) + ifnull(sum(service_fees),0)
+--    + ifnull(sum(pass_revenue),0)) as ticket_revenue_budget
+-- The budget seed already carries service_fees; it was simply not in the total.
+-- Leaving one side of the variance on a two-component definition and the other
+-- on three would have reintroduced the unlike-totals problem 8.1.0 removed from
+-- TOTAL_RETAIL_GROSS_PROFIT.
 
 {{ config(
     materialized='table',
@@ -25,9 +35,11 @@ final as (
         b.tickets_sold,
         b.ticket_revenue,
         b.pass_revenue,
-        b.ticket_revenue
-          + b.pass_revenue          as total_admission_revenue,
         b.service_fees,
+        -- 8.6.0: + service_fees (legacy ticket_revenue_budget)
+        b.ticket_revenue
+          + b.pass_revenue
+          + b.service_fees          as total_admission_revenue,
         b.donations_ticketing,
 
         -- Audio

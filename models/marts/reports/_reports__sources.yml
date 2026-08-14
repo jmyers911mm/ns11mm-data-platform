@@ -1,7 +1,32 @@
+# Semantic-view sources.
+#
+# 8.6.0: `database` resolves through `{{ target.database }}` rather than the
+# literal NS11MM_DW_PROD it carried through 7.13.0. A semantic view wraps MARTS
+# objects, and MARTS builds into the target database — so pinning the source to
+# prod meant a dev build of rpt_*_powerbi read PROD's view over PROD's facts,
+# and any release adding a COLUMN to a fact could not have its metric deployed
+# at all without first promoting that release to prod. 8.6.0 is the first
+# release to add one (fct_daily_performance.ecom_gross_profit), which is what
+# forced this.
+#
+# RAW and SEEDS are NOT affected and must not be changed to match: they stay on
+# the single shared source database per ADR-019. That is why the SEEDS
+# references inside RETAIL.sv.yaml and ATTENDANCE.sv.yaml are fully qualified to
+# NS11MM_DW_DEV.SEEDS while their MARTS references stay schema-only.
+#
+# CONSEQUENCE: semantic views are DDL, not dbt-built, so each environment
+# (including each personal sandbox) needs its own deploy run of the relevant
+# scripts/deploy_semantic_view_*.sql before its rpt_*_powerbi models will build.
+#
+# This is a platform-wide pathing change that would have belonged at 8.1.0 had
+# it been visible then; it lands here because 8.6.0 is where it blocks. The
+# underlying decision — where a semantic view lives and how it promotes — is an
+# open ADR item (release-process brief, Q4; docs hardcoded-database-audit).
+
 sources:
   - name: dpr_semantic
     description: Native Snowflake SEMANTIC VIEW objects (deployed from cortex_project/DPR.sv.yaml as DDL — not dbt-built).
-    database: NS11MM_DW_PROD
+    database: "{{ target.database }}"
     schema: MARTS
     tables:
       - name: DPR
@@ -10,7 +35,7 @@ sources:
   # --- Attendance domain semantic view (Daily Scan + Today's Sales, 1.6.0) ---
   - name: attendance_semantic
     description: Native Snowflake SEMANTIC VIEW object for attendance/scanning (deployed from cortex_project/ATTENDANCE.sv.yaml as DDL — not dbt-built).
-    database: NS11MM_DW_PROD
+    database: "{{ target.database }}"
     schema: MARTS
     tables:
       - name: ATTENDANCE
@@ -19,7 +44,7 @@ sources:
   # --- Retail Performance Report serving layer (added 1.6.0) ----------------
   - name: retail_semantic
     description: Native Snowflake SEMANTIC VIEW object for retail (deployed from cortex_project/RETAIL.sv.yaml as DDL — not dbt-built).
-    database: NS11MM_DW_PROD
+    database: "{{ target.database }}"
     schema: MARTS
     tables:
       - name: RETAIL

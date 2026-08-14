@@ -322,7 +322,7 @@ seeds:
         description: Gateway default customer id to exclude.
         data_tests: [not_null, unique]
 
-  # ─── Serving-layer seeds (coverage added 2026-07-29) ───────────────────────
+  # ─── Gateway admissions cohort seeds (8.6.0, ADR-005 gated) ───────────────
   - name: retail_line_items
     description: >
       Report-layout catalog for the Retail Performance Report: one row per
@@ -640,3 +640,77 @@ seeds:
         description: Legacy file and line the rule was verified from.
         data_tests: [not_null]
 
+  - name: seed_gateway_reseller_customer
+    description: >
+      JnlTickets.CustomerID values whose general-admission dollars belong to
+      Pass Revenue rather than Ticket Revenue. Legacy pair:
+      t_reporting_ticket_revenue_new excludes them
+      (`f.customer_id not in ('20056','17522','23110','22361','29619')`) and
+      t_reporting_pass_revenue_new claims the identical cohort with `in`.
+      DISTINCT from seed_gateway_excluded_customer, which filters
+      vAttribute.rItmDefaultCustomerID -- the item-master default customer, a
+      different column that happens to share the value 20056.
+    config:
+      column_types:
+        customer_id: varchar
+        reseller_name: varchar
+    columns:
+      - name: customer_id
+        description: Galaxy JnlTickets.CustomerID for the reseller.
+        data_tests: [not_null, unique]
+      - name: reseller_name
+        description: Reseller trading name. Three of five are unresolved from the legacy SQL.
+        data_tests: [not_null]
+
+  - name: seed_gateway_pass_plu
+    description: >
+      Galaxy PLUs that belong to a named Pass Revenue cohort, plus the PLU
+      exclusion list t_fact_museum_citypass applies. pass_cohort drives which
+      of the legacy pass-revenue steps a line lands in; coupon_category is the
+      legacy key_coupon_category label the PLU maps to (an enumerable
+      code->label mapping, which is what a seed is for).
+    config:
+      column_types:
+        plu: varchar
+        pass_cohort: varchar
+        coupon_category: varchar
+    columns:
+      - name: plu
+        description: Galaxy product PLU.
+        data_tests: [not_null, unique]
+      - name: pass_cohort
+        description: Pass revenue cohort, or 'excluded' for the CityPASS PLU drop list.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [c3_booklet, citypass_booklet, excluded]
+
+  - name: seed_gateway_tickets_sold_excluded_plu
+    description: >
+      PLUs dropped from the tickets-sold / tickets-issued counts.
+      t_reporting_tickets_sold_issued_new, applied identically to the issued
+      and unissued steps. Revenue is NOT filtered by this list.
+    config:
+      column_types:
+        plu: varchar
+    columns:
+      - name: plu
+        description: Galaxy product PLU to exclude from tickets sold.
+        data_tests: [not_null, unique]
+
+  - name: seed_gateway_ticket_revenue_excluded_plu
+    description: >
+      Early-access museum tour PLUs excluded from GA ticket REVENUE only
+      (t_reporting_ticket_revenue_new / t_reporting_pass_revenue_new); they
+      report separately as early-access tour revenue. Deliberately three rows,
+      not the seven PLUs seed_tour_plu labels 'early_access_tour' -- legacy
+      excludes exactly these three. See DECISION_MEMO.md.
+    config:
+      column_types:
+        plu: varchar
+    columns:
+      - name: plu
+        description: Galaxy product PLU to exclude from GA ticket revenue.
+        data_tests: [not_null, unique]
+
+  # ─── Serving-layer seeds (coverage added 2026-07-29) ───────────────────────

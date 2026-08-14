@@ -40,15 +40,19 @@ tables:
         synonyms:
           - total admission revenue
         description: >-
-          Governed admission-revenue numerator (ticket + pass revenue). The
-          definition of record is the TOTAL_ADMISSION_REVENUE column on
+          Governed admission-revenue numerator: ticket + pass + SERVICE FEES.
+          The definition of record is the TOTAL_ADMISSION_REVENUE column on
           FCT_DAILY_PERFORMANCE; this metric MUST equal SUM of that column.
+          8.6.0: service fees added, per the legacy definition of record in
+          t_dpr_excel_data_update -- (sum(ticket_revenue) + sum(pass_revenue)
+          + sum(service_fees)) as total_adm_rev, with the budget side agreeing
+          (ticket_revenue + service_fees + pass_revenue). ADR-005 GATED.
           ENGINE LIMITATION: a semantic-view metric name shadows the same-named
           base column in every expression (referencing it is invalid or cyclic),
           so the components are restated here. Drift is guarded by the dbt test
           assert_sv_admission_revenue_matches_fct — if the fct definition ever
           changes, this expression must change with it.
-        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE)
+        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) + SUM(SERVICE_FEES)
         access_modifier: public_access
       - name: TOTAL_ASK_EDUCATOR_REVENUE
         synonyms:
@@ -140,6 +144,23 @@ tables:
         description: Ecommerce donation-ask collections (CounterPoint ecom store).
         expr: SUM(ECOM_DONATION_ASK)
         access_modifier: public_access
+      - name: TOTAL_ECOM_GROSS_PROFIT
+        synonyms:
+          - e-commerce gross profit
+          - ecommerce gross profit
+          - online store profit
+        description: >-
+          E-commerce gross profit. Legacy t_reporting_ecom_profit, modern era:
+          CounterPoint facility 1234 non-donation sales
+          (key_summary_category <> 6) less fact_cogs cost at facility 1234.
+          Built in 8.6.0 -- before that the DPR line had a budget but no actual,
+          and the variance column on TOTAL_RETAIL_GROSS_PROFIT compared unlike
+          totals (8.1.0 removed the mismatch by dropping ecom from the budget
+          composite; this release restores it to both sides). The pre-2017-07-01
+          Shopify-era construction is NOT reconstructed: no staged source, and
+          the DPR window starts 2020-07-04.
+        expr: SUM(ECOM_GROSS_PROFIT)
+        access_modifier: public_access
       - name: TOTAL_ESTIMATED_REVENUE
         synonyms:
           - total estimated revenue
@@ -151,7 +172,8 @@ tables:
           hand in rpt_dpr_report_long AND in rpt_tracker_powerbi
           (total_earned_revenue), which ADR-021 calls a defect even when the
           two agree. Both now read this metric through rpt_dpr_powerbi.
-          Components: admission revenue (ticket + pass) + the four guided-tour
+          Components: admission revenue (ticket + pass + service fees, 8.6.0)
+          + the four guided-tour
           lines + all virtual tour revenue + store and cart gross profit +
           cafe profit + museum audio/headset + the two governed donation
           composites. Components are restated as SUM() of base columns rather
@@ -162,7 +184,7 @@ tables:
           rpt_dpr_mtd_ytd_long, which additionally carries mem_audio_guide and
           omits box_office_mus_exit_don / coatcheck_don. Reconciling the two is
           an ADR-005 item, not a refactor.
-        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) + SUM(REVEALED_TOUR_REVENUE) + SUM(MEM_MUS_TOUR_REVENUE) + SUM(MUS_GUIDED_TOUR_REVENUE) + SUM(MEM_GUIDED_TOUR_REVENUE) + SUM(VIRTUAL_MEM_TOUR_REVENUE) + SUM(VIRTUAL_MUS_TOUR_REVENUE) + SUM(VIRTUAL_YF_MEM_TOUR_REVENUE) + SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT) + SUM(AUDIO_TOUR_HEADSET) + SUM(ECOM_DONATION_ASK) + SUM(DONATION_BOX) + SUM(CART_DONATION_ASK) + SUM(MASK_DONATIONS) + SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CAFE1_DONATIONS)
+        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) + SUM(SERVICE_FEES) + SUM(REVEALED_TOUR_REVENUE) + SUM(MEM_MUS_TOUR_REVENUE) + SUM(MUS_GUIDED_TOUR_REVENUE) + SUM(MEM_GUIDED_TOUR_REVENUE) + SUM(VIRTUAL_MEM_TOUR_REVENUE) + SUM(VIRTUAL_MUS_TOUR_REVENUE) + SUM(VIRTUAL_YF_MEM_TOUR_REVENUE) + SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(ECOM_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT) + SUM(AUDIO_TOUR_HEADSET) + SUM(ECOM_DONATION_ASK) + SUM(DONATION_BOX) + SUM(CART_DONATION_ASK) + SUM(MASK_DONATIONS) + SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CAFE1_DONATIONS)
         access_modifier: public_access
       - name: TOTAL_FIELD_TRIP_REVENUE
         synonyms:
@@ -349,14 +371,16 @@ tables:
           The printed report line "Total Retail Gross Profit" as the DPR and the
           MTD/YTD workbooks mean it: Museum Store + Memorial Carts, with the
           Museum Cafe reported on its own line (print section 80) and
-          e-commerce GP pending its actual measure. This is the metric the
-          serving models must use for that line; TOTAL_RETAIL_GROSS_PROFIT is
-          the wider DPR rollup that also folds cafe in, and its own comment
-          warns against using it as this line. Added in 8.1.0 because
-          rpt_dpr_mtd_ytd_long was summing TOTAL_RETAIL_GROSS_PROFIT and
-          TOTAL_CAFE_PROFIT into TOTAL_ESTIMATED_REVENUE, counting
-          CAFE1_ALL_PROFIT twice.
-        expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT)
+          e-commerce GP included from 8.6.0. This is the metric the serving
+          models must use for that line; TOTAL_RETAIL_GROSS_PROFIT is the wider
+          DPR rollup that also folds cafe in, and its own comment warns against
+          using it as this line. Added in 8.1.0 because rpt_dpr_mtd_ytd_long was
+          summing TOTAL_RETAIL_GROSS_PROFIT and TOTAL_CAFE_PROFIT into
+          TOTAL_ESTIMATED_REVENUE, counting CAFE1_ALL_PROFIT twice. 8.6.0 adds
+          ECOM_GROSS_PROFIT, restoring the third component the legacy line has
+          always had and putting it on BOTH the actual and the budget side of
+          the variance.
+        expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(ECOM_GROSS_PROFIT)
         access_modifier: public_access
       - name: TOTAL_REVEALED_TOUR_REVENUE
         synonyms:

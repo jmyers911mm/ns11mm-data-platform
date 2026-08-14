@@ -1,0 +1,6 @@
+customer_id,reseller_name,notes
+20056,Sightseeing Pass,"JnlTickets.CustomerID. GA/TOU lines for this customer are Pass Revenue, not Ticket Revenue (t_reporting_ticket_revenue_new excludes it; t_reporting_pass_revenue_new claims it). Also appears in seed_gateway_excluded_customer, but that seed filters vAttribute.rItmDefaultCustomerID - a different column."
+17522,Reseller (name pending),"JnlTickets.CustomerID. Reseller identity not recoverable from the Pentaho SQL; confirm with Chris Wogas before go-live."
+23110,Reseller (name pending),"JnlTickets.CustomerID. Reseller identity not recoverable from the Pentaho SQL; confirm with Chris Wogas before go-live."
+22361,Reseller (name pending),"JnlTickets.CustomerID. Reseller identity not recoverable from the Pentaho SQL; confirm with Chris Wogas before go-live."
+29619,New York Pass,"JnlTickets.CustomerID. Paired with the %GAD-NYA-NYA-OTH-XXX% additional-revenue cohort in t_reporting_pass_revenue_new; confirm the mapping with Chris Wogas."
