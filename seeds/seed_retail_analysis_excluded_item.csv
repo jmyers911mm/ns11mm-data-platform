@@ -1,0 +1,7 @@
+item_no,exclusion_group,legacy_key_item_descr_set,is_resolved,resolution_basis,notes
+100564,membership,2449-2454,TRUE,derived_from_1080_carve_in,"Museum membership product. Legacy excludes key_item_descr ('2449'..'2454') from every retail sales line (Museum Store 1003, Memorial Carts 1020, Vesey 1001, MAG 1040, MUS AG 1060) and carves EXACTLY that set IN as sales_mus_memberships at 1080 (t_fact_mus_store_analysis.sql:271). The six-item membership cohort at store 14 is independently enumerated as item_no 100564-100569 by t_fact_num_tickets (see int_retail__customers membership_docs) and by seed_retail_item_facility. Two independent legacy statements of the same six-item set at the same facility."
+100565,membership,2449-2454,TRUE,derived_from_1080_carve_in,See 100564.
+100566,membership,2449-2454,TRUE,derived_from_1080_carve_in,See 100564.
+100567,membership,2449-2454,TRUE,derived_from_1080_carve_in,See 100564.
+100568,membership,2449-2454,TRUE,derived_from_1080_carve_in,See 100564.
+100569,membership,2449-2454,TRUE,derived_from_1080_carve_in,See 100564.

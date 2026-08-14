@@ -557,3 +557,59 @@ models:
           and is reproduced verbatim so the two finance reports tie. Adding the
           seven legs together double-counts it — see NOTES.md finding 3.
         data_tests: [not_null]
+
+  - name: fct_retail_analysis
+    description: >
+      Facility-grain Retail Analysis fact (one row per date x facility).
+      Platform replacement for legacy 911dw.fact_retail_analysis, which is read
+      by five live surfaces plus the DPR audio roll-up. Additive components
+      only: visitors, customers, sales, cost, gross profit, units, and the two
+      day-level attendance denominators (museum_attendance / memorial_attendance
+      are repeated on every facility row — take MAX, never SUM across
+      facilities). Every legacy ratio and every legacy *_diff column is absent
+      by design (ADR-021 ratio rule). sales_amount and units_sold apply the
+      legacy membership item exclusion and therefore do NOT equal
+      fct_retail_daily.net_sales / net_units at the same facility-day.
+      water_* and medallion_* are typed NULLs — see the model header for causes.
+    columns:
+      - name: date_key
+        description: "FK to dim_date.date_key."
+        constraints:
+          - type: foreign_key
+            to: ref('dim_date')
+            to_columns: [date_key]
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: key_facility
+        description: "FK to seed_facility_area.key_facility."
+        data_tests: [not_null]
+      - name: facility_group
+        description: >
+          Conformed selling-area name. Downstream reports select an area by this
+          value, never by a raw key_facility literal.
+        data_tests: [not_null]
+      - name: sales_amount
+        description: >
+          Net sales excluding donation lines AND the legacy excluded items
+          (seed_retail_analysis_excluded_item). Not interchangeable with
+          fct_retail_daily.net_sales.
+      - name: cost_amount
+        description: >
+          Netted cost of goods, NO item exclusion — legacy t_fact_cogs filters
+          neither category nor item. The asymmetry with sales_amount is legacy
+          behaviour, reproduced deliberately.
+      - name: gross_profit
+        description: "sales_amount - cost_amount. Authored here once; not recomputed downstream."
+      - name: water_gross_profit
+        description: >
+          Water carve-out gross profit. Typed NULL until
+          seed_retail_water_item.is_resolved is set (blocked on a business rule).
+      - name: medallion_sales
+        description: "Typed NULL — no data feed (911dw.medallion_machine has no writer or staged source)."
+    data_tests:
+      - unique:
+          column_name: "date_key || '~' || key_facility"
+          name: fct_retail_analysis_grain_unique

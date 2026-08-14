@@ -1,0 +1,33 @@
+line_item_code,sort_order,section,section_sort_order,line_item,indent,format,value_type,availability,facility_group,key_facility,num_source,den_source
+MUSEUM_ATTENDANCE,10,Museum Attendance,10,Museum Attendance,0,Number0,additive,Available,attendance,,,
+MS__VISITORS,110,Museum Store,20,Museum Store Visitors,1,Number0,additive,Available,museum_store,1003,,
+MS__CAPTURE_RATE,120,Museum Store,20,Capture Rate,1,Percent1,ratio,Available,museum_store,1003,visitors,museum_attendance
+MS__CUSTOMERS,130,Museum Store,20,Customers,1,Number0,additive,Available,museum_store,1003,,
+MS__CONVERSION_RATE,140,Museum Store,20,Conversion Rate,1,Percent1,ratio,Available,museum_store,1003,customers,visitors
+MS__SALES,150,Museum Store,20,Sales,1,Currency0,additive,Available,museum_store,1003,,
+MS__COST,160,Museum Store,20,Cost of Goods,1,Currency0,additive,Available,museum_store,1003,,
+MS__PROFIT,170,Museum Store,20,Profit from Retail,1,Currency0,additive,Available,museum_store,1003,,
+MS__AVG_SALE,180,Museum Store,20,Average Sale,1,Currency2,ratio,Available,museum_store,1003,sales_amount,customers
+MS__PROFIT_PER_CUST,190,Museum Store,20,Profit per Customer,1,Currency2,ratio,Available,museum_store,1003,gross_profit,customers
+VESEY__VISITORS,210,Preview Site / Vesey Street,30,Vesey Visitors,1,Number0,additive,Available,preview_vesey,1001,,
+VESEY__CUSTOMERS,220,Preview Site / Vesey Street,30,Customers,1,Number0,additive,Available,preview_vesey,1001,,
+VESEY__CONVERSION_RATE,230,Preview Site / Vesey Street,30,Conversion Rate,1,Percent1,ratio,Available,preview_vesey,1001,customers,visitors
+VESEY__PROFIT,240,Preview Site / Vesey Street,30,Profit from Retail,1,Currency0,additive,Available,preview_vesey,1001,,
+VESEY__AVG_SALE,250,Preview Site / Vesey Street,30,Average Sale,1,Currency2,ratio,Available,preview_vesey,1001,sales_amount,customers
+VESEY__PROFIT_PER_CUST,260,Preview Site / Vesey Street,30,Profit per Customer,1,Currency2,ratio,Available,preview_vesey,1001,gross_profit,customers
+ECOM__ORDERS,310,E-Commerce,40,# of Orders,1,Number0,additive,Partial,ecommerce,1234,,
+ECOM__SALES,320,E-Commerce,40,Sales,1,Currency0,additive,Partial,ecommerce,1234,,
+ECOM__AVG_SALE,330,E-Commerce,40,Average Sale,1,Currency2,ratio,Partial,ecommerce,1234,sales_amount,customers
+ECOM__PROFIT,340,E-Commerce,40,Gross Profit,1,Currency0,additive,Partial,ecommerce,1234,,
+ECOM__PROFIT_PER_ORDER,350,E-Commerce,40,Gross Profit / Order,1,Currency2,ratio,Partial,ecommerce,1234,gross_profit,customers
+MEM_CART__MEMORIAL_ATTENDANCE,410,Memorial Carts,50,Memorial Attendance,1,Number0,additive,Available,memorial_carts,1020,,
+MEM_CART__CUSTOMERS,420,Memorial Carts,50,Customers,1,Number0,additive,Available,memorial_carts,1020,,
+MEM_CART__CAPTURE_RATE,430,Memorial Carts,50,Capture Rate,1,Percent2,ratio,Available,memorial_carts,1020,customers,memorial_attendance
+MEM_CART__PROFIT,440,Memorial Carts,50,Profit from Retail,1,Currency0,additive,Available,memorial_carts,1020,,
+MEM_CART__AVG_SALE,450,Memorial Carts,50,Average Sale,1,Currency2,ratio,Available,memorial_carts,1020,sales_amount,customers
+MEM_CART__PROFIT_PER_CUST,460,Memorial Carts,50,Profit per Customer,1,Currency2,ratio,Available,memorial_carts,1020,gross_profit,customers
+WATER__MUS_STORE,510,Carve-outs,60,Water Gross Profit - Museum Store,1,Currency0,additive,Stub,museum_store,1003,,
+WATER__MEM_CART,520,Carve-outs,60,Water Gross Profit - Memorial Carts,1,Currency0,additive,Stub,memorial_carts,1020,,
+MEDALLION__SALES,530,Carve-outs,60,Medallion Machine Sales,1,Currency0,additive,Stub,museum_cafe,4007,,
+MEDALLION__PROFIT,540,Carve-outs,60,Medallion Machine Profit,1,Currency0,additive,Stub,museum_cafe,4007,,
+MEDALLION__UNITS_SOLD,550,Carve-outs,60,Medallion Machine Units Sold,1,Number0,additive,Stub,museum_cafe,4007,,

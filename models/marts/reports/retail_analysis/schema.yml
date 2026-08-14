@@ -1,0 +1,108 @@
+version: 2
+
+# retail_analysis report family — see docs/adr/ADR_021_report_serving_layer.md
+# for the role grammar these models follow.
+#
+# Family placement (8.10.0): a NEW subdirectory rather than more models inside
+# retail/. The Retail Analysis Report is a separate live workbook with its own
+# producer (t_retail_analysis_tabs), its own recipients and its own measure
+# definitions — its sales lines apply the legacy membership item exclusion that
+# the Retail Performance series does not, so an MS__SALES line and the existing
+# MUSEUM_STORE__GROSS_MERCH_SALES line are different numbers for the same
+# facility-day and must not share a layout catalog. See NOTES.md §2.
+#
+# No *_powerbi wrapper and no *_period_windows model: 8.10.0 adds no semantic
+# view, and the workbook prints day rows per year rather than six period
+# columns. Budget is NOT re-authored here — rpt_retail_budget_daily and
+# fct_budget_dpr_forecasts are the single authoring sites and this family reads
+# them.
+
+models:
+  - name: rpt_retail_analysis_report_long
+    description: >
+      Tidy Retail Analysis presentation, one row per (report_date, key_facility,
+      line_item_code) carrying actual + budget. Ratio lines carry
+      numerator/denominator so capture rate, conversion rate, average sale and
+      profit-per-customer recompute as ratio-of-sums at any grain (ADR-021).
+      The legacy *_diff columns are not stored — variance is actual minus budget
+      at display grain. The legacy workbook's thirteen sheets are calendar years
+      2014-2026 and are a dim_date slicer, not sections. Five lines (water x2,
+      medallion x3) are Stub and emit NULL amounts by design.
+    config:
+      materialized: view
+      grants:
+        select: ['POWERBI_ROLE']
+    columns:
+      - name: report_date
+        description: Calendar date. Joins to dim_date.
+        data_tests: [not_null]
+      - name: key_facility
+        description: >
+          Selling area. NULL on the facility-agnostic MUSEUM_ATTENDANCE line,
+          matching rpt_retail_report_long's ATTENDANCE row.
+      - name: line_item_code
+        description: Joins to dim_retail_analysis_line_item.line_item_code.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('retail_analysis_line_items')
+              field: line_item_code
+      - name: amount
+        description: Actual additive value for the line item (NULL for ratio rows and Stub rows).
+      - name: numerator
+        description: Ratio numerator (NULL for additive rows).
+      - name: denominator
+        description: Ratio denominator (NULL for additive rows).
+      - name: budget_amount
+        description: Goal additive value. NULL where the line has no budget source.
+      - name: budget_numerator
+        description: Goal ratio numerator. NULL where the line has no budget source.
+      - name: budget_denominator
+        description: Goal ratio denominator. NULL where the line has no budget source.
+
+  - name: rpt_retail_analysis_narrative_brief
+    description: >
+      Deterministic one-row-per-day JSON brief of Retail Analysis facts
+      (per-block headline measures, budget variance, DoD/WoW/YoY, MTD/YTD,
+      7-day direction, top movers, and the four printed ratios as
+      ratio-of-sums from carried components). Reads the long serving shape so
+      the note and the matrix cannot disagree. The five Stub lines are excluded
+      from the metrics and listed in unavailable_lines so the prompt can refuse
+      to mention them. Sole input to the Cortex narrative — unit-test this, not
+      the LLM output. ADR-004.
+    config:
+      materialized: view
+    columns:
+      - name: report_date
+        data_tests:
+          - not_null: { config: { severity: warn } }
+      - name: brief_json
+        description: The full deterministic brief. Every sentence in the narrative must trace to a field here.
+
+  - name: rpt_retail_analysis_narrative
+    description: >
+      DISABLED (enabled=false). Documents the AI_COMPLETE logic and is the
+      source SQL for the daily task in scripts/setup_retail_analysis_narrative.sql
+      (not shipped in 8.10.0). Narrates only the pre-computed brief_json from
+      rpt_retail_analysis_narrative_brief.
+
+  - name: dim_retail_analysis_line_item
+    description: >
+      Retail Analysis Report line-item metadata: printed measure block, display
+      order, indent, number format, availability, and (for ratio lines) the
+      numerator/denominator source measures on fct_retail_analysis. Twin of
+      dim_retail_line_item.
+    columns:
+      - name: line_item_key
+        description: "PK. Surrogate = line_item_code."
+        constraints:
+          - type: primary_key
+        data_tests: [unique, not_null]
+      - name: availability
+        data_tests:
+          - accepted_values:
+              values: ['Available', 'Partial', 'Stub', 'Gap']
+      - name: value_type
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']

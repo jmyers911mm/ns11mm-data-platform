@@ -1,5 +1,6 @@
 version: 2
 seeds:
+
   - name: dpr_line_items
     description: >
       Report-layout catalog for the Daily Performance Report: one row per printed
@@ -30,6 +31,7 @@ seeds:
         data_tests:
           - accepted_values:
               values: ['additive', 'ratio']
+
   - name: seed_tour_plu
     description: "One row per PLU mapping to a DPR tour line item. Labels the field-trip, revealed, and ask-educator cohorts, and enumerates the tour PLUs excluded from the core museum guided-tour cohort (youth and family, early access, all-inclusive early access, architecture). Any PLU here is excluded from mus_guided_tours."
     columns:
@@ -42,6 +44,7 @@ seeds:
           - not_null
           - accepted_values:
               values: [mem_field_trip, mus_field_trip, revealed_tour, ask_educator, architecture_tour, youth_fam_tour, early_access_tour, ea_mem_mus_tour]
+
   - name: seed_retail_item_facility
     description: >
       CounterPoint item_no -> facility carve-outs applied INSIDE the legacy
@@ -81,6 +84,7 @@ seeds:
           First business_date the carve-out is live (t_fact_cogs cutover):
           1040 = 2023-09-04, 1060 = 2024-01-16, 1070 / 1080 = 2024-01-21.
         data_tests: [not_null]
+
   - name: seed_retail_store_facility
     description: >
       Single-valued CounterPoint store_id -> facility map. Used by dim_store and
@@ -98,6 +102,7 @@ seeds:
       - name: key_facility
         description: 911dw facility key the store rolls up to.
         data_tests: [not_null]
+
   - name: seed_facility_area
     description: "Selling-area labels, grouping, and stable facility_group name for retail facility keys (1001 Preview/Vesey, 1002 Visitors Center, 1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships). facility_group is the single source of truth for the key_facility -> name map consumed by int_counterpoint__retail_lines and dim_facility. 8.2.0 added 1001 and 1002, which the legacy t_fact_retail Sales 1 / Sales 2 queries populate and which previously rendered as 'Unmapped'."
     config:
@@ -112,6 +117,7 @@ seeds:
       - name: facility_group
         description: "Stable snake_case facility identity (preview_vesey, visitors_center, museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other). Downstream references this name, not the raw key_facility number."
         data_tests: [not_null]
+
   - name: seed_service_plu
     description: >
       One row per Galaxy PLU mapping to a DPR visitor-services line. Enumerates
@@ -137,6 +143,7 @@ seeds:
               values: [mus_audio_guide, mem_mus_tour]
 
   # ─── Config-as-data lists (2026-07-23 cleanup) ─────────────────────────────
+
   - name: seed_retail_store_scope
     description: >
       The retail reporting scope: one row per legacy t_fact_retail query x
@@ -323,6 +330,7 @@ seeds:
         data_tests: [not_null, unique]
 
   # ─── Gateway admissions cohort seeds (8.6.0, ADR-005 gated) ───────────────
+
   - name: retail_line_items
     description: >
       Report-layout catalog for the Retail Performance Report: one row per
@@ -394,14 +402,19 @@ seeds:
 
   # ─── Legacy reference seeds — no active consumers ──────────────────────────
   # Candidates for deletion once the disabled marketing/CRM models are decided.
+
   - name: ref_customer_segments
     description: "Legacy reference seed (customer segment labels). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+
   - name: ref_ltv_tiers
     description: "Legacy reference seed (customer LTV tier bands + colors). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+
   - name: ref_marketing_channels
     description: "Legacy reference seed (marketing channel catalog). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+
   - name: ref_payment_methods
     description: "Legacy reference seed (payment method catalog). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
+
   - name: ref_ticket_types
     description: "Legacy reference seed (ticket type catalog with default prices). No active consumers; candidate for deletion when the disabled marketing/CRM models are decided."
 
@@ -491,6 +504,7 @@ seeds:
       - name: metric_code
         description: The metric in rpt_dpr_mtd_ytd_long this printed row reads (unmatched = Stub).
         data_tests: [not_null]
+
   - name: seed_sensource_facility_map
     description: >
       Visitor-feed facility -> reporting facility crosswalk, with the measure
@@ -714,3 +728,100 @@ seeds:
         data_tests: [not_null, unique]
 
   # ─── Serving-layer seeds (coverage added 2026-07-29) ───────────────────────
+
+  - name: retail_analysis_line_items
+    description: >
+      Report-layout catalog for the Retail Analysis Report: one row per printed
+      measure, with its measure block (section), label, sort order, number
+      format, additive-vs-ratio, availability, facility, and — for ratio lines —
+      the numerator/denominator source columns on fct_retail_analysis. The
+      legacy workbook's THIRTEEN SHEETS ARE CALENDAR YEARS (2014-2026), routed
+      by `year(key_date)` in t_retail_analysis_tabs, not report sections; the
+      year is a dim_date slicer and the sections here are the four printed
+      measure blocks plus the attendance line and the carve-outs. Report
+      scaffolding, not a business dimension. Consumed by
+      dim_retail_analysis_line_item.
+    columns:
+      - name: line_item_code
+        description: Stable key joined from rpt_retail_analysis_report_long. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: sort_order
+        description: Global printed order within the workbook.
+        data_tests: [not_null, unique]
+      - name: value_type
+        description: "'additive' or 'ratio' — tells Power BI's display measure how to aggregate."
+        data_tests:
+          - accepted_values:
+              values: ['additive', 'ratio']
+      - name: availability
+        description: >
+          Available / Partial / Stub / Gap. Partial on the five E-Commerce lines
+          (CounterPoint order channel only; the 2016-2017 Shopify and the Drupal
+          legs are not staged). Stub on the two water lines (blocked on a
+          business rule) and the three medallion lines (no data feed).
+        data_tests:
+          - accepted_values:
+              values: ['Available', 'Partial', 'Stub', 'Gap']
+
+  - name: seed_retail_analysis_excluded_item
+    description: >
+      CounterPoint items excluded from Retail Analysis SALES and UNITS, per the
+      legacy filter `key_item_descr NOT IN ('2449','2450','2451','2452','2453',
+      '2454')` carried by every t_fact_mus_store_analysis sales branch and by
+      t_reporting_mus_store_profit / t_reporting_mem_cart_profit. key_item_descr
+      is a surrogate over the item DESCRIPTION in 911dw.dim_item_descr, not an
+      item_no, so consumers resolve the seeded item_no back to its description
+      and match on that — see int_retail__analysis. The exclusion is NOT applied
+      to cost: legacy t_fact_cogs filters neither category nor item. Deliberately
+      scoped to this report family; applying it estate-wide would move
+      mus_store_gross_profit on the live DPR (ADR-005).
+    config:
+      column_types:
+        item_no: varchar
+        is_resolved: boolean
+    columns:
+      - name: item_no
+        description: CounterPoint item number. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: exclusion_group
+        description: Which legacy exclusion list this item belongs to.
+        data_tests: [not_null]
+      - name: is_resolved
+        description: >
+          FALSE means the legacy key has not been mapped to a CounterPoint item
+          and consumers must ignore the row rather than guess.
+        data_tests: [not_null]
+      - name: resolution_basis
+        description: How the legacy surrogate was resolved. Audit trail, not logic.
+        data_tests: [not_null]
+
+  - name: seed_retail_water_item
+    description: >
+      The water carve-out SKUs, keyed by the legacy dim_item_descr surrogate.
+      BLOCKER as shipped: both rows carry is_resolved = FALSE because
+      key_item_descr 4636 (Retail Analysis water_mus_store / water_mem_cart) and
+      5095 (the Retail Performance water lines) cannot be resolved to a
+      CounterPoint item_no from any staged source — no captured transformation
+      carves either key in by another key. int_retail__analysis emits typed NULL
+      water measures while this is true and flips to a real measure with no SQL
+      change once item_no and is_resolved are filled. The resolution query
+      against the legacy warehouse is in the 8.10.0 NOTES; it must be run before
+      the Pentaho/MySQL estate is decommissioned.
+    config:
+      column_types:
+        legacy_key_item_descr: varchar
+        item_no: varchar
+        is_resolved: boolean
+    columns:
+      - name: legacy_key_item_descr
+        description: 911dw.dim_item_descr.key_item_desc surrogate. Grain of this table.
+        data_tests: [not_null, unique]
+      - name: water_group
+        description: >
+          Which report's water definition this key belongs to —
+          retail_analysis_carve_out (4636 only) or
+          retail_performance_water_units (4636 + 5095).
+        data_tests: [not_null]
+      - name: is_resolved
+        description: FALSE until item_no is filled. Consumers MUST filter on it.
+        data_tests: [not_null]

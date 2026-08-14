@@ -646,3 +646,30 @@ models:
         description: >
           Net donation dollars. NULL only on CAFE_VENDOR_DON (typed placeholder,
           cause NO DATA FEED). Deliberately NOT tested not_null.
+
+  - name: int_retail__analysis
+    description: >
+      Retail Analysis Report measures at facility-day grain: the additive
+      components behind every printed measure, and no quotient. Ratio
+      denominators and door counts are read from int_retail__ratio_components
+      (the single authoring site, 8.5.0); the exclusion-scoped sales, cost,
+      units and water carve-out are authored here because the Retail Analysis
+      series applies a legacy item exclusion the Retail Performance series does
+      not. Feeds fct_retail_analysis.
+    columns:
+      - name: date_key
+        description: "Calendar date."
+        data_tests: [not_null]
+      - name: key_facility
+        data_tests: [not_null]
+      - name: visitors
+        description: "Sensource door count for this area (int_retail__ratio_components.store_entries)."
+      - name: customers
+        description: "Distinct retail transactions (int_retail__ratio_components.transactions)."
+    data_tests:
+      # Grain inherited from int_retail__ratio_components (spine built there,
+      # not re-enforced here) -> warn per the severity rule.
+      - unique:
+          column_name: "date_key || '~' || key_facility"
+          name: int_retail_analysis_grain_unique
+          config: { severity: warn }
