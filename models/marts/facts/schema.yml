@@ -178,8 +178,45 @@ models:
               to: ref('dim_date')
               field: date_key
       - name: tickets_sold
+        description: >
+          GA tickets sold, issued + unissued (8.8.0). Redefined — do not compare
+          across the release boundary without restating.
         data_tests: [not_null]
       - name: ticket_revenue
+        description: "GA ticket revenue, issued + unissued (8.8.0)."
+        data_tests: [not_null]
+      - name: unissued_tickets_sold
+        description: "Audit companion (8.8.0): the unissued contribution to tickets_sold."
+        data_tests: [not_null]
+      - name: unissued_ticket_revenue
+        description: "Audit companion (8.8.0): the unissued contribution to ticket_revenue."
+        data_tests: [not_null]
+      - name: unissued_tour_revenue
+        description: "Audit companion (8.8.0): the unissued contribution across all tour revenue lines."
+        data_tests: [not_null]
+      - name: unissued_ticketing_donations
+        description: "Audit companion (8.8.0): the unissued contribution to ticketing_donations."
+        data_tests: [not_null]
+      - name: buyout_tour_revenue
+        description: "Audit companion (8.8.0): tour revenue contributed by the buyout leg."
+        data_tests: [not_null]
+      - name: buyout_tours
+        description: "Audit companion (8.8.0): buyout tour count AFTER the legacy suppression."
+        data_tests: [not_null]
+      - name: buyout_tours_unsuppressed
+        description: >
+          Audit companion (8.8.0): buyout tour count BEFORE suppression. The
+          difference from buyout_tours is exactly what the suppression removes
+          from the printed tour counts.
+        data_tests: [not_null]
+      - name: youth_fam_tours
+        description: "NEW ACTUAL (8.8.0). Not yet wired into the DPR report layer."
+        data_tests: [not_null]
+      - name: early_access_tours
+        description: "NEW ACTUAL (8.8.0). Not yet wired into the DPR report layer."
+        data_tests: [not_null]
+      - name: ea_mem_mus_tours
+        description: "NEW ACTUAL (8.8.0). Not yet wired into the DPR report layer."
         data_tests: [not_null]
       - name: mus_attendance
         description: >

@@ -1,0 +1,85 @@
+version: 2
+
+# Tour buyout / unissued seeds (8.8.0). Own schema file so seeds/_seeds.yml is
+# untouched; dbt merges seed properties across files as long as no seed is
+# declared twice. seed_tour_plu keeps its existing entry in seeds/_seeds.yml —
+# 8.8.0 only removes two rows from that CSV (the buyout PLUs, which move here)
+# and does not change its column set or its accepted_values.
+
+seeds:
+  - name: seed_tour_buyout_plu
+    description: >
+      The seven guided-tour BUYOUT PLUs enumerated by
+      t_fact_museum_guided_tour_buyout, each mapped to the DPR line its buyout
+      revenue is added back to, and flagged for the legacy quantity suppression
+      (CASE WHEN jnlTickets.plu IN ('MEMGTOBUY001','MUSGTOBUY007','MUSGTOBUY009')
+      THEN 0 ELSE JnlDetails.Qty END — buyout revenue counts, the tour count does
+      not). Enumerable code->label mapping. Every PLU listed here is also
+      excluded from the core line-grain tour cohorts by int_dpr__tour_revenue, so
+      revenue is recognised exactly once.
+      buyout_line_item is a JUDGEMENT: the legacy add-back is keyed on
+      key_museum_category and the category->PLU crosswalk (911dw.dim_galaxy_items)
+      is not staged. See seed_tour_buyout_category and DECISION_MEMO question 1.
+    config:
+      column_types:
+        plu: varchar
+        buyout_line_item: varchar
+        suppress_quantity: boolean
+        legacy_key_museum_category: integer
+        notes: varchar
+    columns:
+      - name: plu
+        description: "Galaxy product PLU."
+        data_tests: [not_null, unique]
+      - name: buyout_line_item
+        description: "DPR line the buyout revenue is added back to."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [mus_guided_tour, mem_guided_tour, early_access_tour]
+      - name: suppress_quantity
+        description: "TRUE = count zero tours for this PLU but keep its revenue (legacy CASE)."
+        data_tests: [not_null]
+      - name: legacy_key_museum_category
+        description: >
+          911dw key_museum_category the PLU resolved to in the legacy warehouse.
+          NULL for every row today: dim_galaxy_items is not staged, so the
+          crosswalk cannot be verified. Populate as it is confirmed.
+
+  - name: seed_tour_buyout_category
+    description: >
+      The legacy key_museum_category lists that drive the buyout treatment:
+      the 12-category exclusion applied to every tour line grain
+      (1077,1430,1922,2112,2200,2201,2219,2220,2226,2227,2228,2229 plus the two
+      model-specific extras 3039/3040), and the three add-back lists —
+      museum (1077,1430,1922,2226,2831,2826), memorial (2219,2220) and early
+      access (2112,2228).
+      REGISTER, NOT A DRIVER. is_resolved is FALSE on every row because
+      911dw.dim_galaxy_items (key_category -> PLU) is not staged, so no category
+      here can be turned into a filter the platform can execute. The model works
+      from seed_tour_buyout_plu instead. This seed exists so the categories are
+      enumerated, reviewable, and visible as a gap rather than lost.
+    config:
+      column_types:
+        key_museum_category: integer
+        category_role: varchar
+        buyout_line_item: varchar
+        resolved_plu: varchar
+        is_resolved: boolean
+        notes: varchar
+    columns:
+      - name: key_museum_category
+        description: "Legacy 911dw key_museum_category."
+        data_tests: [not_null, unique]
+      - name: category_role
+        description: >
+          'line_exclusion' = removed from the tour line grain only;
+          'buyout_addback' = added back from the buyout fact only;
+          'both' = removed from the line grain and added back from the buyout fact.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [line_exclusion, buyout_addback, both]
+      - name: is_resolved
+        description: "TRUE only when resolved_plu is populated and present in seed_tour_buyout_plu."
+        data_tests: [not_null]

@@ -43,7 +43,11 @@ models:
   - name: int_dpr__tour_revenue
     description: >
       Guided (museum + memorial), virtual, field-trip and program tour
-      quantities and revenue per day.
+      quantities and revenue per day. From 8.8.0 each measure is the sum of three
+      legs — issued journal lines, unissued order lines, and buyout lines — as
+      the legacy DPR computes them. Buyout PLUs are excluded from the line grain
+      and added back from int_gateway__tour_buyout, with the legacy quantity
+      suppression applied.
     columns:
       - name: date_key
         description: "PK. Natural key (calendar date)."
@@ -51,7 +55,28 @@ models:
           - type: primary_key
         data_tests: [not_null, unique]
       - name: mem_guided_tour_revenue
-        description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0).
+        description: Memorial guided tour revenue (%MGT% matrix, ga_flag = 0), issued + unissued + buyout.
+        data_tests: [not_null]
+      - name: youth_fam_tours
+        description: "Youth & Family tour count (issued + unissued). NEW ACTUAL in 8.8.0."
+        data_tests: [not_null]
+      - name: early_access_tours
+        description: "Early Access tour count (issued + unissued + buyout). NEW ACTUAL in 8.8.0."
+        data_tests: [not_null]
+      - name: ea_mem_mus_tours
+        description: "All-Inclusive Early Access tour count (issued + unissued). NEW ACTUAL in 8.8.0."
+        data_tests: [not_null]
+      - name: unissued_tour_revenue_total
+        description: "Audit companion: the total tour revenue contributed by the unissued leg."
+        data_tests: [not_null]
+      - name: buyout_tour_revenue_total
+        description: "Audit companion: the total tour revenue contributed by the buyout leg."
+        data_tests: [not_null]
+      - name: buyout_tours_unsuppressed_total
+        description: >
+          Audit companion: buyout tour count BEFORE the legacy suppression.
+          buyout_tours_unsuppressed_total - buyout_tours_total is the count the
+          suppression removes.
         data_tests: [not_null]
 
   - name: int_dpr__fees_and_services
@@ -73,13 +98,22 @@ models:
         data_tests: [not_null, unique]
 
   - name: int_dpr__donations
-    description: Gateway ticketing/box/exit donations per day.
+    description: >
+      Gateway ticketing/box/exit donations per day. ticketing_donations is the
+      issued leg PLUS the unissued leg from 8.8.0, matching t_reporting_donations
+      and the DPR-New / Tracker-YTD .prpt (sum(issued) + sum(unissued)).
     columns:
       - name: date_key
         description: "PK. Natural key (calendar date)."
         constraints:
           - type: primary_key
         data_tests: [not_null, unique]
+      - name: ticketing_donations_issued
+        description: "Audit companion: the issued leg alone (the pre-8.8.0 value)."
+        data_tests: [not_null]
+      - name: ticketing_donations_unissued
+        description: "Audit companion: the newly-added unissued leg."
+        data_tests: [not_null]
 
   - name: int_dpr__admissions
     description: >
@@ -98,6 +132,21 @@ models:
         description: >
           RECONCILIATION ONLY. GA ticket quantity — the pre-8.7.0 museum
           attendance definition. Never join this to a report.
+      - name: tickets_sold
+        description: >
+          GA tickets sold: issued journal lines + unissued order lines + the
+          memorial-tour-with-museum-admission cohort (8.8.0). Rises relative to
+          the issued-only figure published before this release.
+        data_tests: [not_null]
+      - name: ticket_revenue
+        description: "GA ticket revenue, issued + unissued (8.8.0)."
+        data_tests: [not_null]
+      - name: unissued_tickets_sold
+        description: "Audit companion: the newly-added unissued ticket quantity."
+        data_tests: [not_null]
+      - name: unissued_ticket_revenue
+        description: "Audit companion: the newly-added unissued ticket revenue."
+        data_tests: [not_null]
 
   - name: int_dpr__attendance
     description: >
@@ -430,3 +479,93 @@ models:
           column_name: "date_key || '~' || key_facility"
           name: int_budget_retail_forecasts_grain_unique
           config: { severity: warn }
+  - name: int_gateway__unissued_order_lines
+    description: >
+      Unissued (sold, not yet ticketed) Gateway order lines, one row per
+      order_line_id x cohort x leg. Reproduces the four legacy unissued facts
+      including the DisbursementDetails.Basis price CASE. Cohorts:
+      museum_tickets, memorial_tours, mem_tour_mus_admission, ticketing_donations.
+      Feeds int_dpr__admissions, int_dpr__tour_revenue, int_dpr__donations.
+      Table-materialized: 3 consumers, 6 joins.
+    data_tests:
+      # Grain is enforced by construction (one row per source order line per
+      # cohort/leg CTE), so error severity is safe here.
+      - unique:
+          column_name: "order_line_id || '~' || cohort || '~' || leg"
+          name: int_gateway_unissued_order_lines_grain_unique
+    columns:
+      - name: order_line_id
+        description: "Galaxy OrderLines.OrderLineID (part of the grain)."
+        data_tests: [not_null]
+      - name: cohort
+        description: "Which legacy unissued fact this row reproduces."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [museum_tickets, memorial_tours, mem_tour_mus_admission, ticketing_donations]
+      - name: leg
+        description: >
+          'priced' = the Basis-CASE revenue leg; 'ga_zero' = the legacy second
+          UNION leg that credits a GA quantity with zero revenue.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [priced, ga_zero]
+      - name: date_key
+        description: >
+          Event date for the ticket/tour cohorts (RMEvents.StartDateTime with the
+          blessed event_ticket_date/ticket_date fallback), Orders.OpenDate for the
+          donations cohort — matching the legacy basis per cohort.
+        data_tests: [not_null]
+      - name: ga_flag
+        description: "Legacy GeneralAdmissionFlag CASE. 1 = general admission."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: qty_unissued
+        description: "quantity - issued_quantity. Always > 0 by the model filter."
+        data_tests: [not_null]
+      - name: amt_unissued
+        description: "Unissued revenue from the DisbursementDetails.Basis CASE (0 on the ga_zero leg)."
+        data_tests: [not_null]
+
+  - name: int_gateway__tour_buyout
+    description: >
+      Guided-tour buyout lines (911dw.fact_museum_guided_tour_buyout), one row per
+      date_key x plu x source_leg. Carries the legacy quantity suppression for
+      MEMGTOBUY001 / MUSGTOBUY007 / MUSGTOBUY009 (revenue counts, tour count does
+      not) and the TOUADDREV002 additional-revenue leg. Feeds int_dpr__tour_revenue.
+    data_tests:
+      - unique:
+          column_name: "date_key || '~' || plu || '~' || source_leg"
+          name: int_gateway_tour_buyout_grain_unique
+    columns:
+      - name: date_key
+        description: "Recognized reporting date (legacy basis: rmEvents.StartDateTime)."
+        data_tests: [not_null]
+      - name: plu
+        description: "Galaxy product PLU."
+        data_tests: [not_null]
+      - name: buyout_line_item
+        description: >
+          DPR line the buyout revenue is added back to, from seed_tour_buyout_plu.
+          Typed NULL on the tour_additional_revenue leg — cause BLOCKED ON A
+          BUSINESS RULE (TOUADDREV002's key_museum_category cannot be resolved
+          without dim_galaxy_items), so that leg is not consumed downstream.
+      - name: source_leg
+        description: "'journal' or 'tour_additional_revenue'."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [journal, tour_additional_revenue]
+      - name: buyout_tours
+        description: "Tour count AFTER the legacy suppression."
+        data_tests: [not_null]
+      - name: buyout_tours_unsuppressed
+        description: "Tour count BEFORE the legacy suppression (audit companion)."
+        data_tests: [not_null]
+      - name: buyout_revenue
+        description: "Buyout revenue. Always counts, suppression or not."
+        data_tests: [not_null]
+

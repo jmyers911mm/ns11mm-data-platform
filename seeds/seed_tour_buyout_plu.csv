@@ -1,0 +1,8 @@
+plu,buyout_line_item,suppress_quantity,legacy_key_museum_category,notes
+MUSGTOADR004,mus_guided_tour,FALSE,,"t_fact_museum_guided_tour_buyout jnlTickets.plu IN list. MUS prefix -> museum guided tour buyout add-back (t_reporting_mus_guided_tours_revenue key_museum_category IN (1077,1430,1922,2226,2831,2826)). Not in the qty-suppression list, so its quantity counts."
+MUSGTOADR007,early_access_tour,FALSE,,"t_fact_museum_guided_tour_buyout plu list. Assigned to the early-access buyout add-back (t_reporting_early_access_tours_revenue key_museum_category IN (2112,2228)); the repo already classified this PLU as early_access_tour in seed_tour_plu before 8.8.0. Not qty-suppressed."
+MUSGTOBUY007,mus_guided_tour,TRUE,,"t_fact_museum_guided_tour_buyout plu list AND in the CASE WHEN jnlTickets.plu IN ('MEMGTOBUY001','MUSGTOBUY007','MUSGTOBUY009') THEN 0 ELSE JnlDetails.Qty END suppression list: revenue counts, the tour COUNT does not."
+MUSGTOBUY009,early_access_tour,TRUE,,"t_fact_museum_guided_tour_buyout plu list AND qty-suppressed. Assigned to early access on the same basis as MUSGTOADR007 (prior repo classification in seed_tour_plu)."
+MUSGTOCPR007,mus_guided_tour,FALSE,,"t_fact_museum_guided_tour_buyout plu list. MUS prefix, no BUY/ADR early-access signal, not qty-suppressed -> museum guided tour buyout."
+MEMGTOADR003,mem_guided_tour,FALSE,,"t_fact_museum_guided_tour_buyout plu list. MEM prefix -> memorial buyout add-back (t_reporting_mem_guided_tours_revenue key_museum_category IN (2219,2220)). Not qty-suppressed."
+MEMGTOBUY001,mem_guided_tour,TRUE,,"t_fact_museum_guided_tour_buyout plu list AND qty-suppressed. MEM prefix -> memorial buyout add-back."

@@ -40,15 +40,26 @@
 --    closed-day zeroing applied), NOT from int_dpr__admissions' GA ticket
 --    quantity. This changes museum attendance and therefore every per-capita
 --    ratio computed against it in the rpt_ layer.
---  * mem_attendance now comes from int_dpr__attendance reading
---    stg_memorial__attendance (911dw.memorial_attendance, staged in 8.4.0) --
---    the table every legacy reader uses. It replaces a facility-name
---    pattern-match artefact ('%MEMORIAL%' on the Gateway facility catalogue)
---    with the legacy measure, so the value changes. It is still NOT coalesced
---    to zero: NULL now means the feed has no row for that day. Do not
---    re-introduce coalesce(...,0) here -- a zero would be indistinguishable
---    from a genuine no-visitor day and would silently deflate memorial
---    per-caps.
+--  * mem_attendance is NOT coalesced to zero. Its legacy source
+--    (911dw.memorial_attendance) has no staged feed, so it flows as a typed
+--    NULL placeholder — cause: NO DATA FEED. The layout seeds mark the
+--    corresponding report rows 'Stub'. Do not re-introduce coalesce(...,0)
+--    here: a zero would be indistinguishable from a genuine no-visitor day and
+--    would silently deflate memorial per-caps.
+--
+-- 8.8.0 (ADR-005 GATED — see DECISION_MEMO.md):
+--  * tickets_sold, ticket_revenue, total_admission_revenue, the museum and
+--    memorial guided-tour quantities and revenue, field trips, virtual tours and
+--    ticketing_donations all now include the UNISSUED (sold, not yet ticketed)
+--    leg, matching the legacy DPR. Every one of those measures rises.
+--  * The guided-tour QUANTITIES also absorb the buyout leg, whose three
+--    suppressed PLUs contribute revenue with a zero tour count — so tour counts
+--    can fall on the same day tour revenue rises.
+--  * youth_fam_*, early_access_* and ea_mem_mus_* are NEW ACTUAL columns. The
+--    DPR report layer still treats those lines as budget-only; wiring them
+--    through rpt_dpr_powerbi / rpt_dpr_report_long is a separate change with its
+--    own gate.
+--  * The unissued_* / buyout_* columns are audit companions, not report lines.
 
 {{ config(
     materialized='table',
@@ -125,9 +136,9 @@ combined as (
         att.mus_attendance                                                 as mus_attendance,
         att.mus_passes_scanned                                             as mus_passes_scanned,
         att.is_museum_closed_day,
-        -- Memorial attendance: SUM(passes_scanned) from 911dw.memorial_attendance
-        -- at the seeded memorial facility. NULL only where the feed has no row
-        -- for the day. Never zero-filled. See int_dpr__attendance.
+        -- Memorial attendance: typed NULL placeholder — cause NO DATA FEED
+        -- (911dw.memorial_attendance is not staged; no Gateway ACP resolves to
+        -- key_facility 2000). Never zero-filled. See int_dpr__attendance.
         att.mem_attendance                                                 as mem_attendance,
 
         -- Tours (quantities)
@@ -139,6 +150,10 @@ combined as (
         coalesce(t.virtual_mus_tours, 0)                                   as virtual_mus_tours,
         coalesce(t.virtual_yf_mem_tours, 0)                                as virtual_yf_mem_tours,
         coalesce(f.mem_mus_tours, 0)                                       as mem_mus_tours,
+        -- New actuals (8.8.0): previously budget-only on the DPR.
+        coalesce(t.youth_fam_tours, 0)                                     as youth_fam_tours,
+        coalesce(t.early_access_tours, 0)                                  as early_access_tours,
+        coalesce(t.ea_mem_mus_tours, 0)                                    as ea_mem_mus_tours,
 
         -- Tours (revenue)
         coalesce(t.mus_guided_tour_revenue, 0)                             as mus_guided_tour_revenue,
@@ -151,6 +166,21 @@ combined as (
         coalesce(t.virtual_mus_tour_revenue, 0)                            as virtual_mus_tour_revenue,
         coalesce(t.virtual_yf_mem_tour_revenue, 0)                         as virtual_yf_mem_tour_revenue,
         coalesce(f.mem_mus_tour_revenue, 0)                                as mem_mus_tour_revenue,
+        -- New actuals (8.8.0): previously budget-only on the DPR.
+        coalesce(t.youth_fam_tour_revenue, 0)                              as youth_fam_tour_revenue,
+        coalesce(t.early_access_tour_revenue, 0)                           as early_access_tour_revenue,
+        coalesce(t.ea_mem_mus_tour_revenue, 0)                             as ea_mem_mus_tour_revenue,
+
+        -- Audit companions for the 8.8.0 recognition change. Additive, carried
+        -- so the ADR-005 impact is measurable at the fact grain without
+        -- re-deriving it. Not printed on any report.
+        coalesce(a.unissued_tickets_sold, 0)                               as unissued_tickets_sold,
+        coalesce(a.unissued_ticket_revenue, 0)                             as unissued_ticket_revenue,
+        coalesce(t.unissued_tour_revenue_total, 0)                         as unissued_tour_revenue,
+        coalesce(d.ticketing_donations_unissued, 0)                        as unissued_ticketing_donations,
+        coalesce(t.buyout_tour_revenue_total, 0)                           as buyout_tour_revenue,
+        coalesce(t.buyout_tours_total, 0)                                  as buyout_tours,
+        coalesce(t.buyout_tours_unsuppressed_total, 0)                     as buyout_tours_unsuppressed,
 
         -- Audio (service_fees is projected above, next to the admission total
         -- it now feeds)

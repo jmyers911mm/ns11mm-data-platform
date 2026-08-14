@@ -32,6 +32,18 @@
 -- the JOURNAL-ISSUED components, plus typed-NULL placeholders for the unstaged
 -- cohorts.
 --
+-- SCOPE NOTE (ADR-005 gate, 8.8.0): UNISSUED RECOGNITION. tickets_sold and
+-- ticket_revenue now include sold-but-not-yet-issued order lines, which is what
+-- the legacy DPR does: t_reporting_tickets_sold_issued_new unions "Get Issued
+-- Tickets" with "Get Unissued Tickets" and "Get Memorial Tour Mus Admission
+-- Unissued tickets" (identical predicates on the issued and unissued facts),
+-- and t_reporting_ticket_revenue_new unions "Issued Ticket Revenue" with
+-- "Unissued Ticket Revenue". Both measures rise. The unissued leg reuses the
+-- SAME exclusion seeds as the issued leg -- the legacy predicates are identical
+-- and the lists must not be authored twice. Pass revenue is NOT given an
+-- unissued leg: no legacy pass-revenue step reads an unissued fact.
+-- See DECISION_MEMO question 2.
+--
 -- Config-as-data. Four seeds drive the cohorts; edit the seed, not this SQL:
 --   seed_gateway_tickets_sold_excluded_plu    tickets sold/issued exclusions
 --   seed_gateway_ticket_revenue_excluded_plu  early-access PLUs, revenue only
@@ -45,6 +57,11 @@
 
 with ticket_lines as (
     select * from {{ ref('int_gateway__ticket_journal_lines') }}
+),
+
+unissued_lines as (
+    select * from {{ ref('int_gateway__unissued_order_lines') }}
+    where ga_flag = 1
 ),
 
 tickets_sold_excluded_plu as (
@@ -79,6 +96,17 @@ labeled as (
     left join ticket_revenue_excluded_plu tre on l.plu = tre.plu
     left join reseller_customer           rc  on cast(l.customer_id as varchar) = rc.customer_id
     left join pass_plu                    pp  on l.plu = pp.plu
+),
+
+-- Same labelling pass over the unissued order lines, against the same seeds.
+labeled_unissued as (
+    select
+        u.*,
+        (tse.plu is not null)                                        as is_tickets_sold_excluded,
+        (tre.plu is not null)                                        as is_ticket_revenue_excluded
+    from unissued_lines u
+    left join tickets_sold_excluded_plu   tse on u.plu = tse.plu
+    left join ticket_revenue_excluded_plu tre on u.plu = tre.plu
 ),
 
 ga as (
@@ -177,24 +205,61 @@ ga as (
 
     from labeled
     group by date_key
+),
+
+-- ── Unissued leg (8.8.0) ────────────────────────────────────────────────────
+-- The legacy unissued steps carry the SAME predicates as the issued steps, so
+-- the same seed-driven flags and the same matrix patterns are applied here. The
+-- mem_tour_mus_admission cohort is legacy's "Get Memorial Tour Mus Admission
+-- Unissued tickets" step (matrix %MGT% and %XXX%), which has no PLU exclusion.
+unissued as (
+    select
+        date_key,
+        sum(case when cohort = 'museum_tickets'
+                  and (matrix_code like '%GAD%' or matrix_code like '%TOU%')
+                  and matrix_code not like '%XGA%'
+                  and not is_tickets_sold_excluded
+                 then qty_unissued else 0 end)
+          + sum(case when cohort = 'mem_tour_mus_admission'
+                     then qty_unissued else 0 end)                   as tickets_sold_unissued,
+        sum(case when cohort = 'museum_tickets'
+                  and (matrix_code like '%GAD%' or matrix_code like '%TOU%')
+                  and not is_ticket_revenue_excluded
+                 then amt_unissued else 0 end)
+          + sum(case when cohort = 'mem_tour_mus_admission'
+                     then amt_unissued else 0 end)                   as ticket_revenue_unissued
+    from labeled_unissued
+    group by date_key
+),
+
+date_spine as (
+    select date_key from ga
+    union select date_key from unissued
 )
 
 select
-    date_key,
-    tickets_sold_ga                                                  as tickets_sold,
-    ticket_revenue_ga                                                as ticket_revenue,
-    mus_attendance_ga_proxy,
+    s.date_key                                                       as date_key,
+    coalesce(g.tickets_sold_ga, 0)
+      + coalesce(u.tickets_sold_unissued, 0)                         as tickets_sold,
+    coalesce(g.ticket_revenue_ga, 0)
+      + coalesce(u.ticket_revenue_unissued, 0)                       as ticket_revenue,
+
+    -- Audit companions (8.8.0): the size of the newly-added unissued leg.
+    coalesce(u.tickets_sold_unissued, 0)                             as unissued_tickets_sold,
+    coalesce(u.ticket_revenue_unissued, 0)                           as unissued_ticket_revenue,
+
+    coalesce(g.mus_attendance_ga_proxy, 0)                           as mus_attendance_ga_proxy,
 
     -- Pass revenue cohorts, carried individually so the roll-up is auditable
     -- against the five legacy steps rather than being a single opaque number.
-    pass_tickets_citypass_matrix,
-    pass_revenue_citypass_matrix,
-    pass_tickets_c3_booklet,
-    pass_revenue_c3_booklet,
-    pass_tickets_citypass_booklet,
-    pass_revenue_citypass_booklet,
-    pass_tickets_reseller,
-    pass_revenue_reseller,
+    coalesce(g.pass_tickets_citypass_matrix, 0)                         as pass_tickets_citypass_matrix,
+    coalesce(g.pass_revenue_citypass_matrix, 0)                         as pass_revenue_citypass_matrix,
+    coalesce(g.pass_tickets_c3_booklet, 0)                              as pass_tickets_c3_booklet,
+    coalesce(g.pass_revenue_c3_booklet, 0)                              as pass_revenue_c3_booklet,
+    coalesce(g.pass_tickets_citypass_booklet, 0)                        as pass_tickets_citypass_booklet,
+    coalesce(g.pass_revenue_citypass_booklet, 0)                        as pass_revenue_citypass_booklet,
+    coalesce(g.pass_tickets_reseller, 0)                                as pass_tickets_reseller,
+    coalesce(g.pass_revenue_reseller, 0)                                as pass_revenue_reseller,
 
     -- ── Placeholders (ADR-021: typed NULL with a stated cause) ──────────────
     -- Legacy pass-revenue cohort 5: fact_museum_citypass_scanchange, the
@@ -229,12 +294,14 @@ select
     -- cohorts are excluded from the sum rather than zero-filled into it: a NULL
     -- inside this total would NULL the DPR admission line, and a zero would
     -- assert the cohort is empty. Their absence is the documented gap.
-    pass_tickets_citypass_matrix
-      + pass_tickets_c3_booklet
-      + pass_tickets_citypass_booklet
-      + pass_tickets_reseller                                        as pass_tickets,
-    pass_revenue_citypass_matrix
-      + pass_revenue_c3_booklet
-      + pass_revenue_citypass_booklet
-      + pass_revenue_reseller                                        as pass_revenue
-from ga
+    coalesce(g.pass_tickets_citypass_matrix, 0)
+      + coalesce(g.pass_tickets_c3_booklet, 0)
+      + coalesce(g.pass_tickets_citypass_booklet, 0)
+      + coalesce(g.pass_tickets_reseller, 0)                           as pass_tickets,
+    coalesce(g.pass_revenue_citypass_matrix, 0)
+      + coalesce(g.pass_revenue_c3_booklet, 0)
+      + coalesce(g.pass_revenue_citypass_booklet, 0)
+      + coalesce(g.pass_revenue_reseller, 0)                           as pass_revenue
+from date_spine s
+left join ga       g on s.date_key = g.date_key
+left join unissued u on s.date_key = u.date_key

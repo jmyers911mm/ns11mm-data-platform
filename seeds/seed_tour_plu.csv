@@ -30,12 +30,10 @@ MUSGTOFTVW001,youth_fam_tour,Youth & Family Tour - excluded from core museum gui
 MUSGTOFTYB001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
 MUSGTOFTYC001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
 MUSGTOFTYW001,youth_fam_tour,Youth & Family Tour - excluded from core museum guided tours
-MUSGTOADW004,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
-MUSGTOADB004,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
-MUSGTOADR005,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
-MUSGTOADR007,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
-MUSGTOBUY009,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
-MUSGTOADW005,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
-MUSGTOADW011,early_access_tour,Early Access Museum Tour (issued/unissued/buyout) - excluded from core museum guided tours
+MUSGTOADW004,early_access_tour,"Early Access Museum Tour (ISSUED + UNISSUED line grain). Verified against t_reporting_early_access_tours_revenue plu IN list. Buyout PLUs moved to seed_tour_buyout_plu in 8.8.0."
+MUSGTOADB004,early_access_tour,"Early Access Museum Tour (ISSUED + UNISSUED line grain). Verified against t_reporting_early_access_tours_revenue plu IN list. Buyout PLUs moved to seed_tour_buyout_plu in 8.8.0."
+MUSGTOADR005,early_access_tour,"Early Access Museum Tour (ISSUED + UNISSUED line grain). Verified against t_reporting_early_access_tours_revenue plu IN list. Buyout PLUs moved to seed_tour_buyout_plu in 8.8.0."
+MUSGTOADW005,early_access_tour,"Early Access Museum Tour (ISSUED + UNISSUED line grain). Verified against t_reporting_early_access_tours_revenue plu IN list. Buyout PLUs moved to seed_tour_buyout_plu in 8.8.0."
+MUSGTOADW011,early_access_tour,"Early Access Museum Tour (ISSUED + UNISSUED line grain). Verified against t_reporting_early_access_tours_revenue plu IN list. Buyout PLUs moved to seed_tour_buyout_plu in 8.8.0."
 MUSGTOADW008,ea_mem_mus_tour,All-Inclusive Early Access Tour - excluded from core museum guided tours
 MUSARCADW001,architecture_tour,Architecture tour - excluded from core museum guided tours (confirm full PLU set)
