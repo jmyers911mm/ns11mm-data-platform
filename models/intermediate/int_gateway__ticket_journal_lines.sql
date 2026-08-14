@@ -20,6 +20,19 @@
 -- Attribute (matrix_code) lookup comes from the shared int_gateway__item_attributes.
 -- Placeholder-PLU and excluded-customer lists are seed-driven
 -- (seed_gateway_excluded_plu / seed_gateway_excluded_customer).
+--
+-- 8.1.0 JOIN-CARDINALITY FIX: coa and attributes were INNER joins. Every legacy
+-- extract that builds this grain uses LEFT OUTER JOIN dbo.COA and
+-- LEFT OUTER JOIN report.vAttribute with ISNULL(vA.rItmMatrixCode,'')
+-- (t_fact_museum_tickets_issued_fordate_new, t_fact_museum_citypass,
+-- t_fact_museum_citypass_booklets, t_reporting_* family). Inner-joining them
+-- silently dropped every ticket line whose account has no COA row and every
+-- line whose item has no attribute-value group -- and those lines feed
+-- admissions, tours AND fees, so the loss was invisible three models
+-- downstream. Both are now LEFT joins with the legacy coalesce. jnl_tickets
+-- and items stay INNER: legacy left-joins them too, but its WHERE clause
+-- (Items.PLU <> 'EXTEVENTAD001' AND matrix LIKE ...) drops the unmatched rows
+-- again, so inner is equivalent there and does not need to change.
 
 -- Materialized as a TABLE, not a view: this model runs 7 joins and is consumed
 -- by 3 downstream models (admissions, tour_revenue, fees) each run — a view
@@ -98,8 +111,14 @@ joined as (
     from jnl_details            jd
     inner join jnl_tickets      jt   on jd.aux_table_id = jt.jnl_detail_id
     inner join items            it   on jt.plu          = it.plu
-    inner join attributes       va   on it.attribute_value_group_id = va.avg_id
-    inner join coa              c    on jd.account_id   = c.account_id
+    -- LEFT (was INNER): legacy `left outer join report.vAttribute vA on
+    -- Items.AttributeValueGroupID = vA.avgID`. Items with no attribute group
+    -- keep their line; matrix_code coalesces to '' exactly as ISNULL does.
+    left join attributes        va   on it.attribute_value_group_id = va.avg_id
+    -- LEFT (was INNER): legacy `left outer join dbo.COA on
+    -- jnldetails.AccountID = coa.AccountID`. COA is only a bridge to the
+    -- disbursement lookup, so a missing COA row must not remove the line.
+    left join coa               c    on jd.account_id   = c.account_id
     left join disbursement      dd   on jt.disbursement_id = dd.disbursement_id
                                     and c.gl_code       = 101
                                     and c.company_id    = dd.company_id
@@ -108,7 +127,10 @@ joined as (
     left join events            rme  on rme.event_id    = jt.event_no
 
     -- Exclusions (seed-driven). Placeholder/external-event PLU always dropped;
-    -- internal/default customers excluded (NULL customer is kept, as before).
+    -- internal/default customers excluded (NULL customer is kept, as before --
+    -- legacy: `(vA.rItmDefaultCustomerID NOT IN (20056, 23361)) OR
+    -- (vA.rItmDefaultCustomerID IS NULL)`, which the left join now also
+    -- satisfies for items with no attribute row at all).
     where it.plu not in (select plu from {{ ref('seed_gateway_excluded_plu') }})
       and not exists (
             select 1

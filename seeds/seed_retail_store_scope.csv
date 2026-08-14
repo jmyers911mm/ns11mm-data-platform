@@ -1,10 +1,19 @@
-store_id,notes
-1,Museum Cafe (facility 4007) - added 2026-07-08
-3,Ecommerce
-8,Museum Store
-9,Museum Store
-10,Museum Store
-11,Memorial Carts
-12,Memorial Carts
-13,Memorial Carts
-14,Memorial Carts
+legacy_query,store_id,key_facility,valid_from,valid_to,item_no_filter,item_no_exclude,exclude_shipping_descr,apply_item_facility_override,price_column,is_primary_facility,notes
+sales_1,2,1002,,,,,FALSE,FALSE,gross_ext_price,TRUE,Visitors Center. Legacy t_fact_retail Sales 1 is the ONLY query with no shipping-description filter and the only one summing GROSS_EXT_PRC.
+sales_1,5,1002,,,,,FALSE,FALSE,gross_ext_price,TRUE,Visitors Center. See sales_1 store 2.
+sales_1,7,1002,,,,,FALSE,FALSE,gross_ext_price,TRUE,Visitors Center. See sales_1 store 2.
+sales_2,1,1001,,,,,TRUE,FALSE,ext_price,TRUE,Preview Site / Vesey Street. Store 1 also feeds 4007 from 2022-11-28 (sales_7); 1001 is the primary (non-double-counting) home for store 1.
+sales_2,4,1001,,,,,TRUE,FALSE,ext_price,TRUE,Preview Site / Vesey Street.
+sales_2,6,1001,,,,,TRUE,FALSE,ext_price,TRUE,Preview Site / Vesey Street.
+sales_2,8,1001,,,,,TRUE,FALSE,ext_price,FALSE,Preview Site / Vesey Street. Store 8 ALSO reports under 1003 Museum Store (sales_3) for the same dates - legacy counts it in both. 1003 is the primary home; this row is a reporting view only.
+sales_3,8,1003,,,,,TRUE,FALSE,ext_price,TRUE,Museum Store. Primary home for store 8.
+sales_3,9,1003,,,,,TRUE,FALSE,ext_price,TRUE,Museum Store.
+sales_3,10,1003,,,,,TRUE,FALSE,ext_price,TRUE,Museum Store. Primary home for store 10; store 10 ALSO reports under 1030 Atrium (sales_6) from 2019-12-10.
+sales_3,14,1003,,,201205,,TRUE,FALSE,ext_price,TRUE,Museum Store carve-IN. Legacy: (STR_ID='14' AND item_no='201205'). Disjoint from sales_4 which excludes 201205 - so this row is primary without double counting.
+sales_4,11,1020,,,,201205,TRUE,TRUE,ext_price,TRUE,Memorial Carts. Item->facility override applies HERE ONLY (1040/1060/1070/1080 carve-outs); everything else falls to 1020.
+sales_4,12,1020,,,,201205,TRUE,TRUE,ext_price,TRUE,Memorial Carts. See sales_4 store 11.
+sales_4,13,1020,,,,201205,TRUE,TRUE,ext_price,TRUE,Memorial Carts. See sales_4 store 11.
+sales_4,14,1020,,,,201205,TRUE,TRUE,ext_price,TRUE,Memorial Carts. Store 14 excludes 201205 (that item is carved in to 1003 by the sales_3 store-14 row).
+sales_5,3,1234,2017-07-01,,,,TRUE,FALSE,ext_price,TRUE,Ecommerce. Legacy BUS_DAT >= '20170701'. Zero-rates NOTHING (no row in seed_retail_zero_price_item scoped to 1234) and reclasses item 7-00003 to Donations (seed_retail_donation_item).
+sales_6,10,1030,2019-12-10,,,,TRUE,FALSE,ext_price,FALSE,Atrium. Legacy BUS_DAT >= '20191210'. Store 10 is already counted under 1003 (sales_3); this row is a reporting view only.
+sales_7,1,4007,2022-11-28,,,,TRUE,FALSE,ext_price,FALSE,Museum Cafe. t_fact_retail Sales 7 carries no date bound but t_fact_cogs (Cafe1) t_fact_num_tickets and t_reporting_donations all gate store 1 -> 4007 at >= '20221128'; the dated form is implemented. Store 1 is already counted under 1001 (sales_2); this row is a reporting view only.

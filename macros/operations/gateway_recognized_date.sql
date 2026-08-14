@@ -74,6 +74,37 @@
     credited. Confirm whether disbursement_id is genuinely always 0 in Galaxy
     or an extract artifact; if the latter, this branch (and any other
     disbursement-dependent logic) needs the corrected column before go-live.
+
+    8.1.0 DEAD-CODE REMOVAL (the '%XGA' literal):
+      This CASE previously carried
+
+          and coalesce(va.itm_matrix_code, '') <> '%XGA'
+
+      which is a LITERAL string comparison, not a pattern match, so it excluded
+      only a matrix code whose value is the four characters %XGA. Galaxy matrix
+      codes never contain '%', so the predicate was true for every row: dead.
+
+      Column check (asked and answered): itm_matrix_code IS the right column.
+      The legacy predicate reads `g.account_idno not like '%XGA%'`, and
+      t_dim_galaxy_ticket_types builds dim_galaxy_items.account_idno as
+      `ISNULL(vA.rItmMatrixCode,'') 'AccountIDNo'` -- account_idno and
+      itm_matrix_code are the same field under two names. So the column was
+      never the problem.
+
+      What IS wrong is the PLACEMENT, and legacy is wrong the same way:
+      t_fact_museum_tickets_issued_fordate_new carries the identical dead
+      literal inside its GeneralAdmissionFlag CASE. The live XGA exclusion
+      lives one layer up, in the reporting query
+      t_reporting_tickets_sold_issued_new, as a cohort filter on tickets
+      sold/issued (`and g.account_idno not like '%XGA%'`) -- and it is NOT
+      applied to ticket revenue (t_reporting_ticket_revenue_new has no XGA
+      predicate at all).
+
+      Turning the literal into `not like '%XGA%'` HERE would therefore diverge
+      from legacy ga_flag classification rather than converge on it. The dead
+      literal is removed; the real cohort exclusion is implemented where legacy
+      implements it (int_dpr__admissions.tickets_sold) in release 8.6.0, under
+      the ADR-005 gate, because it moves tickets sold.
 -#}
 {% macro gateway_general_admission_flag(va, jt, dd) -%}
     case
@@ -91,7 +122,6 @@
                  or coalesce({{ va }}.itm_matrix_code, '') like '%VTS%'
                  )
              and coalesce({{ dd }}.disbursement_name, 'GEN ADM') = 'GEN ADM'
-             and coalesce({{ va }}.itm_matrix_code, '') <> '%XGA'
             then 1
         else 0
     end

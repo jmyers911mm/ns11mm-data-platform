@@ -78,5 +78,15 @@ select * from semantic_view(
         dp.total_virtual_mem_tour_revenue    as virtual_mem_tour_revenue,
         dp.total_virtual_mus_tours           as virtual_mus_tours,
         dp.total_virtual_mus_tour_revenue    as virtual_mus_tour_revenue,
-        dp.total_virtual_yf_mem_tours        as virtual_yf_mem_tours
+        dp.total_virtual_yf_mem_tours        as virtual_yf_mem_tours,
+
+        -- 8.1.0: composites promoted OUT of the serving models and INTO the
+        -- semantic view per ADR-021 ("preferred home, in order: a semantic-view
+        -- metric; failing that, a column on the wrapper; failing that, one
+        -- serving model"). rpt_dpr_report_long and rpt_dpr_mtd_ytd_long now
+        -- read these columns instead of restating the component arithmetic.
+        dp.total_memorial_donations          as total_memorial_donations,
+        dp.total_museum_donations            as total_museum_donations,
+        dp.total_retail_gross_profit_ex_cafe as total_retail_gross_profit_ex_cafe,
+        dp.total_estimated_revenue           as total_estimated_revenue
 )

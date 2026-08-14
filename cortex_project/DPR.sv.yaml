@@ -140,6 +140,30 @@ tables:
         description: Ecommerce donation-ask collections (CounterPoint ecom store).
         expr: SUM(ECOM_DONATION_ASK)
         access_modifier: public_access
+      - name: TOTAL_ESTIMATED_REVENUE
+        synonyms:
+          - total estimated revenue
+          - total earned revenue
+          - estimated revenue
+        description: >-
+          The DPR "Total Estimated Revenue" line. Authored ONCE here in 8.1.0:
+          before this release the identical component set was written out by
+          hand in rpt_dpr_report_long AND in rpt_tracker_powerbi
+          (total_earned_revenue), which ADR-021 calls a defect even when the
+          two agree. Both now read this metric through rpt_dpr_powerbi.
+          Components: admission revenue (ticket + pass) + the four guided-tour
+          lines + all virtual tour revenue + store and cart gross profit +
+          cafe profit + museum audio/headset + the two governed donation
+          composites. Components are restated as SUM() of base columns rather
+          than as metric arithmetic because a metric name shadows the
+          same-named base column in this engine (see TOTAL_ADMISSION_REVENUE);
+          any change to a component metric must be mirrored here.
+          NOT identical to the TOTAL_ESTIMATED_REVENUE authored in
+          rpt_dpr_mtd_ytd_long, which additionally carries mem_audio_guide and
+          omits box_office_mus_exit_don / coatcheck_don. Reconciling the two is
+          an ADR-005 item, not a refactor.
+        expr: SUM(TICKET_REVENUE) + SUM(PASS_REVENUE) + SUM(REVEALED_TOUR_REVENUE) + SUM(MEM_MUS_TOUR_REVENUE) + SUM(MUS_GUIDED_TOUR_REVENUE) + SUM(MEM_GUIDED_TOUR_REVENUE) + SUM(VIRTUAL_MEM_TOUR_REVENUE) + SUM(VIRTUAL_MUS_TOUR_REVENUE) + SUM(VIRTUAL_YF_MEM_TOUR_REVENUE) + SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT) + SUM(AUDIO_TOUR_HEADSET) + SUM(ECOM_DONATION_ASK) + SUM(DONATION_BOX) + SUM(CART_DONATION_ASK) + SUM(MASK_DONATIONS) + SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CAFE1_DONATIONS)
+        access_modifier: public_access
       - name: TOTAL_FIELD_TRIP_REVENUE
         synonyms:
           - field trip revenue
@@ -160,6 +184,22 @@ tables:
           - memorial visitors
         description: Memorial attendance (valid Gateway scans at memorial-classified facilities). Scan component only; full Sensource turnstile blend not yet staged.
         expr: SUM(MEM_ATTENDANCE)
+        access_modifier: public_access
+      - name: TOTAL_MEMORIAL_DONATIONS
+        synonyms:
+          - total memorial visitor donations
+          - memorial donations
+        description: >-
+          DPR report line "Total Memorial Visitor Donations". Legacy definition
+          of record, t_dpr_excel_data_update:
+          (sum(ecom_don) + sum(don_box) + sum(cart_don_ask) + sum(mask_don)).
+          Authored ONCE here per ADR-021 (a composite belongs in the semantic
+          view before it belongs in a serving model); rpt_dpr_report_long reads
+          it through rpt_dpr_powerbi instead of restating the components.
+          BOX_OFFICE_MEM_DON is deliberately NOT a component: legacy reports it
+          on fact_donations_analysis_report, not on the DPR memorial donation
+          line.
+        expr: SUM(ECOM_DONATION_ASK) + SUM(DONATION_BOX) + SUM(CART_DONATION_ASK) + SUM(MASK_DONATIONS)
         access_modifier: public_access
       - name: TOTAL_MEMORIAL_FIELD_TRIPS
         synonyms:
@@ -212,6 +252,23 @@ tables:
           - museum visitors
         description: Museum attendance (scanned general-admission component; see notes for Sensource blend).
         expr: SUM(MUS_ATTENDANCE)
+        access_modifier: public_access
+      - name: TOTAL_MUSEUM_DONATIONS
+        synonyms:
+          - total museum visitor donations
+          - museum donations
+        description: >-
+          DPR report line "Total Museum Visitor Donations". Components are
+          unchanged from the definition rpt_dpr_report_long carried inline
+          before 8.1.0 (ticketing + box-office museum exit + coat check +
+          museum store + museum exit + cafe); moved here so the composite is
+          authored once per ADR-021. OPEN (ADR-005): legacy
+          t_dpr_excel_data_update defines mus_don as
+          (ms_donations + mus_exit_donations + ticketing_donations +
+          cafe1_donations) -- it does NOT include BOX_OFFICE_MUS_EXIT_DON or
+          COATCHECK_DON. Reconciling that difference moves the number and is
+          therefore gated; it is not done here.
+        expr: SUM(TICKETING_DONATIONS) + SUM(BOX_OFFICE_MUS_EXIT_DON) + SUM(COATCHECK_DON) + SUM(MUS_STORE_DONATIONS) + SUM(MUS_EXIT_DONATIONS) + SUM(CAFE1_DONATIONS)
         access_modifier: public_access
       - name: TOTAL_MUSEUM_FIELD_TRIPS
         synonyms:
@@ -283,6 +340,23 @@ tables:
           line) and INCLUDES e-commerce GP (not yet modeled) — component realignment
           or rename is an open ADR-005 item; do not treat this metric as that line.
         expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT) + SUM(CAFE1_ALL_PROFIT)
+        access_modifier: public_access
+      - name: TOTAL_RETAIL_GROSS_PROFIT_EX_CAFE
+        synonyms:
+          - total retail gross profit report line
+          - store and cart gross profit
+        description: >-
+          The printed report line "Total Retail Gross Profit" as the DPR and the
+          MTD/YTD workbooks mean it: Museum Store + Memorial Carts, with the
+          Museum Cafe reported on its own line (print section 80) and
+          e-commerce GP pending its actual measure. This is the metric the
+          serving models must use for that line; TOTAL_RETAIL_GROSS_PROFIT is
+          the wider DPR rollup that also folds cafe in, and its own comment
+          warns against using it as this line. Added in 8.1.0 because
+          rpt_dpr_mtd_ytd_long was summing TOTAL_RETAIL_GROSS_PROFIT and
+          TOTAL_CAFE_PROFIT into TOTAL_ESTIMATED_REVENUE, counting
+          CAFE1_ALL_PROFIT twice.
+        expr: SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT)
         access_modifier: public_access
       - name: TOTAL_REVEALED_TOUR_REVENUE
         synonyms:

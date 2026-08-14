@@ -4,7 +4,7 @@
 -- Grain: one row per business_date (aliased date_key)
 --
 -- Recreates the CounterPoint-sourced DPR line items from the retail-line
--- silver model. Gross profit = sales - cost; donations are the summary-
+-- silver model. Gross profit = net sales - net cost; donations are the summary-
 -- category-6 lines at specific facilities/items.
 --
 -- Facility selection and the donation flag come from int_counterpoint__retail_lines
@@ -12,6 +12,12 @@
 -- numbers (1003, 1020, ...) or the donation category (= 6). Donation SKUs are
 -- resolved to a donation_line via seed_retail_donation_item (was inline item_no
 -- literals) -- edit the seed to re-point a donation product.
+--
+-- 8.3.0: every cost line reads `net_cost` instead of `sale_cost`. Legacy
+-- t_fact_cogs sums EXT_COST over sale AND return lines; taking the sale side
+-- only returned a customer's money while keeping the item's cost on the books,
+-- so mus_store_gross_profit / retail_carts_gross_profit / cafe1_all_profit /
+-- musag_profit were all overstated on any day with a return. All four DROP.
 --
 -- Legacy lineage: t_reporting_mus_store_profit, t_reporting_mem_cart_profit,
 -- t_reporting_museum_audio_headset_revenue (CounterPoint portion, fac 1060),
@@ -24,6 +30,7 @@
 -- mus_exit -> '101375' (legacy 886, Donation Box Store Exit)
 -- mask -> '200704' (legacy 4618, Mask donations; dormant since 2021)
 -- plaza_box -> '101165' (legacy 3375, Plaza donation box)
+-- ecom_ask -> '7-00003' (8.2.0; store-3 reclass, feeds ecom_donation_ask)
 
 {{ config(materialized='view') }}
 
@@ -44,24 +51,25 @@ daily as (
         sum(case when r.facility_group = 'museum_store' and not r.is_donation
                  then r.net_amount else 0 end)          as mus_store_sales,
         sum(case when r.facility_group = 'museum_store' and not r.is_donation
-                 then r.sale_cost else 0 end)                              as mus_store_cost,
+                 then r.net_cost else 0 end)                               as mus_store_cost,
 
         -- Memorial Carts gross profit (non-donation)
         sum(case when r.facility_group = 'memorial_carts' and not r.is_donation
                  then r.net_amount else 0 end)          as mem_cart_sales,
         sum(case when r.facility_group = 'memorial_carts' and not r.is_donation
-                 then r.sale_cost else 0 end)                              as mem_cart_cost,
+                 then r.net_cost else 0 end)                               as mem_cart_cost,
 
         -- Cafe gross profit (non-donation)
         sum(case when r.facility_group = 'museum_cafe' and not r.is_donation
                  then r.net_amount else 0 end)          as cafe1_sales,
         sum(case when r.facility_group = 'museum_cafe' and not r.is_donation
-                 then r.sale_cost else 0 end)                              as cafe1_cost,
+                 then r.net_cost else 0 end)                               as cafe1_cost,
 
         -- Memorial Audio Guide, CounterPoint portion (mag_cart = item 201114
-        -- via seed_retail_item_facility). Primary MAG source since 2023;
-        -- previously carved out of the carts but aggregated NOWHERE, so the
-        -- mart undercounted mem_audio_guide_revenue (Galaxy %MAG% only).
+        -- via seed_retail_item_facility, stores 11-14 from 2023-09-04).
+        -- Primary MAG source since 2023; previously carved out of the carts but
+        -- aggregated NOWHERE, so the mart undercounted mem_audio_guide_revenue
+        -- (Galaxy %MAG% only).
         sum(case when r.facility_group = 'mag_cart' and not r.is_donation
                  then r.net_amount else 0 end)          as mag_cp_revenue,
 
@@ -69,7 +77,7 @@ daily as (
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
                  then r.net_amount else 0 end)          as musag_sales,
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
-                 then r.sale_cost else 0 end)                              as musag_cost,
+                 then r.net_cost else 0 end)                               as musag_cost,
         sum(case when r.facility_group = 'mus_ag' and not r.is_donation
                  then r.net_quantity else 0 end)      as musag_units,
 
@@ -88,6 +96,8 @@ daily as (
                  then r.net_amount else 0 end)          as cart_donation_ask,
         sum(case when r.facility_group = 'museum_store' and di.donation_line = 'mus_exit'
                  then r.net_amount else 0 end)          as mus_exit_donations,
+        -- Ecommerce ask: CATEG_COD='DONATE' plus the 7-00003 reclass that
+        -- legacy t_fact_retail Sales 5 applies at store 3 only (8.2.0).
         sum(case when r.facility_group = 'ecommerce' and r.is_donation
                  then r.net_amount else 0 end)          as ecom_donation_ask,
         sum(case when r.facility_group = 'museum_cafe' and r.is_donation
@@ -114,7 +124,7 @@ daily as (
 select
     date_key,
 
-    -- Gross profit line items (sales - cost)
+    -- Gross profit line items (net sales - net cost)
     mus_store_sales - mus_store_cost                                       as mus_store_gross_profit,
     mem_cart_sales  - mem_cart_cost                                        as retail_carts_gross_profit,
     cafe1_sales     - cafe1_cost                                           as cafe1_all_profit,

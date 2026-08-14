@@ -44,26 +44,49 @@ seeds:
               values: [mem_field_trip, mus_field_trip, revealed_tour, ask_educator, architecture_tour, youth_fam_tour, early_access_tour, ea_mem_mus_tour]
   - name: seed_retail_item_facility
     description: >
-      CounterPoint item_no overrides for facility assignment. Checked before
-      the store-id fallback (legacy t_fact_retail CASE precedence).
+      CounterPoint item_no -> facility carve-outs applied INSIDE the legacy
+      t_fact_retail Sales-4 cohort only (stores 11-14, Memorial Carts). One row
+      per item_no x store_id_scope, each with the t_fact_cogs cutover date from
+      which the carve-out is live. Grain: item_no + store_id_scope.
+      Consumed by int_counterpoint__retail_lines, which applies these rows only
+      where seed_retail_store_scope.apply_item_facility_override is TRUE; before
+      valid_from the line falls back to the scope's own key_facility (1020).
+      8.2.0: was item_no-unique and store/date-blind, which pushed the carve-out
+      facilities onto every store and every date.
     config:
       # item_no is a string in the source (mix of numeric and alpha codes);
       # pin the type so dbt seed inference does not coerce it to a number and
       # break the varchar join in int_counterpoint__retail_lines.
       column_types:
         item_no: varchar
+        store_id_scope: varchar
         key_facility: integer
+        valid_from: date
     columns:
       - name: item_no
-        description: CounterPoint item number.
-        data_tests: [not_null, unique]
+        description: >
+          CounterPoint item number. NOT unique on its own — the same item can be
+          carved out at several stores (201114 and 201197 at stores 11-14).
+        data_tests: [not_null]
+      - name: store_id_scope
+        description: >
+          CounterPoint store id this carve-out applies to. Legacy scopes 1040 and
+          1060 to stores 11-14 and 1070 / 1080 to store 14 only.
+        data_tests: [not_null]
       - name: key_facility
-        description: 911dw facility key the item rolls up to.
+        description: 911dw facility key the item rolls up to inside its scope.
+        data_tests: [not_null]
+      - name: valid_from
+        description: >
+          First business_date the carve-out is live (t_fact_cogs cutover):
+          1040 = 2023-09-04, 1060 = 2024-01-16, 1070 / 1080 = 2024-01-21.
         data_tests: [not_null]
   - name: seed_retail_store_facility
     description: >
-      CounterPoint store_id to facility fallback mapping, applied when no
-      item-number override matches.
+      Single-valued CounterPoint store_id -> facility map. Used by dim_store and
+      fct_today_sales_hourly, which need one facility per store. NOT the retail
+      scope: the reporting scope is many-to-many and date-bounded and lives in
+      seed_retail_store_scope.
     config:
       column_types:
         store_id: varchar
@@ -76,7 +99,7 @@ seeds:
         description: 911dw facility key the store rolls up to.
         data_tests: [not_null]
   - name: seed_facility_area
-    description: "Selling-area labels, grouping, and stable facility_group name for retail facility keys (1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships). facility_group is the single source of truth for the key_facility -> name map consumed by int_counterpoint__retail_lines and dim_facility."
+    description: "Selling-area labels, grouping, and stable facility_group name for retail facility keys (1001 Preview/Vesey, 1002 Visitors Center, 1003 Museum Store, 1020 Memorial Carts, 1030 Atrium, 1234 Ecommerce, 4007 Cafe, 1040/1060 audio, 1070 tour guides, 1080 memberships). facility_group is the single source of truth for the key_facility -> name map consumed by int_counterpoint__retail_lines and dim_facility. 8.2.0 added 1001 and 1002, which the legacy t_fact_retail Sales 1 / Sales 2 queries populate and which previously rendered as 'Unmapped'."
     config:
       column_types:
         key_facility: integer
@@ -87,7 +110,7 @@ seeds:
       - name: area_name
         data_tests: [not_null]
       - name: facility_group
-        description: "Stable snake_case facility identity (museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other). Downstream references this name, not the raw key_facility number."
+        description: "Stable snake_case facility identity (preview_vesey, visitors_center, museum_store, memorial_carts, museum_cafe, mag_cart, mus_ag, ecommerce, other). Downstream references this name, not the raw key_facility number."
         data_tests: [not_null]
   - name: seed_service_plu
     description: >
@@ -116,18 +139,97 @@ seeds:
   # ─── Config-as-data lists (2026-07-23 cleanup) ─────────────────────────────
   - name: seed_retail_store_scope
     description: >
-      CounterPoint store_ids in scope for the retail-lines silver model (legacy
-      t_fact_retail store filter). Edit to add/remove a store without touching SQL.
+      The retail reporting scope: one row per legacy t_fact_retail query x
+      CounterPoint store. Store -> facility is MANY-TO-MANY and DATE-BOUNDED —
+      stores 1, 8 and 10 each report under two facilities and legacy counts them
+      in both, because facility is a reporting view, not a partition. Each row
+      carries the date window, an item carve-in (item_no_filter) or carve-out
+      (item_no_exclude), whether the legacy shipping-description filter applies,
+      whether the Sales-4 item->facility override applies, which price column
+      legacy sums, and whether the row is the one a cross-facility total may add
+      up (is_primary_facility). Consumed by int_counterpoint__retail_lines.
+      Edit the seed, not the SQL.
+      8.2.0: replaced a store_id-only in-scope list that dropped stores 2, 4, 5,
+      6 and 7 entirely and could not express the two-facility stores.
     config:
       column_types:
+        legacy_query: varchar
         store_id: varchar
+        key_facility: integer
+        valid_from: date
+        valid_to: date
+        item_no_filter: varchar
+        item_no_exclude: varchar
+        exclude_shipping_descr: boolean
+        apply_item_facility_override: boolean
+        price_column: varchar
+        is_primary_facility: boolean
     columns:
+      - name: legacy_query
+        description: >
+          Which t_fact_retail step this row reproduces (sales_1 .. sales_7).
+          Carried onto every fact row for lineage.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [sales_1, sales_2, sales_3, sales_4, sales_5, sales_6, sales_7]
       - name: store_id
-        description: CounterPoint store id in scope.
-        data_tests: [not_null, unique]
+        description: >
+          CounterPoint store id. NOT unique — a store appears once per legacy
+          query it belongs to.
+        data_tests: [not_null]
+      - name: key_facility
+        description: >
+          911dw facility key this store reports under for this query. For
+          sales_4 this is the ELSE branch (1020); the item carve-outs come from
+          seed_retail_item_facility.
+        data_tests: [not_null]
+      - name: valid_from
+        description: First business_date in scope. Empty = open (no lower bound).
+      - name: valid_to
+        description: Last business_date in scope. Empty = open (still live).
+      - name: item_no_filter
+        description: >
+          Carve-IN. When set, only this item_no qualifies for the row (legacy
+          Sales 3's `STR_ID = '14' AND item_no = '201205'`). Empty = all items.
+      - name: item_no_exclude
+        description: >
+          Carve-OUT. When set, this item_no is excluded (legacy Sales 4's
+          `ITEM_NO <> '201205'`). Empty = no exclusion.
+      - name: exclude_shipping_descr
+        description: >
+          Apply the legacy `DESCR not like '%shipping%'` filter. TRUE for
+          Sales 2-7; FALSE for Sales 1, which does not carry it.
+        data_tests: [not_null]
+      - name: apply_item_facility_override
+        description: >
+          Apply seed_retail_item_facility inside this scope. TRUE only for
+          sales_4 (stores 11-14) — the legacy item CASE lives in that query
+          alone.
+        data_tests: [not_null]
+      - name: price_column
+        description: >
+          Which staged price column legacy sums for this query. Sales 1 sums
+          GROSS_EXT_PRC; Sales 2-7 sum EXT_PRC.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [ext_price, gross_ext_price]
+      - name: is_primary_facility
+        description: >
+          TRUE on exactly one scope row per source line. A total ACROSS
+          facilities must filter on it; per-facility reporting must not. FALSE
+          for store 8 -> 1001, store 10 -> 1030 and store 1 -> 4007, whose lines
+          are already counted at 1003, 1003 and 1001 respectively.
+        data_tests: [not_null]
 
   - name: seed_retail_excluded_item
-    description: "CounterPoint item_no values dropped from retail lines (legacy t_fact_retail hygiene)."
+    description: >
+      DEPRECATED, no consumers as of 8.2.0. Its only row (201205) was a
+      Sales-4-scoped exclusion applied globally, which silently dropped the
+      store-14 / item-201205 carve-in to 1003 Museum Store. The exclusion now
+      lives in seed_retail_store_scope.item_no_exclude. Delete this seed once
+      8.2.0 has shipped clean.
     config:
       column_types:
         item_no: varchar
@@ -137,24 +239,48 @@ seeds:
         data_tests: [not_null, unique]
 
   - name: seed_retail_zero_price_item
-    description: "CounterPoint item_no values whose sale price is zero-rated in retail lines (legacy t_fact_retail)."
+    description: >
+      CounterPoint item_no values whose SALE price is zero-rated, scoped to the
+      resolved key_facility. Legacy zero-rating is per query, not global:
+      Sales 3 (1003) and Sales 4 (1020) zero '200933' and '201229'; Sales 7
+      (4007) zeroes '200933' only; Sales 5 (1234) zeroes nothing. Return amount
+      is never zeroed. Grain: item_no + key_facility_scope.
+      8.2.0: was a global item list, which zero-rated ecommerce and cafe sales
+      legacy charged for.
     config:
       column_types:
         item_no: varchar
+        key_facility_scope: integer
     columns:
       - name: item_no
-        description: CounterPoint item number to zero-rate.
-        data_tests: [not_null, unique]
+        description: >
+          CounterPoint item number to zero-rate. NOT unique on its own — the
+          same SKU is zero-rated at several facilities.
+        data_tests: [not_null]
+      - name: key_facility_scope
+        description: >
+          Resolved key_facility the zero-rating applies at. A line is zero-rated
+          only when its resolved facility matches.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [1003, 1020, 4007]
 
   - name: seed_retail_donation_item
     description: >
-      CounterPoint donation SKUs mapped to their DPR donation line. Replaces the
-      inline item_no literals in int_dpr__retail; edit here to re-point a donation
-      product. donation_line drives cart_ask / mus_exit / mask / plaza_box.
+      CounterPoint donation SKUs mapped to their DPR donation line, plus the
+      store-scoped category reclass. donation_line drives cart_ask / mus_exit /
+      mask / plaza_box / ecom_ask in int_dpr__retail. reclass_to_donation tells
+      int_counterpoint__retail_lines to fold the SKU into summary_category 6
+      even when CATEG_COD is not 'DONATE' — legacy t_fact_retail does this for
+      item 7-00003 in Sales 5 (store 3, ecommerce) and nowhere else.
+      Edit here to re-point a donation product.
     config:
       column_types:
         item_no: varchar
         donation_line: varchar
+        store_id_scope: varchar
+        reclass_to_donation: boolean
     columns:
       - name: item_no
         description: CounterPoint item number for the donation product.
@@ -164,7 +290,17 @@ seeds:
         data_tests:
           - not_null
           - accepted_values:
-              values: [cart_ask, mus_exit, mask, plaza_box]
+              values: [cart_ask, mus_exit, mask, plaza_box, ecom_ask]
+      - name: store_id_scope
+        description: >
+          CounterPoint store id the row applies to. Empty = all stores. Only
+          7-00003 is scoped (store 3).
+      - name: reclass_to_donation
+        description: >
+          TRUE means the SKU is folded into 'Donations' / summary_category 6
+          regardless of CATEG_COD, within store_id_scope. The other four SKUs
+          already carry CATEG_COD = 'DONATE' and need no reclass.
+        data_tests: [not_null]
 
   - name: seed_gateway_excluded_plu
     description: "Gateway PLUs always dropped from the ticket journal (placeholder/external-event products)."

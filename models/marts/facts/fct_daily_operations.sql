@@ -75,6 +75,15 @@ retail as (
     from {{ ref('int_counterpoint__retail_lines') }} r
     inner join {{ ref('dim_date') }} dd
         on cast(r.business_date as date) = dd.date_key
+    -- 8.2.0: int_counterpoint__retail_lines fans a POS line out to every
+    -- reporting facility whose scope claims it, because legacy t_fact_retail
+    -- treats facility as a reporting view rather than a partition (store 8 is
+    -- both Preview/Vesey 1001 and Museum Store 1003; store 10 is both 1003 and
+    -- Atrium 1030; store 1 is both 1001 and Cafe 4007). This model aggregates
+    -- to DAY grain with no facility in the group by, so without this predicate
+    -- those three stores' revenue and transactions would count two or three
+    -- times. is_primary_facility is true on exactly one scope row per line.
+    where r.is_primary_facility
     group by 1
 )
 

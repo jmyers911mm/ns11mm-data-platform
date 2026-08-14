@@ -14,7 +14,28 @@
 -- Professional Program Revenue, Total Estimated Revenue, and Virtual Tour
 -- Revenue (unmapped).
 --
+-- 8.1.0 changes in this model:
+--  1. TOTAL_MEMORIAL_DONATIONS and TOTAL_MUSEUM_DONATIONS are no longer
+--     restated here. They are semantic-view metrics (DPR.sv.yaml) read off the
+--     wrapper, per ADR-021's composite rule. TOTAL_MEMORIAL_DONATIONS also
+--     changes definition to match the legacy line of record
+--     (t_dpr_excel_data_update: ecom_don + don_box + cart_don_ask + mask_don):
+--     MASK_DONATIONS is added, BOX_OFFICE_MEM_DON is removed. Before 8.1.0 the
+--     two DPR serving surfaces disagreed -- rpt_dpr_mtd_ytd_long counted
+--     mask donations inside TOTAL_OTHER_VISITOR_REVENUE while this model
+--     dropped them and substituted a donation line legacy books elsewhere.
+--  2. ECOM_GROSS_PROFIT symmetry. The budget side carried an
+--     ECOM_GROSS_PROFIT row AND folded it into the budget
+--     TOTAL_RETAIL_GROSS_PROFIT, while the actual side had neither, so the
+--     variance on that composite compared unlike totals. The budget composite
+--     now matches the actual composite (store + carts) and the actual side
+--     emits an explicit typed-NULL ECOM_GROSS_PROFIT placeholder. Cause:
+--     PENDING AN UPSTREAM ADDITION -- the measure is buildable from
+--     CounterPoint facility 1234 sales less fact_cogs cost and is scheduled
+--     for release 8.6.0 under the ADR-005 gate.
+--
 -- ADR-004: all business logic in dbt, never Power BI.
+-- ADR-021: composites authored once; placeholders are typed NULLs with a cause.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
@@ -67,24 +88,37 @@ a_composite as (
            cast(null as number(38,4)) as numerator, cast(null as number(38,4)) as denominator from a_wide
     union all
     select report_date, 'TOTAL_RETAIL_GROSS_PROFIT',
-           cast(mus_store_gross_profit + retail_carts_gross_profit as number(38,4)), null, null from a_wide
+           cast(total_retail_gross_profit_ex_cafe as number(38,4)), null, null from a_wide
     union all
+    -- Both donation composites are governed semantic-view metrics; this model
+    -- projects them rather than restating their components (ADR-021).
     select report_date, 'TOTAL_MEMORIAL_DONATIONS',
-           cast(cart_donation_ask + box_office_mem_don + donation_box + ecom_donation_ask as number(38,4)), null, null from a_wide
+           cast(total_memorial_donations as number(38,4)), null, null from a_wide
     union all
     select report_date, 'TOTAL_MUSEUM_DONATIONS',
-           cast(ticketing_donations + box_office_mus_exit_don + coatcheck_don
-                + mus_store_don + mus_exit_don + cafe_don as number(38,4)), null, null from a_wide
+           cast(total_museum_donations as number(38,4)), null, null from a_wide
     union all
+    -- Total Estimated Revenue is a governed semantic-view metric as of 8.1.0
+    -- (it was authored inline here AND in rpt_tracker_powerbi). Component set
+    -- is unchanged from the inline version except for the memorial-donation
+    -- realignment described in the header.
     select report_date, 'TOTAL_ESTIMATED_REVENUE',
-           cast( admission_revenue
-               + revealed_tour_revenue + mem_mus_tour_revenue + mus_guided_tour_revenue
-                 + mem_guided_tour_revenue + virtual_tour_revenue
-               + mus_store_gross_profit + retail_carts_gross_profit
-               + cafe_profit + audio_tour_headset
-               + cart_donation_ask + box_office_mem_don + donation_box + ecom_donation_ask
-               + ticketing_donations + box_office_mus_exit_don + coatcheck_don
-                 + mus_store_don + mus_exit_don + cafe_don as number(38,4)), null, null from a_wide
+           cast(total_estimated_revenue as number(38,4)), null, null from a_wide
+),
+
+a_placeholder as (
+    -- ECOM_GROSS_PROFIT actual: typed NULL, not zero and not omitted (ADR-021).
+    -- Cause: PENDING AN UPSTREAM ADDITION. Both inputs are staged
+    -- (int_counterpoint__retail_lines facility_group = 'ecommerce' for sales,
+    -- its sale_cost for the fact_cogs equivalent); the measure is built in
+    -- 8.6.0. Until then the ECOM_GROSS_PROFIT budget row has no actual
+    -- counterpart, and this row makes that explicit and typed rather than
+    -- an incidental NULL produced by the outer join.
+    select report_date, 'ECOM_GROSS_PROFIT' as line_item_code,
+           cast(null as number(38,4)) as amount,
+           cast(null as number(38,4)) as numerator,
+           cast(null as number(38,4)) as denominator
+    from a_wide
 ),
 
 a_ratio as (
@@ -98,6 +132,7 @@ a_ratio as (
 actual_long as (
     select report_date, line_item_code, amount, numerator, denominator from a_base
     union all select report_date, line_item_code, amount, numerator, denominator from a_composite
+    union all select report_date, line_item_code, amount, numerator, denominator from a_placeholder
     union all select report_date, line_item_code, amount, numerator, denominator from a_ratio
 ),
 
@@ -145,14 +180,20 @@ b_base as (
 ),
 
 b_composite as (
-    -- Total Tour Revenue (no virtual budget); Total Retail GP includes ecom (available in budget)
+    -- Total Tour Revenue (no virtual budget).
     select report_date, 'TOTAL_TOUR_REVENUE' as line_item_code,
            cast(revealed_tour_revenue + mem_mus_tour_revenue + mus_guided_tour_revenue
                 + mem_guided_tour_revenue as number(38,4)) as amount,
            cast(null as number(38,4)) as numerator, cast(null as number(38,4)) as denominator from b_wide
     union all
+    -- Total Retail GP: store + carts on BOTH scenarios. ecom_gross_profit is
+    -- dropped from the budget composite because the actual composite has no
+    -- ecom component to compare it against -- the variance column was
+    -- differencing unlike totals. The ECOM_GROSS_PROFIT budget row itself is
+    -- unchanged and still printed; only the composite changes. Both sides get
+    -- ecom back in 8.6.0 when the actual measure exists.
     select report_date, 'TOTAL_RETAIL_GROSS_PROFIT',
-           cast(mus_store_gross_profit + retail_carts_gross_profit + ecom_gross_profit as number(38,4)),
+           cast(mus_store_gross_profit + retail_carts_gross_profit as number(38,4)),
            null, null from b_wide
 ),
 

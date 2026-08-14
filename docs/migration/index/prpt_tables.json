@@ -1,0 +1,89 @@
+{
+ "911dw.dayofdata.arialnormal": [
+  "$",
+  "cafe_performance",
+  "dim_date",
+  "dim_item_descr",
+  "fact_cogs",
+  "fact_donations_analysis_report",
+  "fact_dpr_forecasts",
+  "fact_dpr_report_data",
+  "fact_forecasted_value_for_date",
+  "fact_museum_audio_new",
+  "fact_num_tickets",
+  "fact_retail",
+  "fact_retail_analysis",
+  "fact_retail_forecasts"
+ ],
+ "daily_attendance_report": [
+  "fact_passes_by_hour"
+ ],
+ "daily_scan_report_new": [
+  "dim_date",
+  "fact_dailyscan_data",
+  "fact_dsr_forecasts",
+  "fact_passes_by_hour"
+ ],
+ "finance_mtd_dpr": [
+  "cafe_performance",
+  "dim_date",
+  "fact_all_donations",
+  "fact_donations_analysis_report",
+  "fact_dpr_report_data",
+  "fact_museum_ticketing_donations_issued",
+  "fact_retail_analysis"
+ ],
+ "finance_ytd_dpr": [
+  "cafe_performance",
+  "dim_date",
+  "fact_all_donations",
+  "fact_donations_analysis_report",
+  "fact_dpr_report_data",
+  "fact_museum_ticketing_donations_issued",
+  "fact_retail_analysis"
+ ],
+ "hourly_retail_report": [
+  "fact_todays_retail_data",
+  "fact_todays_retail_product_data",
+  "fact_visitors_hourly"
+ ],
+ "memorial_museum_daily_tracker_ytd": [
+  "dim_date",
+  "dim_facility",
+  "fact_donations_analysis_report",
+  "fact_dpr_forecasts",
+  "fact_dpr_report_data",
+  "fact_forecasted_value_for_date",
+  "fact_museum_ticketing_donations_issued",
+  "fact_museum_ticketing_donations_unissued",
+  "fact_retail",
+  "fact_retail_analysis",
+  "fact_retail_forecasts"
+ ],
+ "monthly_retail_kpi": [
+  "fact_cogs",
+  "fact_dpr_forecasts",
+  "fact_dpr_report_data",
+  "fact_forecasted_value_for_date",
+  "fact_num_tickets",
+  "fact_profit_from_retail",
+  "fact_retail",
+  "fact_retail_analysis",
+  "fact_retail_forecasts",
+  "fact_visitors"
+ ],
+ "new_dpr": [
+  "$",
+  "dim_date",
+  "dim_facility",
+  "fact_donations_analysis_report",
+  "fact_dpr_forecasts",
+  "fact_dpr_report_data",
+  "fact_forecasted_value_for_date",
+  "fact_museum_ticketing_donations_issued",
+  "fact_museum_ticketing_donations_unissued",
+  "fact_retail",
+  "fact_retail_analysis",
+  "fact_retail_forecasts"
+ ]
+}

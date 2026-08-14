@@ -9,7 +9,12 @@
 -- transactions = count(distinct doc_id); units = quantity_sold. ADR-004:
 -- additive only. Area label comes from the conformed dim_facility.
 
-{{ config(materialized='table') }}
+-- 8.1.0: tags=['intraday'] added. dbt_project.yml sets a 300-second
+-- STATEMENT_TIMEOUT pre-hook for `'intraday' in model.tags`, but no today_sales
+-- model carried the tag, so the same-day models inherited the 3600-second
+-- default (recorded in the 7.13.1 CHANGELOG caveats). Configuration now
+-- matches intent. No SQL and no number changes.
+{{ config(materialized='table', tags=['intraday']) }}
 
 with today as (
     select

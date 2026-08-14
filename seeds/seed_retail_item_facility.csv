@@ -1,10 +1,16 @@
-item_no,key_facility,facility_name,notes
-201114,1040,MAG Cart,Memorial audio guide retail sales item
-201197,1060,MUS AG,Museum audio guide retail sales item (feeds audio_tour_headset)
-101504,1070,Museum w Tour Guides,Tour-guide retail item
-100564,1080,Membership Retail,Membership product
-100565,1080,Membership Retail,Membership product
-100566,1080,Membership Retail,Membership product
-100567,1080,Membership Retail,Membership product
-100568,1080,Membership Retail,Membership product
-100569,1080,Membership Retail,Membership product
+item_no,store_id_scope,key_facility,facility_name,valid_from,notes
+201114,11,1040,MAG Cart,2023-09-04,Memorial audio guide retail item. t_fact_cogs MAG cohort is stores 11-14 with BUS_DAT >= 20230904.
+201114,12,1040,MAG Cart,2023-09-04,Memorial audio guide retail item. See 201114 store 11.
+201114,13,1040,MAG Cart,2023-09-04,Memorial audio guide retail item. See 201114 store 11.
+201114,14,1040,MAG Cart,2023-09-04,Memorial audio guide retail item. See 201114 store 11.
+201197,11,1060,MUS AG,2024-01-16,Museum audio guide retail item (feeds audio_tour_headset). t_fact_cogs MUS AG cohort is stores 11-14 with BUS_DAT >= 20240116.
+201197,12,1060,MUS AG,2024-01-16,Museum audio guide retail item. See 201197 store 11.
+201197,13,1060,MUS AG,2024-01-16,Museum audio guide retail item. See 201197 store 11.
+201197,14,1060,MUS AG,2024-01-16,Museum audio guide retail item. See 201197 store 11.
+101504,14,1070,Museum w Tour Guides,2024-01-21,Tour-guide retail item. t_fact_cogs MTG cohort is STR_ID = 14 only with BUS_DAT >= 20240121.
+100564,14,1080,Membership Retail,2024-01-21,Membership product. t_fact_cogs MEMBERSHIPS cohort is STR_ID = 14 only with BUS_DAT >= 20240121.
+100565,14,1080,Membership Retail,2024-01-21,Membership product. See 100564.
+100566,14,1080,Membership Retail,2024-01-21,Membership product. See 100564.
+100567,14,1080,Membership Retail,2024-01-21,Membership product. See 100564.
+100568,14,1080,Membership Retail,2024-01-21,Membership product. See 100564.
+100569,14,1080,Membership Retail,2024-01-21,Membership product. See 100564.

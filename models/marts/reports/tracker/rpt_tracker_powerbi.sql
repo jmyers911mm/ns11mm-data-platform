@@ -12,19 +12,19 @@
 -- attendance matrix reads this directly via Dim_Date; YTD is a DAX time-
 -- intelligence roll-up, never materialized), rpt_tracker_report_long, and
 -- rpt_tracker_narrative_brief.
--- NOTE: the Total Earned Revenue composite is summed in DAX from the
--- components carried here; it mirrors the DPR TOTAL_ESTIMATED_REVENUE
--- composite exactly (see rpt_dpr_report_long). Component set:
---   admission_revenue
---   + revealed_tour_revenue + mem_mus_tour_revenue + mus_guided_tour_revenue
---     + mem_guided_tour_revenue + virtual_tour_revenue
---   + mus_store_gross_profit + retail_carts_gross_profit
---   + cafe_profit + audio_tour_headset
---   + cart_donation_ask + box_office_mem_don + donation_box + ecom_donation_ask
---   + ticketing_donations + box_office_mus_exit_don + coatcheck_don
---     + mus_store_don + mus_exit_don + cafe_don
+-- NOTE: total_earned_revenue is the DPR TOTAL_ESTIMATED_REVENUE composite. As
+-- of 8.1.0 it is no longer re-summed here: the composite is a semantic-view
+-- metric (DPR.sv.yaml TOTAL_ESTIMATED_REVENUE) and this model projects it off
+-- rpt_dpr_powerbi. Before 8.1.0 the same component set was written out by hand
+-- in three places — here, in rpt_dpr_report_long, and (with a different
+-- component set) in rpt_dpr_mtd_ytd_long — which ADR-021 calls a defect even
+-- when the copies agree; the header comment claiming this one "mirrors the DPR
+-- composite exactly" was precisely the kind of claim that quietly stops being
+-- true. The individual donation components stay projected below because the
+-- Tracker prints them as lines.
 --
 -- ADR-004: all business logic in dbt, never Power BI.
+-- ADR-021: composites authored once.
 
 {{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
 
@@ -66,20 +66,13 @@ select
     mus_exit_don,
     cafe_don,
 
-    -- Total Earned Revenue composite (7.12.1): authored HERE, once — the DPR
-    -- TOTAL_ESTIMATED_REVENUE component set. rpt_tracker_report_long and
-    -- rpt_tracker_narrative_brief consume this column; do not re-author the
-    -- sum downstream (define once, serve many). NULL components are treated
-    -- as zero so one missing feed does not NULL the composite.
-    coalesce(admission_revenue, 0)
-      + coalesce(revealed_tour_revenue, 0) + coalesce(mem_mus_tour_revenue, 0)
-      + coalesce(mus_guided_tour_revenue, 0) + coalesce(mem_guided_tour_revenue, 0)
-      + coalesce(virtual_tour_revenue, 0)
-      + coalesce(mus_store_gross_profit, 0) + coalesce(retail_carts_gross_profit, 0)
-      + coalesce(cafe_profit, 0) + coalesce(audio_tour_headset, 0)
-      + coalesce(cart_donation_ask, 0) + coalesce(box_office_mem_don, 0)
-      + coalesce(donation_box, 0) + coalesce(ecom_donation_ask, 0)
-      + coalesce(ticketing_donations, 0) + coalesce(box_office_mus_exit_don, 0)
-      + coalesce(coatcheck_don, 0) + coalesce(mus_store_don, 0)
-      + coalesce(mus_exit_don, 0) + coalesce(cafe_don, 0)   as total_earned_revenue
+    -- Governed donation composites (semantic-view metrics), carried so the
+    -- Tracker's donation sub-totals and the DPR's cannot drift apart.
+    total_memorial_donations,
+    total_museum_donations,
+
+    -- Total Earned Revenue: the governed DPR TOTAL_ESTIMATED_REVENUE metric,
+    -- projected, not re-summed. rpt_tracker_report_long and
+    -- rpt_tracker_narrative_brief consume this column unchanged.
+    total_estimated_revenue                                as total_earned_revenue
 from {{ ref('rpt_dpr_powerbi') }}

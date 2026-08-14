@@ -14,7 +14,9 @@
 --
 -- ADR-004: all analysis logic lives in this model, not the prompt or Power BI.
 
-{{ config(materialized='view') }}
+-- 8.1.0: tags=['intraday'] added so the 300-second intraday statement
+-- timeout in dbt_project.yml actually applies to this model.
+{{ config(materialized='view', tags=['intraday']) }}
 
 with w as (
     select * from {{ ref('rpt_today_sales_powerbi') }}

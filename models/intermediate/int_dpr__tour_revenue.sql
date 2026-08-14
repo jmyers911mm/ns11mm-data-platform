@@ -19,6 +19,21 @@
 -- t_reporting_revealed_tour_revenue, t_reporting_ask_educator,
 -- t_reporting_youth_fam_tours_revenue, t_reporting_ea_mem_mus_tour_revenue.
 --
+-- 8.1.0 DOUBLE-COUNT FIX (revealed tour inside the virtual-memorial cohort):
+-- revealed_tour_revenue and virtual_mem_tour_revenue were both drawn from the
+-- SAME rows. Legacy separates them on PLU inside the one %VTM% matrix cohort:
+--   t_reporting_revealed_tour_revenue  -> account_idno like '%VTM%'
+--                                         AND g.plu = 'VTMUSOBLOADW001'
+--   t_reporting_virtual_mem_tours_revenue -> account_idno like '%VTM%'
+--                                         AND key_museum_category NOT IN (...)
+-- (the excluded category list is the revealed/buyout carve-out expressed as
+-- 911dw category keys). dbt had the revealed carve-out on the seed side only,
+-- so VTMUSOBLOADW001 was counted once as revealed_tour_revenue and again as
+-- virtual_mem_tour_revenue -- and rpt_dpr_report_long adds BOTH into
+-- TOTAL_TOUR_REVENUE (revealed_tour_revenue + ... + virtual_tour_revenue),
+-- so the revealed dollars landed in that total twice. The virtual-memorial
+-- cohort now excludes the seed-labelled revealed PLU.
+--
 -- NOTE: buyout components (fact_museum_guided_tour_buyout) and the
 -- issued/unissued split of the ORIGINAL Pentaho flow are consolidated here
 -- into recognized-line revenue. Confirm buyout handling with Chris Wogas
@@ -86,9 +101,16 @@ aggregated as (
         sum(case when plu_line_item = 'ask_educator' then amount else 0 end)
                                                                            as ask_educator_revenue,
 
-        -- Virtual Memorial Tour (matrix pattern)
-        sum(case when matrix_code like '%VTM%' then quantity else 0 end)   as virtual_mem_tours,
-        sum(case when matrix_code like '%VTM%' then amount else 0 end)     as virtual_mem_tour_revenue,
+        -- Virtual Memorial Tour (matrix pattern), less the revealed-tour PLU.
+        -- The revealed tour (VTMUSOBLOADW001) carries a %VTM% matrix code but
+        -- is reported on its own line; without this carve-out it is counted in
+        -- both revealed_tour_revenue and virtual_mem_tour_revenue.
+        sum(case when matrix_code like '%VTM%'
+                  and coalesce(plu_line_item, '') <> 'revealed_tour'
+                 then quantity else 0 end)                                 as virtual_mem_tours,
+        sum(case when matrix_code like '%VTM%'
+                  and coalesce(plu_line_item, '') <> 'revealed_tour'
+                 then amount else 0 end)                                   as virtual_mem_tour_revenue,
 
         -- Virtual Museum Tour (matrix pattern)
         sum(case when matrix_code like '%VTU%' then quantity else 0 end)   as virtual_mus_tours,

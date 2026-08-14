@@ -5,7 +5,10 @@
 -- Conforms seed_fact_todays_retail_data (real-time CP feed) into snake_case.
 -- Feeds fct_today_sales_hourly (replaces the stub seed).
 -- ADR-001: rename/recast only.
-{{ config(materialized='view') }}
+-- 8.1.0: tags=['intraday'] added (merges with the raw-layer daily/critical
+-- tags) so the 300-second intraday statement timeout applies to the same-day
+-- CounterPoint feed as well as to the marts built on it.
+{{ config(materialized='view', tags=['intraday']) }}
 
 with source as (
     select * from {{ source('report_estate_seed', 'seed_fact_todays_retail_data') }}

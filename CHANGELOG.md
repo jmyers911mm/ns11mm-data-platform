@@ -4,6 +4,1216 @@ All notable changes to the ns11mm-data-platform project will be documented in th
 
 This is the production repository (`ns11mm/ns11mm-data-platform`).
 
+## [8.11.0] — 2026-08-12 — Earned Income Variance Report
+
+Migrates the last uncovered live report in the estate, and the highest-exposure one: a
+thirteen-sheet XLSX that goes to the CFO and the finance leadership group. Purely additive —
+eighteen new files, **no repo file edited** — so no number that exists today moves. Not
+itself ADR-005 gated, but **it must not be promoted ahead of 8.5.0 → 8.8.0**: all nineteen of
+its printed lines re-project the models those releases correct, so shipping it early
+publishes pre-gate figures to the CFO and then restates them. 8.8.0 is load-bearing in
+particular — Early Access and Youth & Family have actuals only because of it, and this is the
+first surface that prints them.
+
+### Added
+
+- **`int_earned_income__line_items`** — the `earned_revenue_report_values` equivalent. **No
+  measure in this release is derived from staging**: no new cohort predicate, no new matrix
+  pattern, no new PLU list. Every component except the two operating-expense lines is
+  re-projected from the corrected DPR silver chain (`int_dpr__admissions`,
+  `int_dpr__tour_revenue`, `int_dpr__fees_and_services`, `int_dpr__attendance`). What is new
+  is the assembly.
+- **`fct_earned_income`** — the `earned_income_report_analysis` actual equivalent, day grain.
+- **`rpt_earned_income_variance_budget_daily`** — the ADR-021 comparison conform, the role
+  `rpt_dpr_budget_daily` plays for the DPR. Ten of the eighteen budget lines are read from
+  that model rather than re-conformed; two of the ten have their DPR line names undone
+  (`fct_budget_dpr_forecasts.early_access_tour_rev` is mapped onto the DPR's
+  `REVEALED_TOUR_REVENUE` and `.youth_fam_tour_rev` onto `VIRTUAL_YF_TOUR_REVENUE`, which are
+  DPR layout decisions applied to columns this report forecasts as early-access and
+  youth-and-family revenue). `youth_fam_tours` — the count, not the revenue — is read from
+  `fct_budget_dpr_forecasts` directly, because the DPR conform does not project it.
+- **`rpt_earned_income_variance_report_long`** — serving shape, actual + budget, with ratio
+  components rather than stored quotients.
+- **`rpt_earned_income_variance_narrative_brief`** and **`rpt_earned_income_variance_narrative`**
+  (`enabled=false` until a Cortex task exists), **`dim_earned_income_line_item`**, and
+  **`earned_income_line_items` seed** (21 lines, 4 sections).
+- **`seed_budgeted_expense.csv` — a header with zero rows.** The five-column ingest contract
+  for `/opt/pentaho/budgets/BudgetedExpensesDailies.xlsx`, derived from the three live
+  consumers, which between them read exactly these columns and nothing else. Filling it turns
+  four typed-NULL columns into real measures with no model change. Note the naming trap,
+  documented in the seed: `budgeted_expense` is the **actual** despite the name, and
+  `budgeted_expense_budget_value` is the budget — reversing them inverts the DPR's Estimated
+  Operating Expenses line silently.
+- **Five tests**: `assert_earned_income_composites_recompose` (error),
+  `assert_earned_income_placeholders_are_null` (error),
+  `assert_earned_income_budget_differs_from_dpr_budget` (warn — it fails if the two budgets
+  ever become identical, which is the symptom of somebody tidying the conform),
+  `assert_earned_income_expense_feed_absent` (warn),
+  `assert_earned_income_line_items_resolve` (warn).
+- **Three sidecar property files** (`schema_earned_income.yml` ×2,
+  `_seeds_earned_income.yml`) rather than a fourth full-file copy of the three shared
+  property files 8.10.0 had just merged.
+- **`dbt_project.yml` version 8.10.0 → 8.11.0.**
+
+### Why there is no `*_powerbi` wrapper, `*_period_windows` or `*_print` model
+
+ADR-021 makes the wrapper the only caller of `SEMANTIC_VIEW()`, and this release adds no
+`EARNED_INCOME` semantic view, so a wrapper would be a lie about where the metric definitions
+live; the serving shape reads the mart fact directly, the path `rpt_carts_report_long` and
+`rpt_retail_analysis_report_long` already take. The workbook prints day rows inside a year
+sheet rather than six period columns, so `_period_windows` has no analogue and none was
+invented. The legacy Excel writer is a raw dump of one query into thirteen sheets with no row
+catalog of its own, so the layout seed plus the line-item dimension is the whole presentation
+contract.
+
+### Deliberate seams (not moves)
+
+- **`fct_earned_income.ticket_revenue` and `fct_daily_performance.ticket_revenue` are
+  unequal by exactly `pass_revenue_reseller`.** This report's Ticket Revenue has no reseller
+  carve-out; the DPR's does. Both are correct for their own report.
+- **`fct_earned_income.museum_attendance` and `fct_daily_performance.mus_attendance` are
+  unequal on museum closed days**, by exactly the 8.7.0 zeroing. The legacy EIV attendance
+  step has no closed-day CASE; `t_reporting_mus_attendance`, which feeds the DPR, has one.
+- **The nineteen legacy `*_diff` columns are not stored.** Variance is actual minus budget at
+  display grain. This matters on Average Ticket Price: legacy computes
+  `sum(revenue)/sum(tickets)` per day, stores it, and then sums the stored column across
+  days — an average of ratios.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **The operating-expense feed has no owner and no SQL.** `fact_budgeted_expenses` is loaded
+  by an `ExcelInput` step from a spreadsheet on the Pentaho server; there is no database
+  source and no named maintainer anywhere in the system. It supplies three live surfaces —
+  this report's two expense lines, the DPR's Estimated Operating Expenses line, and the
+  Pentaho operating-expenses dashboard — and dies with Pentaho on 5 January 2027.
+  `DECISION_MEMO.md` asks Mike Cartier's team to name an owner. This is not a sign-off gate;
+  it is an ask for a name.
+- **Legacy defect: the museum guided-tour line adds the buyout quantity twice.**
+  `t_fact_earned_income_line_items` builds `total_mus_tours = issued + unissued + buyout_qty`
+  and separately writes `tour_buyout_qty`;
+  `t_fact_guided_tours_earned_income_variance` then computes
+  `guided_tours = total_mus_tours + mus_gt_buyout_qty`. Not reproduced — the dbt line will be
+  **lower than legacy** on buyout days. The column identity is inferred from writer aliases
+  (Pentaho `InsertUpdate` field mappings are not in the captured metadata); the confirming
+  query is NOTES §8(h1) and **must be run before the legacy MySQL warehouse is
+  decommissioned**.
+- **Ten admissions cohorts have no feed**, all on the ticket and CityPASS lines: CityPASS/C3
+  scan change, bulk ticket scans, bulk ticket additions, New York Pass additional revenue,
+  and the `pricePointID = 84` child-evergreen subtraction. All typed NULLs; seven layout
+  lines are `Partial` as a direct consequence, and both totals plus Average Ticket Price
+  inherit it. Unlike the expense gap this one is invisible to the reader — the lines render
+  with values, just smaller ones.
+- **`key_coupon_category` is not staged**, so legacy's `quantity * amount` extension on the
+  Adult/Youth CityPASS coupon categories cannot be reproduced. `CITYPASS_REVENUE` is
+  `sum(amount)` throughout and is `Partial`.
+- **The two reports budget from different seeds.** Earned Income Variance forecasts tickets,
+  revenue, service fees and CityPASS from `SEED_FORECASTED_VALUE_FOR_DATE`; the DPR forecasts
+  its same-named lines from `SEED_DPR_FORECASTS`. Both are loaded, neither reconciles the
+  other, and nobody in the migrated estate reconciles them. Carried faithfully with a monitor.
+  Whether the institution wants one admissions budget is a finance decision.
+- **Two `Total Estimated Revenue` definitions exist in the legacy estate under one name.**
+  The EIV variant takes its retail leg from `fact_profit_from_retail` at facilities
+  1007/1001/1020/1234 (includes Vesey, excludes the Museum Store's usual 1003), its cafe leg
+  as `cafe_performance.revenue * 0.05`, and its other-visitor leg from `fact_retail` by
+  `key_item_descr`. Neither is built twice here. `fact_profit_from_retail` is unbuildable
+  today in any case: **its writer `t_fact_profit_from_retail` is one of the seven
+  transformations referenced by jobs and absent from the Pentaho archive.**
+- **8.6.0's missing-comma finding is carried, not re-decided.** `CPBOOKAD008` /
+  `CPBOOKYS008` sit in the `excluded` pass cohort and are therefore outside `CITYPASS_TICKETS`
+  and `CITYPASS_REVENUE` here. Reading the legacy exclusion as intended removes dollars that
+  have been published for years.
+
+## [8.10.0] — 2026-08-12 — Retail Analysis Report
+
+Migrates the last uncovered live retail workbook and, more importantly, builds the
+`fact_retail_analysis` equivalent that **six other live surfaces already read** — the brief
+named four. Not gated: every number this release publishes is new and nothing that exists
+today moves. It also discharges one line item of the cross-release integration pass.
+
+### Added
+
+- **`int_retail__analysis`** — facility-day components, no quotients. Reproduces the legacy
+  carve-outs on the item **description**, not on `item_no`: `key_item_descr` is a surrogate
+  over `IM_ITEM.DESCR` (proved by `t_dim_item_desc_from_ecommerce`, which loads the same
+  dimension from Drupal `uc_order_products.title`, a source with no item number at all), so
+  two SKUs sharing a description share one key and legacy excludes both.
+- **`fct_retail_analysis`** — the `fact_retail_analysis` equivalent at facility-day grain.
+  Every one of the six legacy readers consumes it as `SUM(<area>_<measure>)` over a date
+  range at day grain and none of them joins it to anything, which is what makes the long
+  grain safe. `museum_attendance` / `memorial_attendance` are day-level and repeated on every
+  facility row — summing them across facilities multiplies them by the facility count, which
+  is the one footgun the grain introduces and is called out in the fact header, the column
+  doc and the serving model.
+- **`rpt_retail_analysis_report_long`**, **`..._narrative_brief`**, **`..._narrative`**
+  (`enabled=false`), **`dim_retail_analysis_line_item`**, **`retail_analysis_line_items`
+  seed** (32 lines, 6 sections). No `*_powerbi` wrapper — no `RETAIL_ANALYSIS` semantic view
+  is added, and a wrapper over nothing is an ADR-021 violation rather than a convenience.
+- **`seed_retail_analysis_excluded_item`** — `key_item_descr` `2449`–`2454` **resolved** to
+  `item_no` `100564`–`100569`, and not by guesswork: `t_fact_mus_store_analysis` carves
+  exactly those six keys *in* at facility 1080 as the membership lines, and
+  `t_fact_num_tickets` defines the same 1080 cohort as store-14 documents containing exactly
+  those six item numbers. Six items, one facility, one product family, stated twice under two
+  different keys.
+- **`seed_retail_water_item`** — the `4636` and `5095` water keys, `is_resolved = FALSE`.
+- **Four tests**, including `assert_retail_analysis_sales_within_retail_daily` (error), which
+  asserts the deliberate inequality between this family's sales and `fct_retail_daily`'s
+  holds in the correct direction on every build.
+- **`dbt_project.yml` version 8.9.0 → 8.10.0.**
+
+### Changed
+
+- **`seeds/_seeds.yml` is now a genuinely cumulative merge — 34 blocks, YAML-validated.**
+  8.4.0, 8.5.0 and 8.6.0 each edited this file from the 7.13.0 baseline rather than from each
+  other, so 8.6.0's copy silently reverted 8.2.0's expanded scope/exclusion/donation docs
+  **and dropped `seed_sensource_facility_map` and `seed_carts_denominator_rule` entirely**.
+  The copy here takes, per seed block, the latest release that actually changed it.
+- **`models/intermediate/schema.yml` and `models/marts/facts/schema.yml`** are cumulative the
+  same way: 8.8.0 shipped full-file copies, 8.9.0 shipped fragments. These are full files
+  carrying both plus the two new blocks, so whoever applies the series does not have to
+  reconcile two conventions. Documentation only — no SQL, no measure.
+
+### Why a new `retail_analysis/` family rather than more models in `retail/`
+
+Four grounds, the fourth decisive. It is a separate live artefact with its own transformation
+and recipient list; its printed surface is disjoint (Preview Site / Vesey and E-Commerce here,
+Museum Cafe and MUS AG there); its budget vocabulary differs (E-Commerce goals come from
+`fct_budget_dpr_forecasts`, not `fct_budget_retail_forecasts`); and **the same-named measures
+are different numbers**. Every Retail Analysis sales branch carries
+`key_summary_category <> '6' AND key_item_descr NOT IN ('2449'..'2454')`; the Retail
+Performance chain applies no item exclusion. `MS__SALES` and
+`MUSEUM_STORE__GROSS_MERCH_SALES` are both correct for the same facility-day and are not
+equal. One layout catalog would put two definitions of "Museum Store sales" one row apart
+with no way for a reader to see why they disagree.
+
+The thirteen legacy sheets are **years 2014–2026**, routed from one query by a `SwitchCase` on
+`year(key_date)` and growing by one every January. They are a `dim_date` slicer, not layout.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **BLOCKER: the water carve-out key `4636` cannot be resolved from any staged source**, and
+  nothing in the 216 captured transformations carves it in by another key, so there is no
+  second statement to triangulate against. `water_sales`, `water_cost` and
+  `water_gross_profit` are typed NULL (cause: *blocked on a business rule*) and
+  `WATER__MUS_STORE` / `WATER__MEM_CART` are `Stub`. Note also that Retail Performance defines
+  water as `('4636','5095')` — **two** keys — while the Retail Analysis carve-out uses one;
+  whether that is deliberate is part of the same question. The resolution query is NOTES §7.1
+  and **must run before the legacy MySQL estate is decommissioned**;
+  `assert_retail_analysis_carve_out_keys_unresolved` keeps it visible in every build and goes
+  silent by itself once the seed is filled.
+- **`911dw.medallion_machine` has no writer among the 216 captured transformations** and no
+  staged equivalent — the same class of gap as memorial attendance. It is read by two live
+  surfaces, so **Tracker-YTD is understating its cafe line by the medallion profit** until
+  this is sourced. Three layout lines are `Stub`.
+- **The legacy sales/cost asymmetry is reproduced, not fixed.** The membership exclusion is
+  applied to sales (`t_fact_retail`, all branches) and not to cost (`t_fact_cogs` has no
+  category or item filter), so `profit_mus_store` is sales-excluding-memberships less
+  cost-including-memberships. That is what the certified series has always computed;
+  correcting it moves a decade-old published number.
+- **`int_dpr__retail` still applies no item exclusion at all**, so the live DPR's Museum Store
+  and Memorial Carts gross profit include membership sales and legacy's do not
+  (`t_reporting_mus_store_profit` and `t_reporting_mem_cart_profit` both carry
+  `key_item_descr not in ('2449'..'2454')`). The new seed makes the fix two lines, but it
+  moves a certified number and belongs in its own ADR-005 release. Same argument, same owner
+  for `retail/`'s `MUSEUM_STORE__GROSS_MERCH_SALES`. *Owner: Gennady Zaritsky.*
+- **Observed while rebasing, for the integration pass: 8.6.0's `int_dpr__retail.sql` still
+  costs with `sale_cost`** — it was written from the 7.13.0 baseline and does not carry
+  8.3.0's `net_cost` netting fix. Same class of non-cumulative divergence as the `_seeds.yml`
+  one fixed here.
+- **`MEM_CART__CAPTURE_RATE` is published here and the same shape is withheld in `retail/`.**
+  8.5.0 left `MEMORIAL_CARTS__CONVERSION_RATE` `Stub` rather than pick a name for the
+  committee; this release publishes the shape under the legacy column's own name
+  (`mem_cart_capture_rate`) on a report where the name is not in dispute. If the committee
+  would rather withhold both, it is one cell in `retail_analysis_line_items.csv` and no SQL.
+- **The memorial-attendance facility set still disagrees with itself.**
+  `t_fact_mus_store_analysis` reads it at `(1000, 2000)`; `t_fact_attendance_all_locations`
+  at `(2000)`. 8.4.0 encoded `2000`; this release consumes the same measure for a line whose
+  legacy source is the `(1000, 2000)` form. *ADR-005, owner: Chris Wogas.*
+- **Legacy aliases two different measures to the same output name** inside one `UNION` branch
+  of `t_fact_mus_store_analysis` (`musag_units_sold` shares an alias with `mtg_units_sold` at
+  1070 and with `mus_memberships_units_sold` at 1080). This release does not reproduce the
+  entanglement, so a legacy-vs-dbt unit diff there is not necessarily a migration bug.
+
+## [8.9.0] — 2026-08-12 — Donations Analysis Report
+
+Builds the sixteenth of the seventeen live reports and, with it, the two legacy tables the
+Donations chain writes: `fact_all_donations` and `fact_donations_analysis_report`. Both are
+load-bearing beyond their own report surface — five other migrated live reports read them.
+Not gated: no certified metric definition changes, and no measure is added to
+`fct_daily_performance`. **No existing number moves** — every model this release reads is
+read-only here.
+
+### Added
+
+- **`int_donations__all_sources`** — the `fact_all_donations` equivalent at component grain,
+  carrying fifteen atomic components. Eleven are **re-projected** from models that already
+  author them (a donation total authored twice is an ADR-021 defect even when the two copies
+  agree today); three are new and each is defined as the *complement* of something already
+  authored, so no dollar is authored twice and the legacy whole recomposes by addition
+  (`MEMORIAL_KIOSK_DON`, `MEM_CART_OTHER_DON`, `VESEY_DON`); one is a typed NULL.
+- **`fct_donations`** — the `fact_donations_analysis_report` equivalent, day grain. It uses
+  **legacy column names deliberately**: the table is a binding contract for five `.prpt`
+  reports, not just an input to a sixth.
+- **`rpt_donations_report_long`** (serving shape; it carries the `POWERBI_ROLE` grant and is
+  the Power BI surface for this family), **`rpt_donations_narrative_brief`**,
+  **`rpt_donations_narrative`** (`enabled=false`), **`dim_donations_line_item`**,
+  **`donations_line_items` seed** (36 lines, 12 sections).
+- **No `rpt_donations_powerbi`, and the reason is structural.** There is no `DONATIONS`
+  semantic view — `_reports__sources.yml` declares exactly three — and authoring a fourth
+  means authoring a new certified metric surface, which is an ADR-005 decision that does not
+  belong in an ungated release. A wrapper with no semantic view behind it would be a copy of
+  `fct_donations` wearing a reserved suffix.
+- **Three tests**: `assert_donations_tie_to_daily_performance` (error — the eleven shared
+  lines must agree), `assert_gateway_donation_cohorts_recompose` (error — the complement
+  split must partition the cohort), `assert_cart_donation_composition` (warn).
+- **`dbt_project.yml` version 8.8.0 → 8.9.0.**
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **Legacy double-counts the box-office exit box across two of its seven legs.**
+  `t_run_donations_kiosk_coatcheck` writes the whole of `fact_all_gateway_donations`, which
+  includes `DONOPSMUS003`; `t_run_donations_exit` then writes `fact_retail` item 886 UNION
+  `box_office_mus_exit_don` — the same PLU's dollars again. Any consumer adding
+  `kiosk_coatcheck_donations + mus_exit_donations` counts the museum exit box twice, and
+  `finance_mtd_dpr` and `finance_ytd_dpr` read both legs. **Reproduced verbatim** so those two
+  reports tie on migration, flagged in the model header, the `schema.yml` and the section-12
+  note, and deliberately **not** silently fixed. *Owner: Chris Wogas / Finance.*
+- **`911dw.dim_item_descr` is not staged and its surrogate keys cannot be recovered.** Six
+  legacy legs filter on integer keys inside an already donation-flagged category. Four SKUs
+  are resolved and seeded; the rest are approximated by the category filter at the same
+  facility, which makes `MUS_STORE_DON`, `VESEY_DONATIONS`, `MEM_CART_ASK_DON`,
+  `RETAIL_CART_DON` and their two dependent ratios **supersets** of the legacy cohorts. All
+  six are `Partial`.
+- **`911dw.cafe_performance` has no writer** anywhere in the 216 migrated transformations and
+  no staged equivalent, so `CAFE_VENDOR_DON` is a typed NULL (cause: *no data feed*) and
+  `CAFE_DONATIONS` / `LEG_CAFE` are `Stub`. Not zero-filled. The vendor-cafe era ended
+  2023-01-01, so this is a historical hole rather than an ongoing one — and the legacy Excel
+  tab already prints `cafe1_donations AS cafe_donations`, i.e. the report abandoned the vendor
+  feed for the CounterPoint cafe and never renamed the column.
+- **No cross-source donations total is authored, deliberately.** Legacy publishes two
+  incompatible roll-ups that disagree structurally, not just numerically: `fact_all_donations`'
+  seven legs (which double-count the exit box and exclude `cafe1_donations`,
+  `vesey_donations` and `mask_donations` entirely), and `t_reporting_donations`' DPR
+  `donations` line (whose issued leg does not carve out categories 3220/3221 and which then
+  adds the kiosk/coatcheck leg on top). Picking one changes what a certified metric counts.
+  Every component is published; both compositions are reconstructable; the narrative prompt is
+  explicitly instructed never to state or imply a cross-source total. *ADR-005, owner: Chris
+  Wogas.*
+- **The legacy `coatcheck_don` and the platform's are not the same cohort.** A side-by-side
+  against the legacy XLSX will show the coat check line low by exactly the exit-box amount
+  from 2024-02-15 onward; section 9 makes up the difference and the shipped test asserts the
+  identity.
+- **`mem_attendance` is `Available` here and `Stub` on the DPR — same word, two measures.**
+  The Donations report's legacy source is the Sensource sensor at 2000, which is live; the
+  DPR's is the scan chain, which is a typed NULL because no Gateway ACP resolves to
+  `key_facility` 2000. Both seeds are correct for their own report; it reads as an
+  inconsistency in a seed diff, so it is called out.
+- **The legacy workbook is thirteen per-year sheets, not twelve.** `t_donations_analysis_tabs`
+  carries thirteen writer steps — 2014 through 2026 — each writing the same 22-column layout
+  filtered by a `SwitchCase` on `year(key_date)`, and it grows by one every January. There is
+  no sheet-level sectioning in the legacy file at all; the twelve sections in the layout seed
+  are the platform's grouping.
+- **`mus_store_donations` in `int_dpr__retail` is broader than every legacy consumer of it**,
+  and the two legacy consumers do not even agree with each other. Pre-existing platform
+  behaviour, already published on the DPR; recorded here because this is the first surface
+  where the difference is visible line by line.
+
+## [8.8.0] — 2026-08-12 — Tour Buyout & Unissued Revenue
+
+**ADR-005 gated. This release must not ship before sign-off from Chris Wogas**, the metric
+owner, per `DECISION_MEMO.md`. Cumulative on 8.7.0; **both releases must be signed before
+either is promoted**. Two whole legs of DPR revenue recognition were missing from the
+platform: the legacy DPR builds each tour and admission line by adding issued journal lines,
+unissued order lines and buyout lines together, and the platform carried only the first.
+
+### Added
+
+- **`int_gateway__unissued_order_lines`** — all four legacy unissued facts reproduced as one
+  order-line-grain model with a `cohort` column, including the `DisbursementDetails.Basis`
+  price CASE. Every staged column the CASE needs is present, so no typed-NULL placeholder was
+  needed for the price expression. The unissued leg reuses the **same exclusion seeds** as the
+  issued leg (`seed_gateway_tickets_sold_excluded_plu`,
+  `seed_gateway_ticket_revenue_excluded_plu`, both from 8.6.0) because the legacy predicates
+  are identical on both legs. Pass revenue is deliberately given no unissued leg: no legacy
+  pass-revenue step reads an unissued fact.
+- **`int_gateway__tour_buyout`** — the `fact_museum_guided_tour_buyout` equivalent, including
+  the quantity suppression and the `TOUADDREV002` leg.
+- **`seed_tour_buyout_plu`** (the seven buyout PLUs, the suppression flag and the target
+  line), **`seed_tour_buyout_category`** (all sixteen legacy `key_museum_category` values,
+  `is_resolved = FALSE` throughout, so the gap is visible rather than lost), and
+  **`_seeds_tour_buyout.yml`**.
+- **Four tests**: `assert_buyout_quantity_suppression`,
+  `assert_buyout_plu_excluded_from_line_grain`, `assert_unissued_lines_are_actually_unissued`,
+  `assert_unissued_legs_reconcile_to_fact`. The double-count guard is the single biggest risk
+  in this release — counting a buyout line at line grain *and* adding it back.
+- **`unissued_*` and `buyout_*` audit companions on `fct_daily_performance`**, so the added
+  amount is exactly recoverable and the release is reversible by column.
+
+### Changed
+
+- **`int_dpr__tour_revenue`** — issued + unissued + buyout; buyout PLUs excluded from the
+  line-grain cohorts and added back through the buyout leg, as legacy does on
+  `key_museum_category`. New `youth_fam_*`, `early_access_*` and `ea_mem_mus_*` actuals.
+- **`int_dpr__admissions`** (cumulative on 8.7.0) — unissued GA tickets and revenue added.
+- **`int_dpr__donations`** — unissued ticketing donations added.
+- **`seed_tour_plu`** — `MUSGTOADR007` and `MUSGTOBUY009` removed; they are buyout PLUs and
+  move to the new seed. The five surviving `early_access_tour` rows are annotated as verified.
+- **`fct_daily_performance`**, `models/intermediate/schema.yml` and
+  `models/marts/facts/schema.yml`, all cumulative on 8.7.0.
+- **`dbt_project.yml` version 8.7.0 → 8.8.0.**
+
+### Numbers that move
+
+- **Museum and memorial guided tour COUNTS fall** by the suppressed quantity. Legacy forces
+  the count to zero for three of the seven buyout PLUs while still counting the revenue; the
+  other four count normally, and nothing in the legacy explains why.
+- **Museum and memorial guided tour REVENUE rises**, because buyout revenue was previously in
+  the wrong cohort or absent entirely.
+- **Average revenue per tour rises sharply on buyout days** — the direct consequence of the
+  two above, and the reason the suppression is a reporting choice rather than a defect: it
+  makes tour counts a measure of *public tours delivered* rather than *tours sold*.
+- **`tickets_sold`, `ticket_revenue`, `total_admission_revenue`, every tour revenue line and
+  `ticketing_donations` all rise** by the unissued balance outstanding on each date.
+- **`AVG_TICKET_PRICE` is not signed a priori** — numerator and denominator both move, and the
+  direction depends on whether the unissued mix is richer or poorer than the issued mix. Print
+  it before signing.
+- **Early Access and Youth & Family gain actuals for the first time in the platform**, on
+  `int_dpr__tour_revenue` and `fct_daily_performance`. They are **not** wired into
+  `rpt_dpr_powerbi`, `rpt_dpr_report_long` or `dpr_line_items`, which still treat those rows
+  as budget-only; that is a separate report-layer release with its own sign-off, kept out of
+  scope so this release's blast radius stays inside the silver layer and the DPR fact.
+
+The substantive accounting question is in the memo: recognising revenue at **order** rather
+than at **issuance** moves revenue earlier, makes the DPR's "today" figure include tickets for
+events that have not happened and may be refunded, and means a restatement whenever an order
+line is later issued or cancelled. Legacy does it; that is not the same as it being right.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **`911dw.dim_galaxy_items` is not staged**, so `key_museum_category` cannot be resolved to a
+  PLU. This blocks the category-keyed buyout add-back (worked around per-PLU, with the seven
+  assignments recorded per row as a judgement to be confirmed), the `TOUADDREV002` line
+  assignment, and any category-grain unissued table for the `.prpt` reports. **It is the
+  single highest-value staging addition for the DPR domain.**
+- **`TOUADDREV002` is built but not attributable.** The leg is real and buildable from staged
+  sources, and it is built; `buyout_line_item` is a typed NULL (cause: *blocked on a business
+  rule*) and `int_dpr__tour_revenue` deliberately does not consume it. Its revenue total is
+  the dollars currently sitting outside every DPR line.
+- **Categories 2831 and 2826 are added back but never excluded; 2200, 2201, 2227 and 2229 are
+  excluded but never added back.** The first pair looks like years of double-counting; the
+  second set means revenue in those categories is dropped from the DPR entirely. Both look
+  like legacy drift.
+- **`t_reporting_early_access_tours_revenue` filters its two legs inconsistently**
+  (`ga_flag = 0` on issued, `and f.ga_flag` on unissued). We used `ga_flag = 0` on both and
+  flagged it as a suspected typo rather than a definition.
+- **`DisbursementDetails` fans out on `disbursement_id` in the legacy query**, and the Pentaho
+  `InsertUpdate` silently collapses the duplicates on the target key. Replicating that would
+  inflate every unissued measure, so one representative detail (lowest `sequence_no`) is
+  taken. If a disbursement can legitimately carry two details with different bases, that
+  choice is wrong and Gateway must supply a tie-break rule.
+- **The Tracker `.prpt` joins `fact_..._issued LEFT JOIN fact_..._unissued ON key_date`** — a
+  day-grain join that fans unissued rows against issued rows. That looks like a defect in the
+  legacy report rather than a definition, and it is not reproduced.
+- **`fact_museum_bulk_tickets_test` and the CityPASS actuals remain unstaged**, so the legacy
+  child-ticket subtraction and CityPASS additions to `tickets_sold` are still absent. This
+  bounds how closely `tickets_sold` can reconcile to the legacy DPR even with the unissued leg
+  added.
+
+## [8.7.0] — 2026-08-12 — Scan Validity & Attendance
+
+**ADR-005 gated. This release must not ship before sign-off from Chris Wogas**, the metric
+owner, per `DECISION_MEMO.md`. Four measures printed by the Daily Performance Report, the
+Attendance Report, the Daily Attendance Report and the Daily Scan Report were computed from
+rules the legacy 911dw estate does not use. Museum attendance in particular was a **ticket
+count, not a gate count** — and because it is the denominator of every per-capita ratio on the
+DPR and the Tracker, the error propagates well beyond the attendance line. Every decision here
+is reversible by editing a seed, not a model. Cumulative on 8.4.0 and 8.6.0; four files are
+delivered rebased onto the latest prior version so the stack applies in order.
+
+### Added
+
+- **`int_dpr__attendance`** — museum and memorial attendance authored once, with seed-driven
+  facility classification and the closed-day zeroing rule.
+- **`seed_gateway_facility_map`** (Gateway `Facility.FacilityID` → `key_facility`: 7 → 1006,
+  12 → 5000, plus the facility-13 exclusion), **`seed_attendance_facility_group`** (museum /
+  memorial / none / unmapped, with the disputed `1000` row carried but not counted), and
+  **`seed_attendance_zeroing_rule`** (the closed-Tuesday rule and the 2022-06-15 exception,
+  sharing a 300-pass threshold). Property file `_seeds_attendance.yml` is a sidecar so
+  `seeds/_seeds.yml` is untouched.
+- **`gross_passes_scanned` / `reversed_passes_scanned`** on `fct_daily_scan`,
+  **`reversing_scans`** on `fct_daily_operations`, and the matching facts and metrics in
+  `ATTENDANCE.sv.yaml` with `PASSES_SCANNED` redefined as the net measure.
+- **Three tests**: `assert_scan_validity_rule`, `assert_museum_closed_day_zeroing`,
+  `assert_scan_passes_reconcile_gross_less_reversals`.
+- **`dbt_project.yml` version 8.6.0 → 8.7.0.**
+
+### Changed
+
+- **`int_ticket_scans` — the legacy validity rule, exactly.** Legacy counts only
+  `Status = 0 and Code = 0` positively, **subtracts** `Code = 11`, drops every other usage
+  code entirely, and excludes Gateway facility 13 from both legs. The platform was
+  `status_code in ('0','1')`: no code predicate, no reversal leg, no facility exclusion, and
+  status 1 wrongly admitted. Implemented as a signed `scan_sign` (+1 / −1 / 0) and a
+  `net_visitor_count`; every attendance measure now sums that one column. No staging change
+  was required — `stg_gateway__usage` already exposes both `code` and `status_code`, so
+  ADR-001 is untouched.
+- **`int_ticket_scans` — the full ACP hop.** Legacy resolves
+  `Usage.ACP → ACPs.AcpId → ACPs.FacilityID → Facility.IDNo` and then reads the map off
+  `Facility.FacilityID` — two different columns. The platform used
+  `stg_gateway__usage.facility_id` directly, skipping the hop. Both hops are deduplicated so
+  the scan grain cannot fan out.
+- **`dim_gate`** — join corrected to `acps.facility_id = facility.id_no`. It was joining
+  `ACPs.FacilityID` to `Facility.FacilityID`, which is the wrong pair. It now carries the
+  resolved `key_facility`.
+- **`int_gateway__scan_lines`**, **`fct_daily_scan`**, **`fct_daily_operations`**
+  (`total_visitors` is now net; `gates_active` counts counted scans),
+  **`fct_daily_performance`** (`mus_attendance` from `int_dpr__attendance`; `mem_attendance`
+  no longer coalesced to 0), **`rpt_attendance`**, **`rpt_daily_attendance`**,
+  **`rpt_daily_scan`**.
+- **`int_dpr__admissions`** — `mus_attendance` removed. The old GA-ticket figure is retained
+  as `mus_attendance_ga_proxy`, wired to nothing, for reconciliation.
+- **Four report-layout seeds** — every memorial-attendance row → `availability = Stub`. The
+  `not_null` tests on `mem_attendance` are removed in both schema files.
+
+### Numbers that move
+
+- **Passes scanned falls**, on four compounding populations: `status_code = 1` rows removed,
+  `status_code = 0` with a code outside (0, 11) removed, code 11 swinging from `+q` to `−q`,
+  and Gateway facility 13 removed. The direction is unambiguous; the magnitude is entirely a
+  function of the code-11 and status-1 volumes in Galaxy.
+- **Museum attendance changes definition and value.** Two independent shifts compound: the
+  source moves from GA tickets issued to gate scans (which differ by no-shows, advance sales
+  recognised on a different date, and multi-entry passes — expect the scan figure materially
+  lower on advance-heavy days and materially different in *timing* on every day), and every
+  Tuesday under 300 passes plus 2022-06-15 moves to exactly 0.
+- **Every per-capita ratio moves with it**, including `REV_PER_CAP_MUSEUM` on the Tracker.
+  Because numerator and denominator stay separate through the serving layer, no stored
+  quotient needs restating — but every displayed per-cap changes.
+- **Memorial attendance goes from a populated number to blank** on the DPR, the Attendance
+  Report, the Daily Attendance Report and the Tracker, and `REV_PER_CAP_MEMORIAL` loses its
+  denominator. That is a visible regression on four reports. The number it replaces was
+  produced by pattern-matching `facility_name like '%MEMORIAL%'` on the Gateway facility
+  catalogue, which is not the legacy measure and was self-flagged as unconfirmed in the model
+  header. We would rather print nothing than print a number nobody can trace.
+- **Any scan whose `Usage.FacilityID` differed from the ACP-derived value moves between
+  attendance lines**; where the two agreed the change is a no-op.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **`911dw.memorial_attendance` has no writer.** No transformation in the migrated Pentaho set
+  populates it, no staged source corresponds to it, and no Gateway ACP resolves to
+  `key_facility` 2000 because the facility map only produces 1006 and 5000. Memorial
+  attendance therefore cannot be reproduced and is a typed NULL, cause *no data feed*. **The
+  largest gap in the attendance domain.**
+- **`key_facility` 3000 is unreachable.** The legacy museum filter is `IN (1006, 3000)` but
+  `t_fact_museum_passes_scanned` only ever writes 1006, 5000 and 0. The seed carries 3000 so
+  the definition is complete; it contributes nothing today.
+- **Gateway facility 5000 is orphaned.** Facility 12 resolves to it and it belongs to neither
+  attendance definition, so those scans are counted nowhere.
+  `int_dpr__attendance.uncounted_passes_scanned` exposes the volume.
+- **The legacy `else '0'` bucket means any gate that is neither 7 nor 12 counts toward no
+  attendance line at all.** If a gate has been added since the Pentaho job was written, its
+  scans are invisible today and stay invisible until a seed row is added.
+- **`report.fe_dailyScan_ss` is a stored procedure whose body is not in the migrated SQL**, so
+  the Daily Scan Report's market-category derivation still rests on the `acs_dynamic_channel`
+  proxy rather than on proven legacy logic. Unchanged here, but it bounds how far that report
+  can be reconciled.
+- **`fct_daily_operations.retail_revenue_per_visitor` is a stored quotient**, which the ratio
+  rule forbids. Pre-existing and out of scope — but its denominator changes in this release,
+  so it is worth retiring rather than leaving a divided ratio whose meaning has shifted.
+- **The `1000` memorial key is left uncounted**, carried in the seed with
+  `is_primary_definition = FALSE`. The legacy estate contradicts itself: two objects use
+  `(2000)` and two use `(1000, 2000)`. Flipping the cell changes the definition with no model
+  edit.
+
+## [8.6.0] — 2026-08-12 — Gateway Admissions Correctness
+
+**ADR-005 gated. This release must not ship before sign-off from Chris Wogas** (admissions and
+ticketing definitions) **and Mary Ng-Zuffante** (revenue recognition and the finance-facing
+totals), per `DECISION_MEMO.md`. Six of its seven changes move a number that appears on the
+printed Daily Performance Report, the MTD/YTD workbooks, or both. Items 1, 2, 4 and 5 all feed
+`ADMISSION_REVENUE`, so a partial acceptance produces a total that matches neither the legacy
+report nor the current one; the memo asks for them as one decision. Cumulative on 8.1.0, which
+ships without a gate.
+
+### Added
+
+- **`seed_gateway_reseller_customer`** (five customer IDs) and **`customer_id`
+  (`JnlTickets.CustomerID`) on `int_gateway__ticket_journal_lines`.** Which column carries the
+  reseller list is settled with proof:
+  `t_fact_museum_tickets_issued_fordate_new` uses both columns in one statement — it filters
+  `vA.rItmDefaultCustomerID NOT IN (20056, 23361)` in the WHERE clause and separately *carries*
+  `JNLTickets.CustomerID` as an output column, which the reporting layer then splits on. 20056
+  appearing in both lists is a coincidence, not evidence they are the same thing.
+- **`tran_date_key` (`JnlHeaders.TranDate`) on `int_gateway__ticket_journal_lines`**, because
+  both legacy service-fee steps key on it rather than on the ticket recognize-basis date.
+- **`seed_gateway_pass_plu`, `seed_gateway_tickets_sold_excluded_plu`,
+  `seed_gateway_ticket_revenue_excluded_plu`** and their `_seeds.yml` definitions and tests.
+- **Four pass-revenue cohorts on `int_dpr__admissions`, carried individually on
+  `fct_daily_performance`** so the roll-up is auditable against the five legacy steps, plus
+  **four typed-NULL placeholders** (`pass_revenue_scanchange`, `pass_revenue_additional`,
+  `ticket_revenue_additional`, `child_tickets_subtracted`) which must never be given
+  `not_null` tests.
+- **`ecom_gross_profit`** — built in `int_dpr__retail` as `ecom_sales - ecom_cost`, mapping
+  1:1 onto `t_reporting_ecom_profit` and `t_fact_cogs` step 5. The 8.1.0 typed-NULL
+  placeholder is removed and the layout seeds flip to `Available`.
+- **`dbt_project.yml` version 8.5.0 → 8.6.0.**
+
+### Changed
+
+- **`total_admission_revenue` = `ticket_revenue + pass_revenue + service_fees`** on the actual
+  (`fct_daily_performance`), the budget (`fct_budget_dpr_forecasts`) and both semantic views.
+  The budget fact already carried `service_fees`; it was simply absent from the total, and
+  leaving one scenario on two components and the other on three would have re-created the
+  unlike-totals defect 8.1.0 removed. `rpt_dpr_report_long`, `rpt_dpr_mtd_ytd_long` and
+  `rpt_dpr_budget_daily` need **no** edit — all three read `admission_revenue` through their
+  wrappers, which is the point of defining the column once.
+- **`int_dpr__fees_and_services` — museum service fees were reading half the journal.** The
+  legacy museum step joins **both** `jnlTickets` (`jnlCodeID = 101`) and `JnlItems`
+  (102/103/104), resolving through `ISNULL(JnlItems.plu, jnlTickets.plu)`; the model read only
+  the item journal, so every museum service fee booked against a ticket line was missing. The
+  memorial step joins items only and is **not** changed.
+- **`int_dpr__admissions`** — the reseller split, the four pass cohorts, and the exclusion
+  lists legacy applies and the platform did not: the tickets-sold PLU list, `%XGA%` on
+  tickets sold only (the working half of 8.1.0 item 1 — legacy applies no XGA predicate to
+  ticket revenue), and the three early-access PLUs on GA ticket **revenue** only.
+- **`int_dpr__donations`** — `JNLDetails.Qty <> 0` applied to the three cohorts legacy sources
+  from `t_fact_all_gateway_donations_new` (`coatcheck_don`, `box_office_mem_don`,
+  `box_office_mus_exit_don`) and **not** to `ticketing_donations`, which legacy sources
+  elsewhere and does not filter on quantity.
+- **`int_gateway__ticket_journal_lines`** — `EventTypeID <> 56`, applied only where the event
+  type is known. **Deliberate divergence:** legacy INNER joins its event set, which also drops
+  every line whose event does not resolve, and `rme.start_at` is NULL for roughly 95% of
+  basis-182 lines in the current extract, so a faithful inner join would delete most of the
+  fact.
+- **`DPR.sv.yaml`, `UNIFIED.sv.yaml`** and both generated deploy scripts;
+  `dpr_line_items.csv` and `dpr_mtd_ytd_print_lines.csv`.
+
+### Numbers that move
+
+- **`ADMISSION_REVENUE` rises by `SERVICE_FEES`, on both scenarios.** `AVG_TICKET_PRICE` rises
+  with it (same numerator change, unchanged denominator), and `TOTAL_ESTIMATED_REVENUE` rises
+  by the same amount and no more — service fees are not added a second time anywhere.
+- **`museum_service_fees` and `SERVICE_FEES` rise** by the newly captured ticket-line half,
+  and carry admission revenue and the estimated-revenue total up with them.
+- **`TICKET_REVENUE` falls and `PASS_REVENUE` rises by exactly the same amount** on the
+  reseller split. `ADMISSION_REVENUE` and `TOTAL_ESTIMATED_REVENUE` are unchanged by this item
+  — it is a reclassification between two lines of one total.
+- **`PASS_REVENUE` rises** on the cohort work: four cohorts where there was one matrix
+  pattern. Note the C3 booklet cohort is `sum(quantity * amount)`, not `sum(amount)` — only
+  that cohort, and it is not a transcription error in legacy, which stores a per-booklet unit
+  amount.
+- **`TICKETS_SOLD` falls** on three separate narrowings (the PLU list, the XGA pattern, event
+  type 56), which pushes **`AVG_TICKET_PRICE` up** through the smaller denominator.
+- **`TICKET_REVENUE` falls** by the three early-access PLUs.
+- **`COATCHECK_DON`, `BOX_OFFICE_MEM_DON` and `BOX_OFFICE_MUS_EXIT_DON` fall or stay flat** by
+  the zero-quantity adjustment lines.
+- **`ECOM_GROSS_PROFIT` goes from nothing to a value**, so the actual side of
+  `TOTAL_RETAIL_GROSS_PROFIT` and `TOTAL_ESTIMATED_REVENUE` rise — and the budget side of
+  `TOTAL_RETAIL_GROSS_PROFIT` returns to its pre-8.1.0 value, with the symmetry 8.1.0 restored
+  intact on both sides.
+
+`tests/reconciliation/assert_sv_admission_revenue_matches_fct` still holds — the fct column
+and the semantic-view metric both gain `service_fees` — and it is exactly the guard that would
+have caught updating one and not the other.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **Legacy defect, long-standing:** `t_fact_museum_citypass`'s PLU exclusion list contains
+  `'CPBOOKAD008''CPBOOKYS008'` **with no separating comma**, which SQL Server parsed as the
+  single literal `CPBOOKAD008'CPBOOKYS008`. **Neither PLU has ever actually been excluded in
+  production.** The seed reads them as two values, which is clearly what the code intended —
+  and reading it as intended removes dollars that have been in the number for years. That is
+  the committee's call, not a silent fix.
+- **Three of the five reseller customer IDs (17522, 23110, 22361) cannot be resolved to a
+  name** from the Pentaho SQL. Seeded as "name pending". A reseller onboarded since the last
+  Pentaho edit is today silently counted as walk-up ticket revenue.
+- **`fact_museum_citypass_scanchange` has no Gateway equivalent among the 21 staged tables**
+  and its construction is not in the extracted transformation set, so the cohort cannot be
+  re-derived, only re-extracted. It covers everything after 2016-06-01, i.e. the entire
+  reporting window.
+- **`fact_additional_revenue_new` is loaded from an operations workbook, not from Galaxy**,
+  which blocks both the `%GAD-NYA-NYA-OTH-XXX%` pass cohort and the `RESLADDREV001`
+  ticket-revenue line.
+- **`pricePointID = 84` is a feed gap, checked rather than assumed.** The only price-point
+  column in the platform is `stg_gateway__vattribute.itm_price_point_id`, which is the item
+  master's price point, not the sold ticket's, and the source fact is not staged at all.
+- **The 13 excluded `key_museum_category` values in `t_reporting_virtual_mem_tours_revenue`
+  cannot be crosswalked** without `dim_galaxy_items`. 8.1.0 expresses the part that matters
+  (the revealed tour PLU) directly on PLU; whether the remaining twelve categories carve out
+  anything else is undeterminable from the extract.
+- **Whether `MUSGADADCP005` / `MUSGADYSCP005` carry a `GAD` matrix code decides whether the
+  CityPASS booklet dollars *move* from ticket revenue to pass revenue or are *added*.** The
+  query is in NOTES item 4; it needs the warehouse, not the SQL.
+- **Carried from 8.1.0 and still undecided:** whether `TOTAL_MUSEUM_DONATIONS` should carry
+  `box_office_mus_exit_don` and `coatcheck_don` (legacy's does not); whether
+  `VIRTUAL_YF_TOUR_REVENUE` should be counted once or twice in `rpt_dpr_mtd_ytd_long`'s grand
+  total, given the print catalog genuinely prints it in two sections; which of the two
+  `TOTAL_ESTIMATED_REVENUE` component sets is right; and whether
+  `rpt_memorial_museum_tracker_ytd.total_donations_ytd` should gain `cafe1_donations`.
+
+## [8.5.0] — 2026-08-12 — Ratio Definitions (capture ≠ conversion)
+
+**ADR-005 gated. This release must not ship before sign-off from Gennady Zaritsky and Chris
+Wogas**, per `DECISION_MEMO.md`. It changes what two certified rates report. Three changes,
+all of which were one defect wearing three hats: the platform had collapsed two metrics into
+one. Depends on 8.4.0 and carries a cumulative `fct_retail_daily.sql`.
+
+### Added
+
+- **`int_retail__ratio_components`** — the four numerator/denominator pairs as separate
+  additive columns, authored once. No quotient is stored anywhere. Six distinct columns cover
+  four pairs because conversion's denominator *is* capture's numerator:
+  `capture_rate = store_entries / museum_attendance`,
+  `conversion_rate = transactions / store_entries`,
+  `sales_per_cap = net_sales / museum_attendance`,
+  `profit_per_cap = net_profit / museum_attendance`.
+- **`capture_rate` as its own metric with its own synonyms** in `RETAIL.sv.yaml` and
+  `UNIFIED.sv.yaml`, plus `sales_per_cap` and `profit_per_cap`, which share capture's
+  denominator and were the other two of the four pairs. `MUSEUM_ATTENDANCE` is added as a fact
+  on the retail view.
+- **`seed_carts_denominator_rule`** — the legacy year rule as data, with rows for 2019 and
+  2020 only.
+- **`dbt_project.yml` version 8.4.0 → 8.5.0.**
+
+### Changed
+
+- **`'capture rate'` is removed from the `conversion_rate` synonym list.**
+  `deploy_semantic_view_unified.sql` carried it as a synonym on the conversion metric, so
+  Cortex answered a capture-rate question with the conversion number. Legacy has kept the two
+  apart since 2014: `t_fact_mus_store_analysis` computes
+  `sum(mus_store_visitors) / sum(mus_visitors)` as capture and
+  `sum(mus_store_customers) / sum(mus_store_visitors)` as conversion.
+- **`fct_retail_daily`** (cumulative on 8.4.0) gains day-level `museum_attendance` and
+  `memorial_attendance` denominators.
+- **`rpt_retail_report_long`** — the `CAPTURE_RATE` denominator moves from `attendance` (the
+  DPR scan proxy) to `museum_attendance` (the Sensource measure legacy divides by).
+- **`rpt_retail_carts_analysis`** — the hardcoded 2019 denominator is replaced by the seeded
+  year rule, and the memorial/museum counts are re-sourced. `mem_visitors` on the carts report
+  is memorial **attendance** (`passes_scanned` at 2000), not a door count at facility 1020,
+  where no Sensource sensor reports — which is why those lines read zero even after 8.4.0.
+- **`rpt_carts_report_long`** — ratio denominators `adj_visitors` → `capture_denominator`.
+- **Layout seeds** — one flip in `retail_line_items.csv`
+  (`MUSEUM_STORE__CAPTURE_RATE` → `Available`); three flips to `Available` and three to
+  `Partial` in `carts_line_items.csv`.
+- **`rpt_retail_powerbi` is deliberately not touched.** `rpt_retail_report_long` reads the
+  capture denominator from the fact rather than from the wrapper, so the semantic view
+  publishes `capture_rate` as a metric without publishing a queryable
+  `TOTAL_MUSEUM_ATTENDANCE` on the retail view — which would sit next to
+  `dpr.total_museum_attendance` in `UNIFIED` with a different value and give Cortex two
+  "museum attendance" totals to choose between.
+
+### Numbers that move
+
+**Nothing that is currently non-zero on a published report becomes a different non-zero
+number.** The visitor denominators were unreachable before 8.4.0, so today's ratios are
+already NULL or blank; the change is from *blank* to *populated*, plus one change of meaning:
+
+- `MUSEUM_STORE__CAPTURE_RATE` — blank → store entries ÷ Sensource museum attendance.
+- Carts `CAPTURE_RATE`, `PROFIT_PER_CAP`, `SALES_PER_CAP` — blank → populated for **2019 and
+  2020 only**, and **still blank for 2021 onward**. `Partial` is the honest availability
+  value; `Available` would promise numbers the current year does not have.
+- Cortex asked "what was the capture rate" — returns the conversion number → returns the
+  capture number. Asked "what was the conversion rate" — unchanged.
+
+For the first run: museum-store capture should come back materially **below** conversion. If
+it comes back higher, the entry/exit column choice or the attendance denominator is wrong, not
+the definition.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **The legacy carts ratios have been blank since 1 January 2021, and nobody noticed.** The
+  year CASE in `t_retail_cart_analysis_tabs` has branches for 2019 and 2020 and **no `ELSE`**,
+  so it falls through to NULL; the same three-branch pattern repeats for `profit_per_cap` and
+  `sales_per_cap`. The report filter is `key_date >= '2020-07-04'` with **no upper bound**, so
+  every row from 2021 onward is selected, printed, and carries three blank ratios. That has
+  been true for five years of a live distributed workbook. This release reproduces the
+  behaviour rather than inventing a 2021+ rule; adding one is a one-row seed edit once the
+  committee answers.
+- **The 2019 denominator `((mem_visitors − 0.25 × mem_visitors) − mus_visitors)` has no
+  clamp.** The pre-8.5.0 model wrapped it in `greatest(..., 0)`, which legacy never did and
+  which silently changes a printed number whenever museum attendance exceeds 75% of memorial
+  attendance. This release matches legacy.
+- **The platform now carries two museum-attendance numbers** — Sensource passes scanned
+  (1006+3000) and the DPR scan component — and the Retail Performance Report will print one on
+  its Attendance line and divide by the other in Capture Rate. Defensible only as a stated
+  interim. **The estate needs one attendance ADR**; the same conflict drives the Attendance
+  Report's Memorial Only line.
+- **`REV_PER_VISITOR` is left on `attendance`.** Four retail lines use it as a denominator.
+  Moving it to `museum_attendance` is arguably right for consistency, but it was not asked for
+  and it restates a currently-`Available` number.
+- **`MEMORIAL_CARTS__CONVERSION_RATE` is left `Stub` and unnamed.** Legacy computes cart
+  customers ÷ memorial attendance and calls it a *capture rate*; the layout seed calls the
+  same shape a *conversion rate*. Not picked for the committee.
+- **`rpt_retail_performance` still computes `conversion_rate` inline** from `fct_retail_daily`.
+  It is correct and needs no change, but it has no capture rate. If the legacy day-grain view
+  is expected to carry both, that is a small follow-up.
+
+## [8.4.0] — 2026-08-12 — Sensource Visitor Crosswalk
+
+Fixes a dead join that made every Sensource-derived number on four live reports permanently
+zero. Not gated: no metric definition changes — measures that were unreachable become
+reachable. The definitional questions this release surfaces are all deferred to 8.5.0 under
+ADR-005.
+
+`int_retail__visitors` passed the Sensource **sensor** `key_facility` straight through, and
+`fct_retail_daily` joined it to the **reporting** facility key. Sensource numbers its sensors
+`1000–1009`; the reporting keys come from `seed_facility_area` (`1003, 1020, 1030, 1234,
+4007, 1040, 1060, 1070, 1080`). The two vocabularies overlap on exactly one value — `1003` —
+and that overlap is a false friend: Sensource 1003 is a sensor, reporting 1003 is the Museum
+Store, and the Museum Store's sensor is **1007**. So the join matched nothing that meant
+anything, and `visitor_count` was `coalesce(..., 0)` = 0 forever, **whether or not the feed
+landed**. The feed did land (1.6.2), which means the platform has been reporting zeros over
+live data since July.
+
+### Added
+
+- **`seed_sensource_facility_map`** — five rows, one per verified legacy mapping, each citing
+  the file and line it came from: 1007 → 1003 (`num_entry`), 1001 → 1001 (`num_exit`),
+  1006 → 1030 (`passes_scanned`), 3000 → 1030 (`passes_scanned`), 2000 → 2000
+  (`passes_scanned`). **The entry-vs-exit split is real and load-bearing** — the Museum
+  Store's main door counts entries and Vesey's count is taken on exit. `num_exit` was staged
+  in 1.6.2 and read by nothing until now.
+- **`int_attendance__sensource`** — pivots the crosswalked counts into the five named areas
+  the Attendance Report prints, including `memorial_only = memorial_attendance −
+  museum_attendance` exactly as legacy computes it. It reads `int_retail__visitors` rather
+  than re-resolving the crosswalk, so the sensor → reporting pivot is authored once.
+- **`assert_sensource_facilities_resolve`** (warn) — raises any sensor facility present in the
+  staged feed with no crosswalk row, returning the row count and unmapped measure totals so
+  the size of the gap is visible.
+- **`dbt_project.yml` version 8.3.0 → 8.4.0.**
+
+### Changed
+
+- **`int_retail__visitors`** inner-joins the crosswalk, selects the seeded measure column per
+  facility, and emits `reporting_facility` as `key_facility`. The Shopify leg is unchanged;
+  the blanket "STUB STATUS" header is replaced with a `STATUS:` line that is accurate per leg.
+- **`fct_retail_daily`** — the facility-day spine becomes `perf UNION (visitors ∩
+  dim_facility)`. The intersection is deliberate: it lets the Atrium (1030) — a visitor-only
+  area with no CounterPoint sales, whose rows the category-fact spine dropped before they
+  reached `rpt_retail_carts_analysis` — through, while keeping attendance-only facilities
+  (Vesey 1001, Memorial Plaza 2000) out of the retail fact where they would surface as
+  `Unmapped` rows with zero sales.
+- **`rpt_attendance`** repointed from `stg_sensource__attendance` — a pre-pivoted landing
+  table with no facility crosswalk and no legacy provenance — to `int_attendance__sensource`.
+  Side effect: this removes a staging read from the marts layer, which was a layering
+  violation.
+- **Six availability flips across three layout seeds**: `MEMORIAL_ONLY`, `MUSEUM_STORE` and
+  `MUSEUM_STORE_VESEY` on the Attendance Report (the whole report is now `Available`),
+  `MUS_VISITORS` on the carts report, and `MUSEUM_STORE__VISITORS` plus
+  `MUSEUM_STORE__CONVERSION_RATE` on Retail Performance. `today_sales_line_items.csv` ships
+  **unchanged, deliberately**, so the release diff shows it was considered.
+
+### Numbers that move
+
+- **`visitor_count` goes from 0 to real** at 1003 (`num_entry` at sensor 1007) and 1030
+  (scanned passes at 1006+3000). The verification query that returns zero rows before this
+  release returns rows after it.
+- **Six line items go from blank to populated**, listed above. Museum-store conversion should
+  land roughly 0.25–0.45; a value above 1 means the entry/exit column choice is inverted for
+  1007, and a value near 0.01 means the denominator is picking up museum attendance instead of
+  store entries.
+- **No additive total in `fct_retail_daily` moves.** The spine union only adds rows whose sales
+  side is NULL → 0; `net_sales`, `net_profit`, `donations` and `transactions` must be
+  identical before and after.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **Sensor 3000 and facility 2000 have no writer in the captured Pentaho set.**
+  `t_fact_museum_passes_scanned` writes only 1006 and 5000; nothing in the 216 captured
+  transformations writes 3000, and **nothing writes `911dw.memorial_attendance` at all**. Both
+  are read by five live reports. Either the writers are among the seven transformations
+  missing from the capture, or these are historical facilities no longer fed. Needs
+  confirmation before the Pentaho server is decommissioned.
+- **The memorial attendance facility set is inconsistent in legacy** — `in (2000)` in one
+  family, `IN (1000, 2000)` in another. `2000` is encoded here per the Attendance Report's own
+  ground truth. If 1000 carries non-zero passes the two families disagree today and always
+  have. *ADR-005, owner: Chris Wogas.*
+- **Memorial Only will not tie to printed Memorial − Museum.** The printed lines are DPR scan
+  measures; Memorial Only is the Sensource pair, per legacy. Both are legacy-faithful and they
+  do not reconcile. Flagged as a `SCOPE NOTE:` on both affected models.
+- **`stg_sensource__attendance` now has no reader.** Left in place rather than deleted — it is
+  a useful independent reconciliation source for exactly the three lines this release derives,
+  and worth an explicit parity check before it is retired.
+- **`MEM_VISITORS` is deliberately not flipped.** It reads `visitor_count` at facility 1020,
+  where no Sensource sensor maps and none should; legacy's `mem_visitors` is memorial
+  *attendance*. Re-pointing it changes what a printed denominator counts, so it and everything
+  downstream of it (`MEM_VISITORS_LESS_25`, `ADJ_VISITORS`, `CAPTURE_RATE`, `PROFIT_PER_CAP`,
+  `SALES_PER_CAP`) stay `Stub` for one release. Same reasoning for
+  `MUSEUM_STORE__CAPTURE_RATE`: publishing a number and restating it one release later is more
+  expensive than leaving it blank.
+- **Today's Sales gets zero flips because it is a feed gap, not a mapping gap.** That report is
+  hourly; `stg_sensource__visitors` is daily, and the legacy hourly chain is not staged.
+- **`seed_facility_area` has no row for 1001 (Vesey) or 2000 (Memorial Plaza)**; the fact spine
+  is written to exclude them, so nothing is broken. Vesey has legacy retail sales at
+  `key_facility = 1001`, so surfacing it later is a separate change with semantic-view
+  consequences.
+
+## [8.3.0] — 2026-08-12 — Retail Profit Correctness (return cost, ticket header)
+
+Ships on top of 8.2.0 — the `int_counterpoint__retail_lines` shipped here is the cumulative
+8.2.0 + 8.3.0 state; do not apply the 8.2.0 copy after it. Three defects, all in the same
+chain: the retail line model never joined a ticket header, so unposted and non-ticket
+documents were being reported and costed; cost was taken from sale lines only, so a return
+handed back the revenue but kept the cost; and customer counts were a grouped
+`count(distinct doc_id)` off the sales scope, on the wrong date column, ignoring every
+`doc_id` semi-join legacy uses.
+
+### Added
+
+- **`return_cost`, `net_cost` and a carried `ticket_date`** on
+  `int_counterpoint__retail_lines`.
+- **`assert_retail_gross_profit_nets_returns`** — the reconciliation test that fails on ship
+  if the netting is not carried through to the consumers.
+- **`dbt_project.yml` version 8.2.0 → 8.3.0.**
+
+### Changed
+
+- **`int_counterpoint__retail_lines`** gains the `pstkthist` header join with `TKT_TYP = 'T'`
+  and the `LIN_TYP <> 'U'` line filter, exactly as `t_fact_cogs` gates every branch.
+  `stg_counterpoint__pstkthist`, `stg_counterpoint__vitkthist` and
+  `stg_counterpoint__vitkthistlin` were staged and read by **nothing** before this.
+- **`int_retail__customers`** rewritten as the eleven legacy cohorts, counting on
+  `TICKET.TKT_DT` (the header ticket date) rather than `LINE.BUS_DAT`, with the `doc_id`
+  semi-joins legacy uses. Memorial Carts is stores 11, 12 and 13 — not 14 — and excludes any
+  document containing `200933`, `201229`, `201114` or `201197` from 2023-09-04. MAG, MUS AG,
+  MTG and Membership use the **inverse** semi-join: documents that *do* contain the carve-out
+  SKU.
+- **`int_retail__performance`** — `net_profit` and `cost_of_goods` move from `sale_cost` to
+  `net_cost`. Not on the original deliverable list but required: without it the new column
+  exists, nothing changes, and the new test fails on ship.
+- **`int_dpr__retail`** — the four cost lines (`mus_store_cost`, `mem_cart_cost`,
+  `cafe1_cost`, `musag_cost`) move to `net_cost`. Also not on the original list, also
+  required.
+
+### Numbers that move
+
+- **Gross profit DROPS on any day with a return. That is the headline.** `t_fact_cogs` sums
+  `LINE.EXT_COST` over **all** surviving lines in every branch — there is no
+  `CASE LIN_TYP WHEN 'S'` anywhere in that file — while the platform had
+  `case when l.line_type = 'S' then l.ext_cost else 0 end`. Revenue netted the return; cost
+  did not. **Profit was overstated by the cost of every returned item.** Affected and all
+  moving down: `net_profit` and `cost_of_goods` on `int_retail__performance` and
+  `fct_retail_performance`, `net_profit` on `fct_retail_daily`, `mus_store_gross_profit` /
+  `retail_carts_gross_profit` / `cafe1_all_profit` / `musag_profit` on `int_dpr__retail`, and
+  everything downstream of those four on `fct_daily_performance` including
+  `audio_tour_headset`. If the number is material to a published month, that is an ADR-005
+  conversation with Gennady Zaritsky **before** the build lands, not after.
+- **Row count and most measures fall on the header gate.** Documents whose `TKT_TYP` is not
+  `'T'` (quotes, orders, holds) and `'U'` lines leave; sales, cost, units and transaction
+  counts fall by whatever those carried. A drop far larger than a percent or two means the
+  `TKT_TYP` values in the staged extract are not what legacy saw — check before shipping,
+  because the inner join is unforgiving.
+- **Customer counts: 1020 falls** (store 14 removed, carve-out documents excluded); **1001 and
+  1002 are counted for the first time**; **1040, 1060, 1070 and 1080 are replaced by their
+  semi-join cohorts** rather than being an artefact of the item→facility mapping; and **every
+  facility shifts by a day at the margin** on `TKT_DT` versus `BUS_DAT`.
+  `fct_retail_daily.transactions` and every ratio built on it — conversion rate, average sale,
+  per-cap donations — move accordingly.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **The return sign convention is still an unconfirmed `CONFIRM`, standing since 7.9.0.** The
+  direction argument above depends on CounterPoint `'R'` lines landing with **negative**
+  `ext_cost`. Query (B) in NOTES proves it on live data and must be run first: if `'R'` cost
+  lands positive, the netting flips, profit moves the other way, and the sign must change in
+  `int_counterpoint__retail_lines` and nowhere else.
+- **`stg_counterpoint__pstkthist` aliases `TKT_TYP` as `is_return`**, which is a misnomer — it
+  is a type code, not a boolean. ADR-001 keeps staging rename-only, so it is read as-is; fix
+  the alias in a follow-up.
+- **Legacy reads the `VI_` reporting views and joins on `DOC_ID` *and* `BUS_DAT`;** this model
+  joins the posted header on `doc_id` alone, which is the header PK at that grain. Moving to
+  the `VI_` views means moving **both** sides.
+- **The Museum Store cohort's operator precedence is almost certainly a legacy bug, and it is
+  what produced the certified series.** `WHERE A OR (B AND C) AND TKT_DT > '20170423'` binds
+  `AND` tighter than `OR`, so stores 8/9/10 have **no start date** and only the store-14
+  carve-in is bounded. Reproduced.
+- **The Membership cohort starts 2023-11-29 in `t_fact_num_tickets` and 2024-01-21 in
+  `t_fact_cogs`**, so 1080 carries roughly seven weeks of transaction counts with no sales.
+  Pick one date before publishing a 1080 per-transaction ratio.
+
+## [8.2.0] — 2026-08-12 — Retail Scope (many-to-many store→facility)
+
+Rebuilds the CounterPoint retail scope so it expresses what legacy `t_fact_retail` actually
+does: **seven independent store queries**, a **many-to-many, date-bounded** store→facility
+relationship, and **per-query** item carve-ins, carve-outs, zero-pricing and donation
+reclassing. Nothing here changes cost or the netting convention — that is 8.3.0.
+
+### Added
+
+- **`seed_retail_store_scope` replaced.** Was a nine-row `store_id` in-scope list. It is now
+  one row per legacy query × store, carrying the date window, item carve-in/carve-out, the
+  shipping filter, the override flag, the price column and an `is_primary_facility` flag.
+- **`seed_facility_area` gains 1001 Preview/Vesey and 1002 Visitors Center.** Not on the
+  original deliverable list but required: this is the first release in which those two
+  facilities carry data, and without seed rows they render as `Unmapped 1001` / `Unmapped
+  1002` in `dim_facility`, `fct_retail_performance` and `fct_retail_daily`.
+- **`assert_retail_scope_seed_covers_legacy_stores`** — plus column docs and tests for all
+  five changed seeds in `seeds/_seeds.yml`.
+- **`dbt_project.yml` version 8.1.0 → 8.2.0.**
+
+### Changed
+
+- **`int_counterpoint__retail_lines`** rewritten to fan out over the scope seed.
+- **`seed_retail_item_facility`** gains `store_id_scope` and `valid_from`; the grain is now
+  `item_no + store_id_scope` (15 rows, was 10). **`seed_retail_zero_price_item`** gains
+  `key_facility_scope`; grain `item_no + key_facility_scope` (5 rows, was 2).
+  **`seed_retail_donation_item`** gains `store_id_scope`, `reclass_to_donation` and the
+  `7-00003` → `ecom_ask` row.
+- **`fct_daily_operations` gains `where r.is_primary_facility` on its retail CTE.** This is
+  the integration change the fan-out forces. Every consumer that groups by `key_facility` —
+  `int_retail__performance`, `fct_retail_performance`, `fct_retail_daily`, `int_dpr__retail` —
+  is unaffected and now more correct, but `fct_daily_operations.retail_revenue` and
+  `.retail_transactions` sum the line model with **no facility grouping** and would
+  double-count stores 1, 8 and 10 at day grain, flowing into `total_revenue`,
+  `retail_revenue_per_visitor` and `ml_visitor_forecast_training`. `is_primary_facility` is
+  TRUE on exactly one scope row per source line. Without the filter, `retail_revenue`
+  overstates by the full store-1/8/10 contribution.
+- **`seed_retail_excluded_item` is left on disk but is now referenced by nothing.** Its only
+  row (`201205`) was a Sales-4-scoped exclusion the old model applied globally. Delete it in a
+  follow-up once 8.2.0 has shipped clean.
+
+### Numbers that move
+
+- **Stores 2, 4, 5, 6 and 7 enter the platform for the first time — total retail revenue rises
+  by the whole history of five stores.** Legacy Sales 1 (stores 2, 5, 7 → 1002) and Sales 2
+  (stores 1, 4, 6, 8 → 1001) were entirely absent from the old scope seed. Two new facilities
+  appear in `fct_retail_performance` and `fct_retail_daily`. This is the largest single
+  increase in the release; size it before shipping.
+- **Stores 1, 8 and 10 now produce two rows per line**, because legacy deliberately reports
+  the same line under two facilities (8 under 1003 and 1001; 10 under 1003 and 1030 from
+  2019-12-10; 1 under 1001 and 4007 from 2022-11-28).
+- **Zero-pricing is no longer global — `net_sales` rises at 1234 and 4007.** The old model
+  zero-rated `200933` and `201229` everywhere; legacy zeroes them only at 1003 and 1020, store
+  1 zeroes `200933` only, and store 3 zeroes nothing. Ecommerce sales of either SKU and cafe
+  sales of `201229` were being booked at $0. No change at 1003 or 1020.
+- **The Sales-4 item carve-outs are now store- and date-scoped — 1040, 1060, 1070 and 1080
+  lose all pre-cutover and out-of-cohort rows, and 1020 Memorial Carts gains them.** This
+  moves `mag_cp_revenue`, `musag_profit` and `musag_units` in `int_dpr__retail`, and therefore
+  `audio_tour_headset`.
+- **Item 201205 stops being deleted — 1003 Museum Store rises slightly.** Legacy carves it
+  *in* to 1003 from store 14 and only excludes it from Sales 4; the old global exclusion
+  silently deleted that carve-in.
+- **Item 7-00003 is reclassed to Donations at store 3 — 1234 merchandise falls and
+  `ecom_donation_ask` rises by the same amount.**
+- **1002 only:** Sales 1 is the only legacy query summing `GROSS_EXT_PRC` rather than
+  `EXT_PRC`, and the only one with no `DESCR not like '%shipping%'` filter. Both are now
+  per-query. Since 1002 is new here there is no before/after to compare.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **SCOPE NOTE — three legacy ambiguities are resolved in favour of the dated behaviour, and
+  each changes what a certified metric counts.** Recorded rather than gated, but they need
+  sign-off. *Owner: Gennady Zaritsky.*
+  1. **Sales-4 carve-out cutovers.** `t_fact_retail` applies the item CASE with no date bound;
+     `t_fact_cogs` gates each cohort (1040 from 2023-09-04, 1060 from 2024-01-16, 1070/1080
+     from 2024-01-21) *and* excludes those items from 1020 entirely. The two legacy
+     transformations disagree. Implemented: the cogs cutovers, with pre-cutover lines falling
+     back to 1020.
+  2. **Store 1 → 4007 start date.** `t_fact_retail` Sales 7 has no date bound; `t_fact_cogs`,
+     `t_fact_num_tickets` and `t_reporting_donations` all gate at 2022-11-28. Implemented:
+     dated.
+  3. **Price column.** `net_amount` follows `t_fact_retail` because the certified Retail
+     Performance series descends from `fact_retail` — but `t_fact_cogs` uses `GROSS_EXT_PRC`
+     throughout, **so the DPR gross-profit sales side is arguably on the wrong column today.**
+- **Legacy return quantity is `SUM(LINE.QTY_SOLD)` on `'R'` lines, not `QTY_RET`.** The model
+  keeps the platform convention (`quantity_returned`). If CounterPoint populates the two
+  differently on returns, `net_quantity` will diverge from legacy `Return_QTY`.
+- **`t_fact_cogs` sums `GROSS_EXT_PRC` in every branch while `t_fact_retail` does not**, so
+  the cost chain and the sales chain disagree about the sales side in legacy itself.
+
+## [8.1.0] — 2026-08-12 — Dead Code & Double Counts
+
+Not gated. Nothing here redefines a certified metric on the basis of a judgement call: every
+change is either code that provably does nothing today, or a component counted twice, or two
+surfaces of the same report disagreeing with each other and with the legacy definition of
+record. Items 4 and 5 below do move published numbers; they are included because the
+pre-change state is internally contradictory, not because a definition was chosen, and each
+carries its exact delta and the query that measures it.
+
+### Changed
+
+- **`macros/operations/gateway_recognized_date.sql` — the `'%XGA'` literal is deleted.**
+  `gateway_general_admission_flag` carried
+  `and coalesce(va.itm_matrix_code, '') <> '%XGA'` — a literal string comparison that excludes
+  a row only when the matrix code is exactly those four characters. Galaxy matrix codes contain
+  no `%`, so the predicate was true for every row in the warehouse. Legacy carries the *same
+  dead literal in the same place*; the live XGA exclusion sits one layer up as a cohort filter
+  on tickets sold, and is not applied to ticket revenue at all. Rewriting it as a real `LIKE`
+  would change `ga_flag` itself and drop rows from ticket revenue too, which legacy never
+  does — so the deletion is free and the working exclusion lands in 8.6.0. **Numbers moved:
+  none**, with a guard query that must return 0 before shipping.
+- **`int_gateway__ticket_journal_lines` — `inner join` → `left join` on COA and attributes.**
+  Every legacy extract at this grain left-joins both and coalesces the matrix code the way the
+  repo already does. COA is only a bridge to the `DisbursementDetails` lookup; a ticket line
+  whose account has no COA row still exists, and an item with no attribute-value group has no
+  matrix code, which is exactly what `ISNULL(...,'')` is for. The loss surfaced three models
+  downstream as quietly missing dollars rather than as an error. `jnl_tickets` and `items`
+  stay `inner join` — legacy's own `WHERE` drops the unmatched rows again, so inner is
+  equivalent there and converting them *would* change behaviour. **Numbers moved: up**, or
+  flat, wherever rows were being dropped — `tickets_sold`, `ticket_revenue`, tour revenue and
+  service fees. If any of them falls, the change was not the cause and the build is wrong.
+- **`int_dpr__tour_revenue` — revealed tour was counted inside the virtual-memorial cohort.**
+  `revealed_tour_revenue` came from `seed_tour_plu` (PLU `VTMUSOBLOADW001`) and
+  `virtual_mem_tour_revenue` from `matrix_code like '%VTM%'` with no carve-out, and
+  `VTMUSOBLOADW001` carries a `%VTM%` code — so the same dollars landed in both measures, and
+  `rpt_dpr_report_long` sums both into `TOTAL_TOUR_REVENUE`. Legacy isolates them on PLU
+  inside one `%VTM%` cohort. **`virtual_mem_tour_revenue`, `VIRTUAL_TOUR_REVENUE` and
+  `TOTAL_TOUR_REVENUE` all fall by exactly the revealed amount.**
+- **`mask_donations` — the two DPR surfaces disagreed, and neither matched legacy.**
+  `rpt_dpr_mtd_ytd_long` included mask donations in `total_other_visitor_revenue` and excluded
+  `box_office_mem_don`; `rpt_dpr_report_long` did the opposite in
+  `TOTAL_MEMORIAL_DONATIONS`. The legacy definition of record is
+  `ecom_don + don_box + cart_don_ask + mask_don`, where `don_box` is the CounterPoint plaza
+  donation box (platform `donation_box`, item `101165`) and **not** `box_office_mem_don`
+  (Gateway PLU `DONOPSMEM003`), which legacy reports on the donations analysis fact instead.
+  Mask donations are in; `box_office_mem_don` is out of the composite and still projected as
+  its own measure. The composite moves to `DP.TOTAL_MEMORIAL_DONATIONS` in the semantic view —
+  ADR-021's first-preference home — and `TOTAL_MUSEUM_DONATIONS` moves the same way with its
+  components unchanged, so the two live side by side under one governance surface. **Numbers
+  moved: `TOTAL_MEMORIAL_DONATIONS`, and therefore `TOTAL_ESTIMATED_REVENUE` and the Tracker's
+  `total_earned_revenue`, change by `mask_donations − box_office_mem_don`. Mask donations have
+  been dormant since 2021, so in practice this is a decrease equal to `box_office_mem_don`.**
+- **`ECOM_GROSS_PROFIT` — the budget/actual asymmetry, corrected against the brief.** The
+  asymmetry is real but it is not in `TOTAL_ESTIMATED_REVENUE`, which has no budget branch at
+  all in `rpt_dpr_report_long`. It was in `TOTAL_RETAIL_GROSS_PROFIT`, whose budget composite
+  carried `ecom_gross_profit` and whose actual composite did not, so the variance column
+  differenced two different things. `ecom_gross_profit` is removed from the **budget**
+  composite (the standalone `ECOM_GROSS_PROFIT` budget row is untouched and still prints), the
+  actual side emits an explicit typed-NULL placeholder with the ADR-021 cause stated, and
+  `dpr_line_items.csv` moves that row from `Gap` to `Stub`. **Numbers moved: budget only,
+  down. No actual changes.**
+- **Museum Cafe was counted twice in `rpt_dpr_mtd_ytd_long`.** `TOTAL_RETAIL_GROSS_PROFIT` was
+  mapped to `dp.total_retail_gross_profit`, which is store + carts + **cafe**, and
+  `TOTAL_ESTIMATED_REVENUE` then added `cafe_profit` again. Provable from the definitions
+  alone, and confirmed twice over: the semantic view's own comment says the legacy "Total
+  Retail Gross Profit" line *excludes* cafe and warns against treating the metric as that
+  line, and the print catalog puts `EC_TOTAL_RETAIL_GP` in the E-Commerce section and
+  `CAFE_TOTAL_PROFIT` in its own. New governed metric
+  `DP.TOTAL_RETAIL_GROSS_PROFIT_EX_CAFE` is used for the line and inside
+  `TOTAL_ESTIMATED_REVENUE` in both DPR serving models; the cafe-inclusive metric stays for
+  Cortex users who want the wider rollup. **Numbers moved: `rpt_dpr_mtd_ytd_long`'s
+  `TOTAL_RETAIL_GROSS_PROFIT` and `TOTAL_ESTIMATED_REVENUE` both fall by the cafe profit.
+  `rpt_dpr_report_long` is unaffected** — it already summed store + carts inline.
+- **`TOTAL_ESTIMATED_REVENUE` was authored three times, not twice** as ADR-021's open items
+  record: `rpt_dpr_report_long`, `rpt_dpr_mtd_ytd_long`, and `rpt_tracker_powerbi` (as
+  `total_earned_revenue`, whose header claimed it mirrors the DPR composite exactly). The
+  first and third have identical component sets and are collapsed onto a new
+  `DP.TOTAL_ESTIMATED_REVENUE`. The `mtd_ytd` set is **not** identical — it additionally
+  carries `mem_audio_guide_revenue` and `virtual_yf_tour_revenue` and omits
+  `box_office_mus_exit_don`, `coatcheck_don` and `donation_box` — so collapsing it too would
+  be choosing a definition rather than removing a duplicate. Carried into the 8.6.0 memo.
+  **Numbers moved: none from this change alone.**
+- **The `intraday` tag existed on only one model.** `dbt_project.yml` sets a 300-second
+  statement timeout for `{% if 'intraday' in model.tags %}`, but the tag was on
+  `fct_ticket_availability` alone, so every same-day model inherited the 3600-second default.
+  Added to `fct_today_sales_hourly`, `rpt_today_sales_powerbi`,
+  `rpt_today_sales_report_long`, `rpt_today_sales_narrative_brief`,
+  `stg_counterpoint__todays_retail` and `stg_counterpoint__todays_retail_product`. dbt merges
+  model-level tags with the project-level `daily` / `critical` tags, so no existing selector
+  breaks. **Numbers moved: none** — a session parameter, not SQL.
+- **`dbt_project.yml` version 8.0.0 → 8.1.0.**
+
+### Removed
+
+- **`rpt_attendance`'s dead Sensource columns.** `sensource_mem_attendance` /
+  `sensource_mus_attendance` were selected into a CTE and never projected — recorded in the
+  7.13.1 CHANGELOG, still true. They are removed rather than surfaced deliberately: the report
+  already publishes `memorial_attendance` / `museum_attendance` from `fct_daily_performance`,
+  and adding a second, differently-sourced attendance pair beside them would ship the
+  Sensource-blend ambiguity to report consumers before ADR-005 has settled it (owner: Chris
+  Wogas). **Numbers moved: none** — the columns were never in the output.
+
+### Fixed (stale documentation, not code)
+
+- **`rpt_memorial_museum_tracker_ytd`'s `cafe1_donations` comment.** It claimed the column was
+  "not surfaced in `fct_daily_performance` yet"; it has been for some time
+  (`fct_daily_performance` line 127). The gap in `total_donations_ytd` is real, but its cause
+  is a component choice, not a missing upstream column. The note is corrected here (free) and
+  the fix is carried into the 8.6.0 memo (gated). **Numbers moved: none.**
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **`VIRTUAL_YF_TOUR_REVENUE` is double-counted in `rpt_dpr_mtd_ytd_long`.**
+  `TOTAL_GUIDED_TOUR_REVENUE` includes it and `VIRTUAL_TOUR_REVENUE` includes it, and
+  `TOTAL_ESTIMATED_REVENUE` adds both. Unlike the cafe case, the print catalog genuinely
+  prints the measure in two sections (`GT_YF_TOUR_REV` in Guided Tours,
+  `VT_YF_MEM_TOUR_REV` in Virtual Tours), so whether the grand total should count it once or
+  twice is a question for the report owner rather than a defect with one reading. It was zero
+  in the 2025-12-31 workbook, which is why the verification note in that model's header
+  passed. Documented in the model header and carried into the 8.6.0 memo.
+- **`TOTAL_MUSEUM_DONATIONS` does not match legacy's museum donation total**, which is
+  `ms_donations + mus_exit_donations + ticketing_donations + cafe1_donations` and does **not**
+  include `box_office_mus_exit_don` or `coatcheck_don`, both of which the platform's composite
+  carries. A definition question for the report owner, not a defect with one right answer, so
+  it is not decided here. ADR-005; carried into the 8.6.0 memo.
+- **The `rpt_dpr_mtd_ytd_long` header verification note (MTD 9,170,373.79) is annotated in
+  place.** The "retail GP total" term in that arithmetic was read from the cafe-inclusive
+  metric and must be re-run against the 2025-12-31 workbook before it is treated as current.
+- **`assert_silver_gold_revenue_reconciliation` will move** with the join change (more silver
+  rows retained, more gold revenue). Re-baseline if it asserts an absolute value rather than
+  an equality between layers.
+
+## [8.0.0] — 2026-08-12 — Legacy Reference Capture
+
+Additive documentation only. No model, seed, macro, test or semantic-view change — `dbt parse`
+output is byte-identical to 7.13.1, and the only file in the dbt project that changes is the
+version string. **It ships first and it is the only release in the v8 series with an external
+deadline.** Every v8 correction was found by reading legacy SQL; after January that SQL is
+gone, and any correction not yet made becomes unverifiable — we would hold a number that
+disagrees with a report nobody can re-read. Committing the reference decouples the deadline
+from the pace of the corrections.
+
+### Why this is 8.0.0, and why 7.14.0 is a live option
+
+Semver on this platform has been ambiguous (release-process brief, Q5). The v8 series opens
+with a major because the **series** is breaking: 8.5.0 through 8.8.0 change what certified
+metrics count. **8.0.0 itself breaks nothing** — it opens the series and establishes the
+reference material every later release cites. If the team prefers the major to land on the
+first release that actually moves a number, **this can ship as 7.14.0 with no other change**
+and the major moves to 8.5.0's position in the sequence. Worth deciding once, at the top of
+the series, and recording in the release-process work.
+
+### Added
+
+- **`docs/migration/legacy_sql/` — 216 Pentaho transformations as `.sql`**, and
+  **`docs/migration/legacy_report_sql/` — 309 report queries extracted from the nine live
+  `.prpt` bundles**, nine files.
+- **`docs/migration/index/`** — `pentaho_parsed.json` (216 transformations + 80 jobs,
+  structured), `closure2.json` (live/dead classification and source closure),
+  `prpt_tables.json` (table references per live report), plus `parse2.py` (the `.ktr`/`.kjb`
+  extractor) and `closure2.py` (the live/dead walker).
+- **`docs/migration/README.md`** — what the capture is, how it was built, how to grep it.
+- **`docs/migration/RECOVERY_CHECKLIST.md`** — the urgent half. See below.
+- **`dbt_project.yml` version 7.13.1 → 8.0.0.** No other file in the dbt project changes.
+
+### Verified
+
+- **The dbt project is untouched apart from the version string.** `dbt parse` plus a
+  `git diff --stat` against 7.13.1 over `dbt_project.yml`, `models/`, `seeds/`, `macros/`,
+  `tests/` and `cortex_project/` — expect one file, one insertion, one deletion.
+- **The capture is complete**: 216 files in `legacy_sql/`, 9 in `legacy_report_sql/`, 309
+  query blocks across them.
+- **No credentials rode along.** `.prpt` bundles carry `data:property name="password"` blobs
+  and `.ktr` connection blocks carry credentials; `parse2.py` captures connection *names* only
+  and the report extractor takes only `data:static-query` bodies. The grep is in the NOTES and
+  must be run before merging anyway — this is a public-ish repo and the check is free.
+- **~2.4 MB across 230 files**, mostly `legacy_sql/`. No binaries, no `.prpt` files, no PDFs —
+  all text, all diffable.
+
+### Findings recorded in the caveats tables (no code change this release)
+
+- **`RECOVERY_CHECKLIST.md` is the sharper point of this release: 7 transformations, 2 stored
+  procedures, 8 workbooks, 10 open questions and 4 unrecoverable items are *not* in this
+  capture.** §A1–A3 alone mean **three of the four Daily Scan Report ETL steps are missing
+  today**, including the `report.fe_dailyScan_*` stored procedures whose bodies are not in the
+  migrated SQL.
+- **`docs/README.md` does not yet list `docs/migration/` in its map.** Left for the release
+  that adds the v8 series index, so the doc map is edited once.
+- **`parse2.py` and `closure2.py` are committed as-is from the analysis sandbox.** They are
+  re-runnable but not packaged (standard library only — `zipfile`, `xml.etree`, `re`, `json`).
+  Fine as reference; do not import them into anything.
+
+
 ## [7.13.1] — 2026-08-11 — Report Lineage Documentation (per-family pages + DPR rewrite)
 
 Documentation-only release. No model, seed, macro, test, or semantic-view change — `dbt

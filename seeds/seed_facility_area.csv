@@ -1,4 +1,6 @@
 key_facility,area_name,area_group,is_selling,facility_group
+1001,Preview Site / Vesey Street,Retail,TRUE,preview_vesey
+1002,Visitors Center,Retail,TRUE,visitors_center
 1003,Museum Store,Retail,TRUE,museum_store
 1020,Memorial Carts,Retail,TRUE,memorial_carts
 1030,Atrium,Visitors,FALSE,other

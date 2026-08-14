@@ -18,7 +18,9 @@
 --
 -- ADR-004: all business logic in dbt, never Power BI.
 
-{{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
+-- 8.1.0: tags=['intraday'] added so the 300-second intraday statement
+-- timeout in dbt_project.yml actually applies to this model.
+{{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}, tags=['intraday']) }}
 
 {#- Additive lines: code -> wrapper column. -#}
 {% set additive_lines = [

@@ -58,8 +58,15 @@ with fct as (
         f.mus_store_donations,
         f.donation_box,
         f.mask_donations,
-        -- cafe1_donations: not surfaced in fct_daily_performance yet; add to
-        -- fct then reinstate here (tracked as a follow-up)
+        -- cafe1_donations: the comment that used to sit here said the column
+        -- was "not surfaced in fct_daily_performance yet". That has been false
+        -- for some time -- fct_daily_performance projects cafe1_donations
+        -- (recorded in the 7.13.1 CHANGELOG caveats). The column is genuinely
+        -- absent from total_donations_ytd below, and adding it MOVES a
+        -- published YTD total, so the fix is gated (ADR-005, owner: Data & AI
+        -- Committee) and is carried into the 8.6.0 decision memo. What is not
+        -- acceptable is a stale note that misattributes the gap to a missing
+        -- upstream column, so the note is corrected here rather than left.
 
         cast(null as number)                            as civic_programs   -- source pending
     from {{ ref('fct_daily_performance') }} f

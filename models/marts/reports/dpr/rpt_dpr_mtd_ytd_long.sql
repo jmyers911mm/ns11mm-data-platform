@@ -30,6 +30,12 @@
 --                                 + other visitor total
 --        MTD 7,264,074.50 + 541,445.80 + 395 + 662,250.08 + 110,553.73
 --            + 591,654.68 = 9,170,373.79  ✓
+--        RE-VERIFY AFTER 8.1.0: the "retail GP total" term above was read from
+--        the cafe-inclusive metric. With the cafe double count removed that
+--        term becomes store + carts only, so the arithmetic above must be
+--        re-run against the workbook before this line is treated as current.
+--        If 662,250.08 already contained the 110,553.73 cafe figure, the
+--        corrected MTD total is 9,059,820.06.
 --
 -- RATIO DEFINITIONS ALSO VERIFIED against the workbook: capture rate =
 -- store visitors / museum attendance (106,299 / 266,115 = 39.94% ✓);
@@ -37,11 +43,40 @@
 -- average sale = store NET SALES / customers (not profit — 40.4787 x 18,376
 -- reconciles to sales, not the 533,225 gross profit).
 --
+-- 8.1.0 DOUBLE-COUNT FIX (Museum Cafe counted twice in TOTAL_ESTIMATED_REVENUE
+-- and TOTAL_RETAIL_GROSS_PROFIT overstated):
+--   TOTAL_RETAIL_GROSS_PROFIT was mapped to the DPR semantic-view metric
+--   dp.total_retail_gross_profit, which is defined as
+--   SUM(MUS_STORE_GROSS_PROFIT) + SUM(RETAIL_CARTS_GROSS_PROFIT)
+--   + SUM(CAFE1_ALL_PROFIT). That metric's own comment says: "the legacy DPR
+--   report line 'Total Retail Gross Profit' EXCLUDES cafe (its own line) ...
+--   do not treat this metric as that line." This model treated it as that
+--   line, then added CAFE_PROFIT again inside TOTAL_ESTIMATED_REVENUE, so
+--   CAFE1_ALL_PROFIT was summed twice. The print catalog confirms the intent:
+--   dpr_mtd_ytd_print_lines puts EC_TOTAL_RETAIL_GP (store/carts/e-commerce
+--   section 70) and CAFE_TOTAL_PROFIT (Museum Cafe section 80) on separate
+--   lines. Both now read the new governed metric
+--   dp.total_retail_gross_profit_ex_cafe (store + carts), projected on the
+--   wrapper as total_retail_gross_profit_ex_cafe.
+--
 -- TOTAL_ESTIMATED_REVENUE duplication: rpt_dpr_report_long authors the same
--- composite inline (its own union branch). Both are the same component set;
--- migrating report_long to a shared column is a follow-up, tracked in the
--- 7.12.5 release notes rather than done here to keep this release's blast
--- radius on the two new reports.
+-- composite inline (its own union branch). The two component sets are NOT
+-- identical -- this one carries virtual_yf_tour, mem_audio_guide and
+-- mask_donations; report_long carries box_office_mem_don,
+-- box_office_mus_exit_don and donation_box -- so collapsing them to one
+-- authoring is a metric decision, not a refactor, and is on the ADR-005
+-- agenda for release 8.6.0 rather than done here.
+--
+-- OPEN (recorded 8.1.0, NOT changed): VIRTUAL_YF_TOUR_REVENUE is a component
+-- of BOTH total_guided_tour_revenue (below) and the semantic-view metric
+-- VIRTUAL_TOUR_REVENUE (= virtual_mem + virtual_mus + virtual_yf_mem), and
+-- TOTAL_ESTIMATED_REVENUE adds both, so youth-and-family virtual tour revenue
+-- is counted twice whenever it is non-zero. It was zero in the 2025-12-31
+-- workbook used for the verification above, which is why the check passed.
+-- The MTD/YTD print catalog also prints that measure in two sections
+-- (GT_YF_TOUR_REV and VT_YF_MEM_TOUR_REV), so whether the workbook intends
+-- the total to count it once or twice is a question for the report owner --
+-- ADR-005 gate, carried into the 8.6.0 decision memo.
 --
 -- ADR-018 note: rpt-from-rpt is the sanctioned projection-chain exception.
 -- ADR-004: all business logic in dbt, never Power BI.
@@ -78,7 +113,7 @@
     ('VIRTUAL_TOUR_REVENUE', 'virtual_tour_revenue'),
     ('MUS_STORE_GROSS_PROFIT', 'mus_store_gross_profit'),
     ('RETAIL_CARTS_GROSS_PROFIT', 'retail_carts_gross_profit'),
-    ('TOTAL_RETAIL_GROSS_PROFIT', 'total_retail_gross_profit'),
+    ('TOTAL_RETAIL_GROSS_PROFIT', 'total_retail_gross_profit_ex_cafe'),
     ('CAFE_PROFIT', 'cafe_profit'),
     ('AUDIO_TOUR_HEADSET', 'audio_tour_headset'),
     ('MEM_AUDIO_GUIDE_REVENUE', 'mem_audio_guide_revenue'),
@@ -177,7 +212,8 @@ select
         coalesce(j.admission_revenue, 0)
       + coalesce(c.total_guided_tour_revenue, 0)
       + coalesce(j.virtual_tour_revenue, 0)
-      + coalesce(j.total_retail_gross_profit, 0)
+      -- store + carts only; cafe is the next term and must not be inside this one
+      + coalesce(j.total_retail_gross_profit_ex_cafe, 0)
       + coalesce(j.cafe_profit, 0)
       + coalesce(c.total_other_visitor_revenue, 0) as number(38,4)),
     null, null

@@ -1,0 +1,119 @@
+-- TRANSFORMATION: t_load_from_lenel
+-- DESC: 
+
+-- WRITES: MemorialSoftware:.BADGE (TableOutput)
+-- WRITES: MemorialSoftware:.DEPT (TableOutput)
+-- WRITES: MemorialSoftware:.DIVISION (TableOutput)
+-- WRITES: MemorialSoftware:.EMP (TableOutput)
+-- WRITES: MemorialSoftware:.MMOBJS (TableOutput)
+-- WRITES: MemorialSoftware:.UDFEMP (TableOutput)
+-- WRITES: MemorialSoftware:.LST877 (TableOutput)
+
+
+-- ===== STEP: Badge Table input [TableInput] conn=Lenel =====
+SELECT
+  ID
+, ISSUECODE
+, EMPID
+, STATUS
+, TYPE
+, ACTIVATE
+, DEACTIVATE
+, PIN
+, EMBOSSED
+, PRINTS
+, LASTPRINT
+, APBEXEMPT
+, LASTCHANGED
+, EXTEND_STRIKE_HELD
+, USELIMIT
+, BADGEKEY
+, SEGMENTID
+, PASSAGE_MODE
+, DEADBOLT_OVERRIDE
+, DEST_EXEMPT
+, TWO_MAN_TYPE
+, DEFAULT_FLOOR
+, DESCRIPTOR_FLAG
+FROM BADGE
+
+-- ===== STEP: Dept Table input [TableInput] conn=Lenel =====
+SELECT
+  ID
+, NAME
+, SEGMENTID
+FROM DEPT
+
+-- ===== STEP: Division Table input [TableInput] conn=Lenel =====
+SELECT
+  ID
+, NAME
+, SEGMENTID
+FROM DIVISION
+
+-- ===== STEP: Emp Table input [TableInput] conn=Lenel =====
+SELECT
+  ID
+, LASTNAME
+, FIRSTNAME
+, MIDNAME
+, SSNO
+, LASTCHANGED
+, VISITOR
+, ALLOWEDVISITORS
+, ASSET_GROUPID
+, LNL_DBID
+, GUARD
+, SEGMENTID
+FROM EMP
+
+-- ===== STEP: LST877 Table Input [TableInput] conn=Lenel =====
+SELECT
+  ID
+, NAME
+, SEGMENTID
+FROM LST877
+
+-- ===== STEP: MMOBJS Table input [TableInput] conn=Lenel =====
+SELECT
+  EMPID
+, "OBJECT"
+, TYPE
+, LNL_BLOB
+, LASTCHANGED
+, ACCEPTANCETHRESHOLD
+, BIO_BODYPART
+FROM MMOBJS
+
+-- ===== STEP: UDFEMP Table input [TableInput] conn=Lenel =====
+SELECT
+  ID
+, ADDR1
+, CITY
+, "STATE"
+, ZIP
+, PHONE
+, BDATE
+, DEPT
+, DIVISION
+, BUILDING
+, FLOOR
+, OPHONE
+, EXT
+, EMAIL
+, LOCATION
+, TITLETEXT850
+, FLDEMERGCT856
+, FLDEMCONTC857
+, FLDRELTN858
+, FLDTEXT859
+, FLDTEXT861
+, PERSONALEMAIL
+, FLDTEXT867
+, RELATIONSHIP
+, CONTACTPHONE2
+, EXT2IN
+, CELLPHONE
+, LST877
+FROM UDFEMP
+where DEPT <> 0

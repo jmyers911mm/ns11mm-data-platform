@@ -4,7 +4,10 @@
 -- Grain:  one row per store_id + doc_id + item_no + tkt_hour
 -- Conforms seed_fact_todays_retail_product_data. Today's Sales product detail.
 -- ADR-001: rename/recast only.
-{{ config(materialized='view') }}
+-- 8.1.0: tags=['intraday'] added (merges with the raw-layer daily/critical
+-- tags) so the 300-second intraday statement timeout applies to the same-day
+-- CounterPoint feed as well as to the marts built on it.
+{{ config(materialized='view', tags=['intraday']) }}
 
 with source as (
     select * from {{ source('report_estate_seed', 'seed_fact_todays_retail_product_data') }}

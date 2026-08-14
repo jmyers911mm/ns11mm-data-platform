@@ -1,3 +1,6 @@
-item_no,notes
-200933,Zero-rated sale price (legacy t_fact_retail)
-201229,Zero-rated sale price (legacy t_fact_retail)
+item_no,key_facility_scope,notes
+200933,1003,Zero-rated SALE price. Legacy t_fact_retail Sales 3 (Museum Store) zeroes 200933 and 201229.
+201229,1003,Zero-rated SALE price. Legacy t_fact_retail Sales 3 (Museum Store).
+200933,1020,Zero-rated SALE price. Legacy t_fact_retail Sales 4 (Memorial Carts). Both zero-rated SKUs fall to the ELSE 1020 branch of the Sales-4 item CASE so 1020 is the only facility they reach inside Sales 4.
+201229,1020,Zero-rated SALE price. Legacy t_fact_retail Sales 4 (Memorial Carts).
+200933,4007,Zero-rated SALE price. Legacy t_fact_retail Sales 7 (Museum Cafe) zeroes ONLY 200933 - 201229 is deliberately absent here.

@@ -15,7 +15,9 @@
 --
 -- ADR-004: all business logic in dbt / the semantic view, never Power BI.
 
-{{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}) }}
+-- 8.1.0: tags=['intraday'] added so the 300-second intraday statement
+-- timeout in dbt_project.yml actually applies to this model.
+{{ config(materialized='view', grants={'select': ['POWERBI_ROLE']}, tags=['intraday']) }}
 
 select * from semantic_view(
     {{ source('attendance_semantic', 'ATTENDANCE') }}
