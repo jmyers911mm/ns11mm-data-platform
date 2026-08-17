@@ -72,6 +72,7 @@ models:
       the LLM output. ADR-004.
     config:
       materialized: view
+      enabled: false
     columns:
       - name: report_date
         data_tests:

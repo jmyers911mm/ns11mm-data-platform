@@ -78,6 +78,7 @@ models:
       budget and no cross-source total, both by design. ADR-004.
     config:
       materialized: view
+      enabled: false
     columns:
       - name: report_date
         description: The latest actuals date strictly before today.
