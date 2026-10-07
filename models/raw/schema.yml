@@ -4,6 +4,13 @@ models:
   # ─── Gateway staging ───────────────────────────────────────────────────────
   - name: stg_gateway__tickets
     description: "Staged gateway tickets with parsed dates and deduplication"
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
+      - late_arriving_data:
+          column_name: sold_at
+          max_lag_hours: 72
+          config: { severity: warn }
     columns:
       - name: ticket_id
         data_tests:
@@ -11,6 +18,10 @@ models:
           - not_null
       - name: sold_at
         description: "Timestamp ticket was sold — null for unsold/reserved"
+        data_tests:
+          - null_rate_threshold:
+              threshold: 0.5
+              config: { severity: warn }
       - name: ticket_date
         description: "Entry/visit date (sourced from endoflifedate)"
 
@@ -42,6 +53,9 @@ models:
 
   - name: stg_gateway__usage
     description: "Staged gateway ticket usage/scan events"
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
     columns:
       - name: usage_id
         data_tests:
@@ -112,6 +126,9 @@ models:
 
   - name: stg_counterpoint__pstkthist
     description: "Staged CounterPoint POS ticket history headers"
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
     columns:
       - name: doc_id
         data_tests:
@@ -199,6 +216,11 @@ models:
 
   - name: stg_sensource__attendance
     description: "Sensource attendance, one row per business_date."
+    data_tests:
+      - late_arriving_data:
+          column_name: business_date
+          max_lag_hours: 48
+          config: { severity: warn }
     columns:
       - name: business_date
         data_tests:
@@ -208,6 +230,10 @@ models:
   - name: stg_sensource__visitors
     description: "Sensource visitor counts per business_date x key_facility x acp_id. Two writers land on SEPARATE rows, distinguished by acp_id: acp_id = 0 is the Sensource API leg (num_entry / num_exit populated, passes_scanned 0); acp_id = a gate id is the Gateway leg from t_fact_museum_passes_scanned (passes_scanned populated, num_entry / num_exit NULL)."
     data_tests:
+      - late_arriving_data:
+          column_name: business_date
+          max_lag_hours: 48
+          config: { severity: warn }
       - unique:
           column_name: "business_date || '~' || key_facility || '~' || acp_id"
           config: { severity: warn }

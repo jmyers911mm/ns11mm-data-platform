@@ -50,6 +50,15 @@ models:
         description: "Derived from CUSTNO prefix: Web, CityPass, Viator, Go City, GetYourGuide, Tiqets, Group, Pre-Sale, Rides/Partner, Other."
         data_tests:
           - not_null
+          - distribution_shift:
+              value: 'Web'
+              min_pct: 0.05
+              max_pct: 0.90
+              config: { severity: warn }
+          - cardinality_change:
+              min_distinct: 3
+              max_distinct: 20
+              config: { severity: warn }
 
   - name: dim_gate
     description: "Gate/access-point dimension combining ACPs with their parent facility from Gateway."
@@ -87,6 +96,15 @@ models:
         description: "Derived classification: Ticket, Pass, Tour, Event, Merchandise."
         data_tests:
           - not_null
+          - distribution_shift:
+              value: 'Ticket'
+              min_pct: 0.05
+              max_pct: 0.90
+              config: { severity: warn }
+          - cardinality_change:
+              min_distinct: 3
+              max_distinct: 10
+              config: { severity: warn }
 
   - name: dim_product
     description: "Retail product dimension from CounterPoint POS (museum store, carts, ecommerce)."

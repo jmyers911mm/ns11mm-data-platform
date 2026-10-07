@@ -292,6 +292,9 @@ models:
     description: >
       POS ticket transactions, one row per ticket_id where sold_at is not null.
       Feeds fct_daily_operations ticket measures.
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
     columns:
       - name: transaction_id
         description: "PK. Ticket transaction id (grain from source)."
@@ -302,6 +305,9 @@ models:
         description: "Sale date (day grain of the operations fact)."
         data_tests:
           - not_null: { config: { severity: warn } }
+          - null_rate_threshold:
+              threshold: 0.01
+              config: { severity: warn }
 
   - name: int_ticket_scans
     description: >
@@ -309,6 +315,9 @@ models:
       with the legacy scan-validity rule and the ACP -> facility resolution
       applied (8.7.0). Feeds int_gateway__scan_lines, int_dpr__attendance and
       fct_daily_operations.
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
     columns:
       - name: scan_id
         description: "PK. Scan event id (usage_id), grain from source."

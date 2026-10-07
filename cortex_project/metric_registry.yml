@@ -1,0 +1,749 @@
+# Governance record for every certified metric, keyed by MET number.
+#
+# What a metric computes (expr, description, synonyms) lives in the semantic view specs,
+# cortex_project/<view>.sv.yaml. Owners come from the Domain Owner Register through domain.
+# Reports come from models/exposures.yml. Nothing here repeats either.
+#
+# RESTORED 2026-10-06. The original records were in semantic_models/*.yaml and were dropped
+# when those files were consolidated into cortex_project/. Each view/metric pairing below was
+# inferred from which reports cite the number, the reports' descriptions, and the order of
+# the UNIFIED view; review.confidence and review.basis say how sure each one is. Confirm or
+# correct the pairing, then delete the review block. Fields the old records held that could
+# not be recovered (sla_tier, scope) are blank for the owners to fill.
+#
+# MET-007 to MET-046, MET-049, and MET-072 were assigned in 2.0.0 but nothing in the repo
+# says what they were. They are left unassigned. New metrics take MET-073 upward.
+version: 1
+metrics:
+
+  - id: MET-001
+    view: DPR
+    metric: TOTAL_TICKETS_SOLD
+    display_name: "General-admission tickets sold"
+    type: "Measure, additive"
+    domain: "Revenue"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-002]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: low
+      basis: "Not cited by any report. First metric in the UNIFIED view's DPR block, which appears to keep the old numbering order."
+
+  - id: MET-002
+    view: DPR
+    metric: TOTAL_TICKET_REVENUE
+    display_name: "Ticket revenue"
+    type: "Measure, additive"
+    domain: "Revenue"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-004]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited by the DPR and DPR Excel Data. Second in the UNIFIED view's DPR block, which appears to keep the old numbering order."
+
+  - id: MET-003
+    view: DPR
+    metric: TOTAL_PASS_REVENUE
+    display_name: "Pass revenue (CityPASS, C3)"
+    type: "Measure, additive"
+    domain: "Revenue"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-004]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: low
+      basis: "Not cited by any report. Third in the UNIFIED view's DPR block."
+
+  - id: MET-004
+    view: DPR
+    metric: TOTAL_ADMISSION_REVENUE
+    display_name: "Total admission revenue"
+    type: "Measure, additive"
+    domain: "Revenue"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-002, MET-003]
+    caveats:
+      - "Includes service fees (ticket plus pass plus fees). Revenue figures that exclude fees will not tie."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Cited by all five DPR-family reports, which lead with admissions revenue. Fourth in the UNIFIED DPR block."
+
+  - id: MET-005
+    view: DPR
+    metric: TOTAL_MUSEUM_ATTENDANCE
+    display_name: "Museum attendance"
+    type: "Measure, additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-053]
+    caveats:
+      - "Scanned general-admission component only; the full Sensource blend is not yet staged."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited by the DPR, YTD, MTD, and Daily Tracker, which report attendance. Fifth in the UNIFIED DPR block."
+
+  - id: MET-006
+    view: DPR
+    metric: TOTAL_MEMORIAL_ATTENDANCE
+    display_name: "Memorial attendance"
+    type: "Measure, additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-054]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited alongside MET-005 by the DPR, YTD, and Daily Tracker. Sixth in the UNIFIED DPR block."
+
+  - id: MET-047
+    view: DPR
+    metric: TOTAL_DONATIONS
+    display_name: "Total donations"
+    type: "Measure, additive"
+    domain: "Fundraising"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: []
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited by all five DPR-family reports, which report donations; the only donations total in the DPR spec."
+
+  - id: MET-048
+    view: DPR
+    metric: TOTAL_RETAIL_GROSS_PROFIT
+    display_name: "Retail gross profit (DPR rollup)"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: []
+    caveats:
+      - "Includes the cafe. The printed DPR line excludes it; see TOTAL_RETAIL_GROSS_PROFIT_EX_CAFE."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: low
+      basis: "Cited only by the full DPR, after the revenue, attendance, and donation metrics. The retail gross profit rollup is the DPR's other headline line; a guess."
+
+  - id: MET-050
+    view: ATTENDANCE
+    metric: TOTAL_PASSES_SCANNED
+    display_name: "Passes scanned"
+    type: "Measure, additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Market segment and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-051, MET-052]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Daily Scan reports passes scanned first; Daily Attendance combines it with attendance."
+
+  - id: MET-051
+    view: ATTENDANCE
+    metric: TOTAL_TICKETS_SCANNED
+    display_name: "Tickets sold (scan side)"
+    type: "Measure, additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Market segment and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-050, MET-052]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Daily Scan reports tickets sold by market segment; this is the scan-side ticket count from the same fact."
+
+  - id: MET-052
+    view: UNIFIED
+    metric: scan_utilization
+    display_name: "Redemption rate"
+    type: "Ratio, non-additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Market segment and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-050, MET-051]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Daily Scan reports a redemption rate; this metric's synonyms include \"redemption rate\". Only in the UNIFIED view."
+
+  - id: MET-053
+    view: DPR
+    metric: TOTAL_MUSEUM_ATTENDANCE
+    display_name: "Museum attendance (Attendance domain copy)"
+    type: "Measure, additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-005]
+    caveats:
+      - "Duplicate of MET-005. Retire one number and point both reports at the other."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited by Attendance and Daily Attendance, which report memorial and museum attendance. The old attendance model kept its own copy; after consolidation it is the same spec metric as MET-005."
+
+  - id: MET-054
+    view: DPR
+    metric: TOTAL_MEMORIAL_ATTENDANCE
+    display_name: "Memorial attendance (Attendance domain copy)"
+    type: "Measure, additive"
+    domain: "Attendance & Ticketing"
+    status: in-review
+    grain: "Business day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-006]
+    caveats:
+      - "Duplicate of MET-006. Retire one number and point both reports at the other."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "As MET-053, for memorial attendance; the same spec metric as MET-006."
+
+  - id: MET-055
+    view: ATTENDANCE
+    metric: TOTAL_TODAY_SALES
+    display_name: "Today's sales (hourly)"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Hour"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-056]
+    caveats:
+      - "Stub: the real-time CounterPoint feed is pending."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Today's Sales (Hourly) reports same-day sales; this is the intraday sales metric."
+
+  - id: MET-056
+    view: ATTENDANCE
+    metric: TOTAL_TODAY_TRANSACTIONS
+    display_name: "Today's transactions (hourly)"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Hour"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-055]
+    caveats:
+      - "Stub: the real-time CounterPoint feed is pending."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Today's Sales (Hourly) reports sales and transactions by hour."
+
+  - id: MET-057
+    view: FUNDRAISING_ECOM
+    metric: ""
+    display_name: "Recurring online commerce revenue"
+    type: "Measure, additive"
+    domain: "Fundraising"
+    status: in-review
+    grain: "Day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: []
+    caveats:
+      - "No spec metric exists. Set metric when the Fundraising semantic view is enabled."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: low
+      basis: "Cited by the Website Commerce Report. Its spec, cortex_project/disabled/FUNDRAISING_ECOM.sv.yaml, is disabled and defines no metrics yet, so there is nothing to point at."
+
+  - id: MET-058
+    view: RETAIL
+    metric: TOTAL_RETAIL_NET_SALES
+    display_name: "Retail net sales"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-059, MET-062]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "First of the retail block. The Retail Performance Report lists net sales, profit, transactions, basket value, and margin, and cites 058, 059, 062, 066, 065 in that order."
+
+  - id: MET-059
+    view: RETAIL
+    metric: TOTAL_RETAIL_NET_PROFIT
+    display_name: "Retail net profit"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-058, MET-065]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Second in the Retail Performance Report's list (profit)."
+
+  - id: MET-060
+    view: RETAIL
+    metric: TOTAL_RETAIL_NET_UNITS
+    display_name: "Retail units sold"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-058]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Not cited by any report. Falls between profit (059) and transactions (062) in the retail sequence."
+
+  - id: MET-061
+    view: RETAIL
+    metric: TOTAL_RETAIL_DONATION_ASK
+    display_name: "Retail donation-ask collections"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: []
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: low
+      basis: "Not cited by any report. Inferred from the retail sequence (the UNIFIED view lists donations between units and transactions)."
+
+  - id: MET-062
+    view: RETAIL
+    metric: TOTAL_TRANSACTIONS
+    display_name: "Retail transactions"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-066, MET-067]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Third in the Retail Performance Report's list (transactions); also cited by the Carts Analysis."
+
+  - id: MET-063
+    view: RETAIL
+    metric: TOTAL_VISITORS
+    display_name: "Store visitors (door count)"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-067, MET-068, MET-069]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Not cited by any report. Follows transactions in the retail sequence; the numerator of the per-visitor ratios."
+
+  - id: MET-064
+    view: RETAIL
+    metric: TOTAL_ECOM_ORDERS
+    display_name: "Ecommerce orders"
+    type: "Measure, additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: []
+    caveats:
+      - "Stub until the Shopify feed lands."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Not cited by any report. Follows visitors in the retail sequence."
+
+  - id: MET-065
+    view: RETAIL
+    metric: GROSS_MARGIN_PCT
+    display_name: "Profit margin"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility, category, and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-058, MET-059]
+    caveats:
+      - "Category grain. The facility-grain equivalent is UNIFIED profit_margin."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Last in the Retail Performance Report's list (margin); also in the Monthly KPI. The 2.0.0 notes name profit_margin as a retail ratio; this is the RETAIL view's net profit over net sales."
+
+  - id: MET-066
+    view: UNIFIED
+    metric: avg_sale
+    display_name: "Average sale (basket value)"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-058, MET-062]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "Fourth in the Retail Performance Report's list (basket value). The 2.0.0 notes name avg_sale as a retail ratio; its synonyms include \"basket size\". Only in the UNIFIED view."
+
+  - id: MET-067
+    view: RETAIL
+    metric: CONVERSION_RATE
+    display_name: "Conversion rate"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-062, MET-063]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: high
+      basis: "The Carts Analysis covers sales and conversion; the 2.0.0 notes name conversion_rate as a retail ratio."
+
+  - id: MET-068
+    view: RETAIL
+    metric: CAPTURE_RATE
+    display_name: "Capture rate"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-063]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Not cited by any report. Between conversion (067) and revenue per visitor (069) in the retail sequence."
+
+  - id: MET-069
+    view: RETAIL
+    metric: REVENUE_PER_VISITOR
+    display_name: "Revenue per visitor"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-058, MET-063]
+    caveats: []
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited by the Monthly Retail KPI. The 2.0.0 notes name rev_per_visitor as a retail ratio."
+
+  - id: MET-070
+    view: RETAIL
+    metric: SALES_PER_CAP
+    display_name: "Sales per cap"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-058]
+    caveats:
+      - "Legacy per-cap basis: net sales over museum attendance."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Cited by the Monthly Retail KPI; follows revenue per visitor in the retail sequence."
+
+  - id: MET-071
+    view: RETAIL
+    metric: PROFIT_PER_CAP
+    display_name: "Profit per cap"
+    type: "Ratio, non-additive"
+    domain: "Retail"
+    status: in-review
+    grain: "Facility and day"
+    time_dimension: DATE_KEY
+    sla_tier: ""
+    version: 1.0.0
+    technical_owner: Jeremy Myers
+    approved_by: ""
+    approval_date: ""
+    scope: ""
+    related_metrics: [MET-059]
+    caveats:
+      - "Legacy per-cap basis: net profit over museum attendance."
+    changelog:
+      - {version: 1.0.0, date: 2026-07-16, note: "Registered in 2.0.0."}
+      - {version: 1.0.0, date: 2026-10-06, note: "Record restored; view and metric pairing inferred, see review."}
+    review:
+      confidence: medium
+      basis: "Not cited by any report. Follows sales per cap in the retail sequence."

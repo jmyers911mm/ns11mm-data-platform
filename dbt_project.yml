@@ -25,6 +25,7 @@ vars:
 
 
 on-run-end:
+  - "{{ log_test_results_to_audit(results) }}"
   - "{% if target.name != 'dev' %}{{ apply_governance_tags() }}{% endif %}"
   - "{% if target.name != 'dev' %}{{ apply_masking_policies() }}{% endif %}"
 
@@ -100,6 +101,11 @@ seeds:
   ns11mm_data_platform:
     +database: NS11MM_DW_DEV
     +schema: SEEDS
+
+tests:
+  ns11mm_data_platform:
+    +store_failures: true
+    +schema: DQ_TEST_RESULTS
 
 snapshots:
   ns11mm_data_platform:

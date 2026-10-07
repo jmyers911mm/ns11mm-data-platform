@@ -7,6 +7,9 @@ version: 2
 models:
   - name: fct_ticket_availability
     description: "Real-time ticket capacity and utilization by date/window/type"
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
     columns:
       - name: availability_key
         description: "PK. Surrogate key (hash of entry_date + ticket_type + window)."
@@ -33,6 +36,10 @@ models:
         description: "Percentage of capacity reserved (0-100)"
         data_tests:
           - not_null
+          - value_between:
+              min_value: 0
+              max_value: 200
+              config: { severity: warn }
 
   - name: fct_ticket_demand_forecast
     description: "Ticket demand aggregated for forecasting and presale analysis"
@@ -69,6 +76,14 @@ models:
 
   - name: fct_daily_operations
     description: "Daily operational metrics: visitors, ticket sales, revenue, retail"
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
+      - daily_volume_bounds:
+          date_column: visit_date
+          min_rows: 1
+          max_rows: 1
+          config: { severity: warn }
     columns:
       - name: visit_date
         description: "PK. Natural key (calendar date of operations)."
@@ -92,6 +107,11 @@ models:
       - name: ticket_revenue
         data_tests:
           - not_null
+          - positive_value:
+              config: { severity: warn }
+          - z_score_outlier:
+              max_zscore: 3
+              config: { severity: warn }
       # Added round 2 (retail wiring). warn severity — coalesced to 0 so they
       # cannot actually fail; kept warn only to guarantee no build-blocking.
       - name: retail_revenue
@@ -125,13 +145,26 @@ models:
               field: date_key
       - name: key_facility
         description: "FK to seed_facility_area.key_facility."
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - cardinality_change:
+              min_distinct: 2
+              max_distinct: 20
+              config: { severity: warn }
       - name: category_code
         description: "CounterPoint product category (Donations folded to 'Donations')."
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - cardinality_change:
+              min_distinct: 2
+              max_distinct: 50
+              config: { severity: warn }
       - name: net_sales
         description: "Sale minus return amount, non-donation lines."
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - positive_value:
+              config: { severity: warn }
     data_tests:
       - unique:
           column_name: "date_key || '~' || key_facility || '~' || category_code"
@@ -167,6 +200,14 @@ models:
     description: >
       Day-grain DPR fact. One additive measure per column; ratios excluded
       by design (computed in rpt_ layer). Replaces legacy fact_dpr_report_data.
+    data_tests:
+      - row_count_drift:
+          config: { severity: warn }
+      - daily_volume_bounds:
+          date_column: date_key
+          min_rows: 1
+          max_rows: 1
+          config: { severity: warn }
     columns:
       - name: date_key
         description: "PK / FK to dim_date.date_key."
@@ -185,10 +226,22 @@ models:
         description: >
           GA tickets sold, issued + unissued (8.8.0). Redefined — do not compare
           across the release boundary without restating.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - positive_value:
+              config: { severity: warn }
+          - z_score_outlier:
+              max_zscore: 3
+              config: { severity: warn }
       - name: ticket_revenue
         description: "GA ticket revenue, issued + unissued (8.8.0)."
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - positive_value:
+              config: { severity: warn }
+          - z_score_outlier:
+              max_zscore: 3
+              config: { severity: warn }
       - name: unissued_tickets_sold
         description: "Audit companion (8.8.0): the unissued contribution to tickets_sold."
         data_tests: [not_null]
@@ -272,7 +325,12 @@ models:
               field: date_key
       - name: segment_key
         description: "FK to seed_scan_market_segment.segment_key."
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - cardinality_change:
+              min_distinct: 3
+              max_distinct: 30
+              config: { severity: warn }
       - name: passes_scanned
         data_tests: [not_null]
       - name: tickets_sold
@@ -299,7 +357,12 @@ models:
         data_tests: [not_null]
       - name: hour_of_day
         description: "Hour of the business day (from the CounterPoint feed)."
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - value_between:
+              min_value: 0
+              max_value: 23
+              config: { severity: warn }
       - name: key_facility
         description: "Resolved 911dw facility key (-1 = unmapped store)."
         data_tests: [not_null]
@@ -445,7 +508,13 @@ models:
           Gateway ticketing donations, issued + unissued (8.8.0 recognition
           change). Re-projected from int_dpr__donations; identical to
           fct_daily_performance.ticketing_donations by construction.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - positive_value:
+              config: { severity: warn }
+          - z_score_outlier:
+              max_zscore: 3
+              config: { severity: warn }
       - name: memorial_kiosk_don
         description: >
           NEW in 8.9.0. The %DON-OPS-MEM% Gateway cohort excluding the plaza
