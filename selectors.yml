@@ -1,0 +1,42 @@
+selectors:
+  - name: tests_staging
+    definition:
+      union:
+        - method: path
+          value: models/raw
+        - exclude:
+            - { method: test_name, value: relationships }
+            - { method: test_type, value: singular }
+
+  - name: tests_intermediate
+    definition:
+      union:
+        - method: path
+          value: models/intermediate
+        - exclude:
+            - { method: test_name, value: relationships }
+            - { method: test_type, value: singular }
+
+  - name: tests_marts_core
+    definition:
+      union:
+        - { method: path, value: models/marts/dimensions }
+        - { method: path, value: models/marts/facts }
+        - exclude:
+            - { method: test_name, value: relationships }
+            - { method: test_type, value: singular }
+
+  - name: tests_marts_reports
+    definition:
+      union:
+        - { method: path, value: models/marts/reports }
+        - { method: path, value: models/ml_features }
+        - exclude:
+            - { method: test_name, value: relationships }
+            - { method: test_type, value: singular }
+
+  - name: tests_relationships
+    definition: { method: test_name, value: relationships }
+
+  - name: tests_singular
+    definition: { method: test_type, value: singular }

@@ -40,6 +40,8 @@ exposures:
       source_models: [MARTS.FCT_DAILY_PERFORMANCE]
       metrics: [MET-002, MET-004, MET-047, MET-005, MET-006, MET-048]
       packages: ["Daily Performance Pack"]
+      embed: "https://app.powerbi.com/reportEmbed?reportId=9b80f837-ffda-4c90-9743-001f7ff8c52b&autoAuth=true&ctid=dbb7ee03-320b-4cb1-bb52-906ed2752b03"
+      link: ""
       caveats:
         - Legacy Pentaho definition; validate against source before certification.
       version: "0.1"
